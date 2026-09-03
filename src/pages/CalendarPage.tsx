@@ -30,6 +30,7 @@ export function CalendarPage({ onEdit }: CalendarPageProps) {
     const m = new Map<string, { expense: number; income: number }>();
     for (const t of scoped) {
       if (!t.date.startsWith(ymKey(month))) continue;
+      if (t.type !== 'expense' && t.type !== 'income') continue;
       const cur = m.get(t.date) ?? { expense: 0, income: 0 };
       if (t.type === 'expense') cur.expense += t.amount;
       else cur.income += t.amount;

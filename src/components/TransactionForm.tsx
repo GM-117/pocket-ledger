@@ -1,42 +1,58 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import type { Txn, TxnType } from '../types';
+import { TRANSFER_CATEGORY_ID, type Txn, type TxnType } from '../types';
 import { fmtISO, parseISO, round2, uid } from '../utils';
 
 interface TransactionFormProps {
+  /** 编辑已有记录 */
   initial: Txn | null;
+  /** 从模板新建（无 id） */
+  preset?: Txn | null;
   onClose: () => void;
 }
 
-/** iCost 风格快速记账面板：金额大字 + 分类宫格 + 数字键盘 */
-export function TransactionForm({ initial, onClose }: TransactionFormProps) {
+/** iCost 风格快速记账面板：金额大字 + 分类宫格 + 数字键盘，支持转账与存为模板 */
+export function TransactionForm({ initial, preset, onClose }: TransactionFormProps) {
   const books = useStore((s) => s.books);
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const activeBookId = useStore((s) => s.activeBookId);
   const saveTxn = useStore((s) => s.saveTxn);
   const removeTxn = useStore((s) => s.removeTxn);
+  const addTemplate = useStore((s) => s.addTemplate);
 
-  const [type, setType] = useState<TxnType>(initial?.type ?? 'expense');
-  const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
-  const [accountId, setAccountId] = useState(initial?.accountId ?? accounts[0]?.id ?? '');
-  const [bookId, setBookId] = useState(initial?.bookId ?? activeBookId);
+  const [type, setType] = useState<TxnType>(initial?.type ?? preset?.type ?? 'expense');
+  const [amount, setAmount] = useState(
+    initial ? String(initial.amount) : preset ? String(preset.amount) : '',
+  );
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? preset?.categoryId ?? '');
+  const [accountId, setAccountId] = useState(
+    initial?.accountId ?? preset?.accountId ?? accounts[0]?.id ?? '',
+  );
+  const [toAccountId, setToAccountId] = useState(
+    initial?.toAccountId ?? accounts.find((a) => a.id !== accountId)?.id ?? '',
+  );
+  const [bookId, setBookId] = useState(initial?.bookId ?? preset?.bookId ?? activeBookId);
   const [date, setDate] = useState(initial?.date ?? fmtISO(new Date()));
-  const [note, setNote] = useState(initial?.note ?? '');
+  const [note, setNote] = useState(initial?.note ?? preset?.note ?? '');
   const [metaOpen, setMetaOpen] = useState(!!initial);
   const [error, setError] = useState('');
+  const [tplSaving, setTplSaving] = useState(false);
+  const [tplName, setTplName] = useState('');
+  const [tplSaved, setTplSaved] = useState(false);
 
   const cats = categories.filter((c) => c.type === type);
 
   const switchType = (t: TxnType) => {
     setType(t);
     setCategoryId('');
+    setTplSaved(false);
   };
 
   /* ---------- 数字键盘 ---------- */
   const pressKey = (k: string) => {
     setError('');
+    setTplSaved(false);
     setAmount((cur) => {
       if (k === 'del') return cur.slice(0, -1);
       if (k === 'clear') return '';
@@ -51,13 +67,18 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
   const submit = () => {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return setError('请输入金额');
-    if (!categoryId) return setError('请选择分类');
-    if (!accountId) return setError('请选择账户');
+    if (type === 'transfer') {
+      if (!accountId || !toAccountId) return setError('请选择转出与转入账户');
+      if (accountId === toAccountId) return setError('转出与转入不能是同一账户');
+    } else if (!categoryId) {
+      return setError('请选择分类');
+    }
     saveTxn({
       id: initial?.id ?? uid(),
       bookId,
       accountId,
-      categoryId,
+      ...(type === 'transfer' ? { toAccountId } : {}),
+      categoryId: type === 'transfer' ? TRANSFER_CATEGORY_ID : categoryId,
       type,
       amount: round2(amt),
       date,
@@ -67,6 +88,25 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
     onClose();
   };
 
+  const saveAsTemplate = () => {
+    const amt = parseFloat(amount);
+    if (!amt || amt <= 0 || !categoryId) return;
+    const cat = categories.find((c) => c.id === categoryId);
+    addTemplate({
+      name: tplName.trim() || `${cat?.emoji ?? ''} ${cat?.name ?? '模板'}`,
+      type: type === 'income' ? 'income' : 'expense',
+      amount: round2(amt),
+      categoryId,
+      accountId,
+      bookId,
+      note: note.trim(),
+    });
+    setTplSaving(false);
+    setTplName('');
+    setTplSaved(true);
+    setTimeout(() => setTplSaved(false), 1800);
+  };
+
   const del = () => {
     if (initial && window.confirm('确定删除这笔记录吗？')) {
       removeTxn(initial.id);
@@ -74,9 +114,9 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
     }
   };
 
-  const selectedCat = categories.find((c) => c.id === categoryId);
   const selectedAcc = accounts.find((a) => a.id === accountId);
   const selectedBook = books.find((b) => b.id === bookId);
+  const isTransfer = type === 'transfer';
 
   return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -91,6 +131,9 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
             </button>
             <button className={type === 'income' ? 'active income' : ''} onClick={() => switchType('income')}>
               收入
+            </button>
+            <button className={type === 'transfer' ? 'active transfer' : ''} onClick={() => switchType('transfer')}>
+              转账
             </button>
           </div>
           {initial ? (
@@ -108,18 +151,43 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
         </div>
         {error && <p className="form-error kp-error">{error}</p>}
 
-        <div className="cat-grid kp-cats">
-          {cats.map((c) => (
-            <button
-              key={c.id}
-              className={'cat-chip' + (categoryId === c.id ? ' active' : '')}
-              onClick={() => setCategoryId(c.id)}
-            >
-              <span>{c.emoji}</span>
-              {c.name}
-            </button>
-          ))}
-        </div>
+        {isTransfer ? (
+          <div className="transfer-grid">
+            <label className="field">
+              <span>转出账户</span>
+              <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.emoji} {a.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>转入账户</span>
+              <select value={toAccountId} onChange={(e) => setToAccountId(e.target.value)}>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id} disabled={a.id === accountId}>
+                    {a.emoji} {a.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : (
+          <div className="cat-grid kp-cats">
+            {cats.map((c) => (
+              <button
+                key={c.id}
+                className={'cat-chip' + (categoryId === c.id ? ' active' : '')}
+                onClick={() => setCategoryId(c.id)}
+              >
+                <span>{c.emoji}</span>
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="kp-meta">
           <button className="kp-meta-chip" onClick={() => setMetaOpen((v) => !v)}>
@@ -133,18 +201,12 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
             </select>
           </button>
           <button className="kp-meta-chip" onClick={() => setMetaOpen((v) => !v)}>
-            <span className="kp-meta-label">账户</span>
-            <select value={accountId} onClick={(e) => e.stopPropagation()} onChange={(e) => setAccountId(e.target.value)}>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.emoji} {a.name}
-                </option>
-              ))}
-            </select>
+            <span className="kp-meta-label">日期</span>
+            {date === fmtISO(new Date()) ? '今天' : `${parseISO(date).getMonth() + 1}/${parseISO(date).getDate()}`}
           </button>
           <button className={'kp-meta-chip' + (metaOpen ? ' open' : '')} onClick={() => setMetaOpen((v) => !v)}>
             <span className="kp-meta-label">更多</span>
-            {date === fmtISO(new Date()) ? '今天' : `${parseISO(date).getMonth() + 1}/${parseISO(date).getDate()}`}
+            备注/账户
           </button>
         </div>
 
@@ -154,14 +216,54 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
               <span>日期</span>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </label>
-            <label className="kp-field">
+            {!isTransfer && (
+              <label className="kp-field">
+                <span>账户</span>
+                <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.emoji} {a.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className="kp-field" style={{ gridColumn: '1 / -1' }}>
               <span>备注</span>
               <input placeholder="记点什么…" value={note} onChange={(e) => setNote(e.target.value)} />
             </label>
             <p className="kp-current">
-              {selectedBook?.emoji} {selectedBook?.name} · {selectedAcc?.emoji} {selectedAcc?.name}
-              {selectedCat ? ` · ${selectedCat.emoji} ${selectedCat.name}` : ''}
+              {selectedBook?.emoji} {selectedBook?.name}
+              {selectedAcc ? ` · ${selectedAcc.emoji} ${selectedAcc.name}` : ''}
             </p>
+          </div>
+        )}
+
+        {!isTransfer && (
+          <div className="tpl-save-row">
+            {tplSaving ? (
+              <>
+                <input
+                  autoFocus
+                  placeholder="模板名称，如：☕ 咖啡"
+                  value={tplName}
+                  onChange={(e) => setTplName(e.target.value)}
+                />
+                <button className="btn ghost" onClick={() => setTplSaving(false)}>
+                  取消
+                </button>
+                <button className="btn primary" onClick={saveAsTemplate} disabled={!parseFloat(amount)}>
+                  存模板
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="tpl-btn" onClick={() => setTplSaving(true)}>
+                  ⭐ 存为模板
+                </button>
+                {tplSaved && <span className="tpl-saved">已保存 ✓</span>}
+              </>
+            )}
           </div>
         )}
 

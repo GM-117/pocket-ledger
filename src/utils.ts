@@ -55,6 +55,15 @@ export function ymKey(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
 
+/** 周期规则：推进一个周期（保持「日」不变，自动处理大小月，如 1/31 → 2/28） */
+export function stepFreq(d: Date, freq: 'daily' | 'weekly' | 'monthly' | 'yearly'): Date {
+  if (freq === 'daily') return addDays(d, 1);
+  if (freq === 'weekly') return addDays(d, 7);
+  const [dy, dm] = freq === 'monthly' ? [d.getFullYear(), d.getMonth() + 1] : [d.getFullYear() + 1, d.getMonth()];
+  const daysInTarget = new Date(dy, dm + 1, 0).getDate();
+  return new Date(dy, dm, Math.min(d.getDate(), daysInTarget), 12);
+}
+
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
 /** 列表分组用的日期标签：今天 / 昨天 / M月D日 周X */
@@ -91,12 +100,17 @@ export const uid = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-/** 账户余额 = 期初 + 收入 − 支出（可截止某日期，ISO 字符串可直接比较） */
+/** 账户余额 = 期初 + 收入 − 支出 ± 转账（可截止某日期，ISO 字符串可直接比较） */
 export function accountBalance(acc: Account, txns: Txn[], endISO?: string): number {
   let b = acc.initialBalance;
   for (const t of txns) {
-    if (t.accountId !== acc.id) continue;
     if (endISO && t.date > endISO) continue;
+    if (t.type === 'transfer') {
+      if (t.accountId === acc.id) b -= t.amount;
+      if (t.toAccountId === acc.id) b += t.amount;
+      continue;
+    }
+    if (t.accountId !== acc.id) continue;
     b += t.type === 'income' ? t.amount : -t.amount;
   }
   return round2(b);

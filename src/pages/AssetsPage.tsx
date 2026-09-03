@@ -135,6 +135,7 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
               ['all', '全部'],
               ['expense', '支出'],
               ['income', '收入'],
+              ['transfer', '转账'],
             ] as [Filter, string][]
           ).map(([k, label]) => (
             <button key={k} className={'chip' + (filter === k ? ' active' : '')} onClick={() => setFilter(k)}>

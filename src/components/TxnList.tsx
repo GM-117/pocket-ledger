@@ -35,7 +35,11 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
     return [...map.entries()].map(([date, items]) => ({
       date,
       items,
-      net: items.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0),
+      // 转账发生在自有账户之间，不计入当日收支净额
+      net: items.reduce(
+        (s, t) => s + (t.type === 'income' ? t.amount : t.type === 'expense' ? -t.amount : 0),
+        0,
+      ),
     }));
   }, [txns]);
 
@@ -66,26 +70,30 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
           {g.items.map((t) => {
             const cat = catMap.get(t.categoryId);
             const acc = accMap.get(t.accountId);
+            const toAcc = t.toAccountId ? accMap.get(t.toAccountId) : undefined;
             const book = showBook ? bookMap.get(t.bookId) : undefined;
+            const isTransfer = t.type === 'transfer';
+            const title = isTransfer ? '转账' : cat?.name ?? '未知分类';
+            const emoji = isTransfer ? '🔁' : cat?.emoji ?? '❓';
+            const sub = isTransfer
+              ? `${acc?.name ?? '?'} → ${toAcc?.name ?? '?'}${t.note ? ` · ${t.note}` : ''}`
+              : `${acc?.name ?? '未知账户'}${t.note ? ` · ${t.note}` : ''}`;
             return (
               <button className="txn-row" key={t.id} onClick={() => onEdit(t)}>
-                <span className={'emoji-dot ' + t.type}>{cat?.emoji ?? '❓'}</span>
+                <span className={'emoji-dot ' + (isTransfer ? 'transfer' : t.type)}>{emoji}</span>
                 <span className="txn-main">
                   <span className="txn-cat">
-                    {cat?.name ?? '未知分类'}
+                    {title}
                     {book && (
                       <span className="txn-book" style={{ color: book.color }}>
                         {book.emoji} {book.name}
                       </span>
                     )}
                   </span>
-                  <span className="txn-sub">
-                    {acc?.name ?? '未知账户'}
-                    {t.note ? ` · ${t.note}` : ''}
-                  </span>
+                  <span className="txn-sub">{sub}</span>
                 </span>
-                <span className={'amount ' + (t.type === 'income' ? 'pos' : 'neg')}>
-                  {t.type === 'income' ? '+' : '−'}
+                <span className={'amount ' + (isTransfer ? 'trf' : t.type === 'income' ? 'pos' : 'neg')}>
+                  {t.type === 'income' ? '+' : isTransfer ? '' : '−'}
                   {fmtMoney(t.amount)}
                 </span>
               </button>

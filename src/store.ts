@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Account, Book, Category, Txn } from './types';
-import { addDays, fmtISO, round2, uid } from './utils';
+import type { Account, Book, Category, Recurring, Template, Txn } from './types';
+import { addDays, fmtISO, parseISO, round2, stepFreq, uid } from './utils';
 
 export interface StoreState {
   books: Book[];
@@ -13,9 +13,19 @@ export interface StoreState {
   budgets: Record<string, number>;
   /** 隐藏金额（隐私模式） */
   hideAmounts: boolean;
+  /** 模板快捷记账 */
+  templates: Template[];
+  /** 周期记账规则 */
+  recurrences: Recurring[];
   setActiveBook: (id: string) => void;
   setBudget: (bookId: string, amount: number | null) => void;
   toggleHideAmounts: () => void;
+  addTemplate: (t: Omit<Template, 'id'>) => void;
+  removeTemplate: (id: string) => void;
+  saveRecurring: (r: Recurring) => void;
+  removeRecurring: (id: string) => void;
+  /** 应用启动时补齐周期账单（幂等） */
+  runRecurrences: () => void;
   saveBook: (b: Book) => void;
   removeBook: (id: string) => void;
   saveAccount: (a: Account) => void;
@@ -142,7 +152,30 @@ function createDemoData() {
   }
   addTxn(work.id, 'income', partTime, cmb, 3000, iso(addDays(now, -14)), '项目奖金');
 
-  return { books, accounts, categories, txns, activeBookId: books[0].id };
+  // 周期记账演示：视频会员（每月 15 日 ¥25），启动时自动补齐
+  const recurrences: Recurring[] = [
+    {
+      id: uid(),
+      bookId: life.id,
+      accountId: ali.id,
+      categoryId: fun.id,
+      type: 'expense',
+      amount: 25,
+      note: '视频会员',
+      freq: 'monthly',
+      startDate: iso(new Date(now.getFullYear(), now.getMonth() - 2, 15)),
+      lastGenerated: null,
+      enabled: true,
+    },
+  ];
+
+  // 模板快捷记账演示
+  const templates: Template[] = [
+    { id: uid(), name: '☕ 咖啡', type: 'expense', amount: 15, categoryId: can.id, accountId: wx.id, bookId: life.id, note: '' },
+    { id: uid(), name: '💰 月度工资', type: 'income', amount: 12800, categoryId: salary.id, accountId: cmb.id, bookId: life.id, note: '月度工资' },
+  ];
+
+  return { books, accounts, categories, txns, recurrences, templates, activeBookId: books[0].id };
 }
 
 /* ------------------------------------------------------------------ */
@@ -165,6 +198,71 @@ export const useStore = create<StoreState>()(
         }),
 
       toggleHideAmounts: () => set((s) => ({ hideAmounts: !s.hideAmounts })),
+
+      addTemplate: (t) =>
+        set((s) => ({ templates: [...s.templates, { ...t, id: uid() }] })),
+
+      removeTemplate: (id) =>
+        set((s) => ({ templates: s.templates.filter((t) => t.id !== id) })),
+
+      saveRecurring: (r) =>
+        set((s) => ({
+          recurrences: s.recurrences.some((x) => x.id === r.id)
+            ? s.recurrences.map((x) => (x.id === r.id ? r : x))
+            : [...s.recurrences, r],
+        })),
+
+      removeRecurring: (id) =>
+        set((s) => ({ recurrences: s.recurrences.filter((r) => r.id !== id) })),
+
+      runRecurrences: () => {
+        const s = get();
+        if (s.recurrences.length === 0) return;
+        const todayISO = fmtISO(new Date());
+        const seen = new Set(
+          s.txns.map((t) => (t.recurrenceId ? `${t.recurrenceId}:${t.date}` : t.id)),
+        );
+        const additions: Txn[] = [];
+        const progress: Record<string, string> = {};
+        for (const r of s.recurrences) {
+          if (!r.enabled) continue;
+          const out: string[] = [];
+          let d = parseISO(r.startDate);
+          let guard = 0;
+          while (guard++ < 500) {
+            const iso = fmtISO(d);
+            if (iso > todayISO) break;
+            if (!r.lastGenerated || iso > r.lastGenerated) out.push(iso);
+            d = stepFreq(d, r.freq);
+          }
+          // 追账上限 60 条，避免久未打开时爆量
+          for (const date of out.slice(-60)) {
+            const key = `${r.id}:${date}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            additions.push({
+              id: uid(),
+              bookId: r.bookId,
+              accountId: r.accountId,
+              categoryId: r.categoryId,
+              type: r.type,
+              amount: r.amount,
+              date,
+              note: r.note,
+              createdAt: new Date().toISOString(),
+              recurrenceId: r.id,
+            });
+            progress[r.id] = date;
+          }
+        }
+        if (additions.length === 0) return;
+        set((st) => ({
+          txns: [...st.txns, ...additions],
+          recurrences: st.recurrences.map((r) =>
+            progress[r.id] ? { ...r, lastGenerated: progress[r.id] } : r,
+          ),
+        }));
+      },
 
       saveBook: (b) =>
         set((s) => ({

@@ -4,22 +4,28 @@ import type { Txn } from '../types';
 import { endOfMonth, fmtISO, fmtMoney, sameMonth, startOfMonth, sumIn, ymKey } from '../utils';
 import { MonthSwitcher } from '../components/MonthSwitcher';
 import { Modal } from '../components/Modal';
+import { RecurringManager } from '../components/RecurringManager';
 import { TxnList } from '../components/TxnList';
 
 interface DetailPageProps {
   onEdit: (t: Txn) => void;
   onManage: () => void;
+  onUseTemplate: (preset: Txn) => void;
 }
 
-export function DetailPage({ onEdit, onManage }: DetailPageProps) {
+export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps) {
   const books = useStore((s) => s.books);
   const txns = useStore((s) => s.txns);
   const budgets = useStore((s) => s.budgets);
+  const templates = useStore((s) => s.templates);
+  const removeTemplate = useStore((s) => s.removeTemplate);
   const activeBookId = useStore((s) => s.activeBookId);
   const setActiveBook = useStore((s) => s.setActiveBook);
 
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [budgetOpen, setBudgetOpen] = useState(false);
+  const [recurringOpen, setRecurringOpen] = useState(false);
+  const [tplManageOpen, setTplManageOpen] = useState(false);
 
   const book = books.find((b) => b.id === activeBookId) ?? books[0];
   const budget = book ? budgets[book.id] ?? 0 : 0;
@@ -70,10 +76,26 @@ export function DetailPage({ onEdit, onManage }: DetailPageProps) {
             </button>
           );
         })}
+        <button className="book-pill manage" onClick={() => setRecurringOpen(true)}>
+          🔁 周期
+        </button>
         <button className="book-pill manage" onClick={onManage}>
           ⚙️ 管理
         </button>
       </div>
+
+      {templates.length > 0 && (
+        <div className="tpl-row scroll-x">
+          {templates.map((t) => (
+            <button key={t.id} className="tpl-chip" onClick={() => onUseTemplate(templateToPreset(t))}>
+              <b>{t.name}</b> {fmtMoney(t.amount)}
+            </button>
+          ))}
+          <button className="tpl-chip manage" onClick={() => setTplManageOpen(true)}>
+            管理
+          </button>
+        </div>
+      )}
 
       <MonthSwitcher value={month} onChange={setMonth} label={`${month.getFullYear()}年${month.getMonth() + 1}月`} disableFuture />
 
@@ -130,8 +152,44 @@ export function DetailPage({ onEdit, onManage }: DetailPageProps) {
       {budgetOpen && (
         <BudgetModal bookId={book.id} bookName={book.name} current={budget} onClose={() => setBudgetOpen(false)} />
       )}
+      {recurringOpen && <RecurringManager bookId={book.id} onClose={() => setRecurringOpen(false)} />}
+      {tplManageOpen && (
+        <Modal title="模板管理" onClose={() => setTplManageOpen(false)}>
+          <div className="recur-list">
+            {templates.map((t) => (
+              <div className="recur-row" key={t.id}>
+                <span className="emoji-dot expense">{t.name.slice(0, 2)}</span>
+                <span className="txn-main">
+                  <span className="txn-cat">{t.name}</span>
+                  <span className="txn-sub">
+                    {t.type === 'income' ? '收入' : '支出'} · {fmtMoney(t.amount)}
+                  </span>
+                </span>
+                <button className="icon-btn" onClick={() => removeTemplate(t.id)} aria-label="删除">
+                  🗑️
+                </button>
+              </div>
+            ))}
+            {templates.length === 0 && <p className="empty-text">还没有模板，记一笔时点「⭐ 存为模板」创建</p>}
+          </div>
+        </Modal>
+      )}
     </>
   );
+}
+
+function templateToPreset(t: { type: Txn['type']; amount: number; categoryId: string; accountId: string; bookId: string; note: string }): Txn {
+  return {
+    id: '',
+    bookId: t.bookId,
+    accountId: t.accountId,
+    categoryId: t.categoryId,
+    type: t.type,
+    amount: t.amount,
+    date: fmtISO(new Date()),
+    note: t.note,
+    createdAt: '',
+  };
 }
 
 function BudgetModal({ bookId, bookName, current, onClose }: { bookId: string; bookName: string; current: number; onClose: () => void }) {
