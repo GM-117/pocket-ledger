@@ -1,0 +1,10 @@
+{
+  "name": "口袋记账 PocketLedger",
+  "short_name": "口袋记账",
+  "description": "多账本、资产管理、收支统计图表的响应式记账本",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#5b7cfa",
+  "icons": []
+}
