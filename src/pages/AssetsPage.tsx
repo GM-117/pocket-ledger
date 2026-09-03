@@ -10,6 +10,8 @@ type Filter = 'all' | TxnType;
 export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
   const accounts = useStore((s) => s.accounts);
   const txns = useStore((s) => s.txns);
+  const hideAmounts = useStore((s) => s.hideAmounts);
+  const toggleHideAmounts = useStore((s) => s.toggleHideAmounts);
   const exportJSON = useStore((s) => s.exportJSON);
   const importJSON = useStore((s) => s.importJSON);
   const loadDemo = useStore((s) => s.loadDemo);
@@ -18,6 +20,8 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
   const [editingAcc, setEditingAcc] = useState<null | 'new' | string>(null);
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));
 
   const totals = useMemo(() => computeTotals(accounts, txns), [accounts, txns]);
 
@@ -68,16 +72,21 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
   return (
     <>
       <div className="hero">
-        <span className="label">净资产（总资产 − 总负债）</span>
-        <div className="net">{fmtMoney(totals.netWorth)}</div>
+        <div className="hero-label-row">
+          <span className="label">净资产（总资产 − 总负债）</span>
+          <button className="eye-btn" onClick={toggleHideAmounts} aria-label="隐藏或显示金额">
+            {hideAmounts ? '🙈' : '👁'}
+          </button>
+        </div>
+        <div className="net">{money(totals.netWorth)}</div>
         <div className="sub">
           <div>
             <span>总资产</span>
-            <strong>{fmtMoney(totals.assets)}</strong>
+            <strong>{money(totals.assets)}</strong>
           </div>
           <div>
             <span>总负债</span>
-            <strong>{fmtMoney(totals.liabilities)}</strong>
+            <strong>{money(totals.liabilities)}</strong>
           </div>
           <div>
             <span>账户数</span>
@@ -107,7 +116,7 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
               </span>
               <span className={'amount ' + (a.type === 'asset' ? 'pos' : 'neg')}>
                 {a.type === 'asset' ? '' : '−'}
-                {fmtMoney(Math.abs(b))}
+                {money(Math.abs(b))}
               </span>
             </button>
           );

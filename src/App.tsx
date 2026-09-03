@@ -3,12 +3,13 @@ import { Layout, type TabKey } from './components/Layout';
 import { BookManager } from './components/BookManager';
 import { TransactionForm } from './components/TransactionForm';
 import { AssetsPage } from './pages/AssetsPage';
-import { BooksPage } from './pages/BooksPage';
+import { CalendarPage } from './pages/CalendarPage';
+import { DetailPage } from './pages/DetailPage';
 import { StatsPage } from './pages/StatsPage';
 import type { Txn } from './types';
 
 export default function App() {
-  const [tab, setTab] = useState<TabKey>('books');
+  const [tab, setTab] = useState<TabKey>('detail');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Txn | null>(null);
   const [bookMgrOpen, setBookMgrOpen] = useState(false);
@@ -21,8 +22,9 @@ export default function App() {
   return (
     <>
       <Layout tab={tab} onTab={setTab} onAdd={() => openEditor(null)}>
-        {tab === 'books' && <BooksPage onEdit={openEditor} onManage={() => setBookMgrOpen(true)} />}
+        {tab === 'detail' && <DetailPage onEdit={openEditor} onManage={() => setBookMgrOpen(true)} />}
         {tab === 'assets' && <AssetsPage onEdit={openEditor} />}
+        {tab === 'calendar' && <CalendarPage onEdit={openEditor} />}
         {tab === 'stats' && <StatsPage />}
       </Layout>
 

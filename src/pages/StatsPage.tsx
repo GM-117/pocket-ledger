@@ -2,33 +2,47 @@ import { useMemo, useState } from 'react';
 import * as echarts from 'echarts';
 import { useStore } from '../store';
 import { Chart, CHART_COLORS } from '../components/Chart';
+import { MonthSwitcher } from '../components/MonthSwitcher';
 import type { Period } from '../utils';
 import {
   PERIOD_LABEL,
+  addMonths,
   categoryBreakdown,
+  fmtISO,
   fmtMoney,
   fmtShort,
   netWorthSeries,
+  parseISO,
   round2,
+  startOfMonth,
+  startOfWeek,
   sumIn,
   trendBuckets,
+  ymKey,
 } from '../utils';
 
 const MUTED = '#7a8194';
 const LINE = '#eef0f4';
+const INK = '#1b2231';
 
-function pieOption(title: string, slices: { name: string; emoji: string; value: number }[]) {
+type StatsPeriod = Period | 'all';
+
+const LABELS: Record<StatsPeriod, string> = { ...PERIOD_LABEL, all: '全部' };
+
+function pieOption(
+  title: string,
+  total: number,
+  totalLabel: string,
+  slices: { name: string; emoji: string; value: number }[],
+) {
   return {
     title: {
-      text: title,
-      left: 14,
-      top: 12,
-      textStyle: { fontSize: 13, color: MUTED, fontWeight: 600 },
-    },
-    tooltip: {
-      trigger: 'item',
-      formatter: (p: { name: string; value: number; percent: number }) =>
-        `${p.name}<br/>${fmtMoney(p.value)} · ${p.percent}%`,
+      text: fmtMoney(total),
+      subtext: totalLabel,
+      left: 'center',
+      top: '40%',
+      textStyle: { fontSize: 17, color: INK, fontWeight: 700 },
+      subtextStyle: { fontSize: 11, color: MUTED },
     },
     legend: {
       bottom: 0,
@@ -38,14 +52,25 @@ function pieOption(title: string, slices: { name: string; emoji: string; value: 
       itemHeight: 8,
       textStyle: { color: MUTED, fontSize: 11 },
     },
+    tooltip: {
+      trigger: 'item',
+      formatter: (p: { name: string; value: number; percent: number }) =>
+        `${p.name}<br/>${fmtMoney(p.value)} · ${p.percent}%`,
+    },
     series: [
       {
         type: 'pie' as const,
-        radius: ['44%', '68%'],
-        center: ['50%', '46%'],
-        data: slices.map((s) => ({ name: `${s.emoji} ${s.name}`, value: s.value })),
+        radius: ['40%', '60%'],
+        center: ['50%', '48%'],
+        data: slices.map((s) => ({ name: `${s.emoji}${s.name}`, value: s.value })),
         itemStyle: { borderColor: '#fff', borderWidth: 2, borderRadius: 4 },
-        label: { show: false },
+        label: {
+          show: true,
+          formatter: (p: { percent: number; name: string }) => `${p.percent}% ${p.name}`,
+          fontSize: 10,
+          color: MUTED,
+        },
+        labelLine: { length: 8, length2: 6 },
       },
     ],
     color: CHART_COLORS,
@@ -57,23 +82,63 @@ export function StatsPage() {
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const txns = useStore((s) => s.txns);
-  const activeBookId = useStore((s) => s.activeBookId);
 
-  const [period, setPeriod] = useState<Period>('month');
+  const [period, setPeriod] = useState<StatsPeriod>('month');
   const [scope, setScope] = useState('__all__');
+  const [anchor, setAnchor] = useState(() => startOfMonth(new Date()));
 
   const scoped = useMemo(
     () => (scope === '__all__' ? txns : txns.filter((t) => t.bookId === scope)),
     [txns, scope],
   );
 
-  const buckets = useMemo(() => trendBuckets(period), [period]);
-  const rangeStart = buckets[0].startISO;
-  const rangeEnd = buckets[buckets.length - 1].endISO;
+  const range = useMemo(() => {
+    const todayISO = fmtISO(new Date());
+    if (period === 'all') {
+      const earliest = scoped.reduce<string | null>((min, t) => (min === null || t.date < min ? t.date : min), null);
+      const start = earliest ?? todayISO;
+      return { startISO: start, endISO: todayISO };
+    }
+    const buckets = trendBuckets(period, period === 'week' ? anchor : new Date(anchor));
+    return { startISO: buckets[0].startISO, endISO: buckets[buckets.length - 1].endISO };
+  }, [period, anchor, scoped]);
 
-  const periodIncome = sumIn(scoped, rangeStart, rangeEnd, 'income');
-  const periodExpense = sumIn(scoped, rangeStart, rangeEnd, 'expense');
+  const buckets = useMemo(() => {
+    if (period === 'all') {
+      // 按月聚合：从最早流水的月份（最多回溯 24 个月）到锚点所在月
+      const earliest = scoped.reduce<string | null>((min, t) => (min === null || t.date < min ? t.date : min), null);
+      const endMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+      let startMonth = startOfMonth(parseISO(earliest ?? fmtISO(new Date())));
+      if (endMonth.getMonth() - startMonth.getMonth() + (endMonth.getFullYear() - startMonth.getFullYear()) * 12 > 23) {
+        startMonth = addMonths(endMonth, -23);
+      }
+      const arr = [];
+      let cur = startMonth;
+      while (cur <= endMonth) {
+        arr.push({
+          key: ymKey(cur),
+          label: `${cur.getMonth() + 1}月`,
+          startISO: fmtISO(new Date(cur.getFullYear(), cur.getMonth(), 1)),
+          endISO: fmtISO(new Date(cur.getFullYear(), cur.getMonth() + 1, 0)),
+        });
+        cur = addMonths(cur, 1);
+      }
+      return arr;
+    }
+    return trendBuckets(period, anchor);
+  }, [period, anchor, scoped]);
+
+  const periodIncome = sumIn(scoped, range.startISO, range.endISO, 'income');
+  const periodExpense = sumIn(scoped, range.startISO, range.endISO, 'expense');
   const periodBalance = round2(periodIncome - periodExpense);
+
+  const dailyAvg = useMemo(() => {
+    const todayISO = fmtISO(new Date());
+    const s = parseISO(range.startISO);
+    const e = parseISO(range.endISO > todayISO ? todayISO : range.endISO);
+    const days = Math.max(1, Math.round((e.getTime() - s.getTime()) / 86400000) + 1);
+    return round2(periodExpense / days);
+  }, [range, periodExpense]);
 
   const trend = useMemo(() => {
     const income = buckets.map((b) => sumIn(scoped, b.startISO, b.endISO, 'income'));
@@ -99,7 +164,11 @@ export function StatsPage() {
           data: buckets.map((b) => b.label),
           axisTick: { show: false },
           axisLine: { lineStyle: { color: LINE } },
-          axisLabel: { color: MUTED, fontSize: 10, interval: period === 'month' ? 4 : 'auto' },
+          axisLabel: {
+            color: MUTED,
+            fontSize: 10,
+            interval: period === 'month' ? 4 : buckets.length > 16 ? 'auto' : 0,
+          },
         },
         yAxis: {
           type: 'value' as const,
@@ -139,18 +208,12 @@ export function StatsPage() {
   const expenseSlices = useMemo(() => categoryBreakdown(scoped, categories, 'expense'), [scoped, categories]);
   const incomeSlices = useMemo(() => categoryBreakdown(scoped, categories, 'income'), [scoped, categories]);
 
-  const netSeries = useMemo(
-    () => netWorthSeries(accounts, scoped, 12),
-    [accounts, scoped],
-  );
+  const netSeries = useMemo(() => netWorthSeries(accounts, scoped, 12), [accounts, scoped]);
 
   const netOption = useMemo(
     () =>
       ({
-        tooltip: {
-          trigger: 'axis',
-          valueFormatter: (v: unknown) => fmtMoney(Number(v)),
-        },
+        tooltip: { trigger: 'axis', valueFormatter: (v: unknown) => fmtMoney(Number(v)) },
         grid: { left: 8, right: 14, top: 24, bottom: 12, containLabel: true },
         xAxis: {
           type: 'category' as const,
@@ -192,6 +255,9 @@ export function StatsPage() {
     [netSeries],
   );
 
+  const anchorLabel =
+    period === 'year' ? `${anchor.getFullYear()}年` : `${anchor.getFullYear()}年${anchor.getMonth() + 1}月`;
+
   return (
     <>
       <div className="chips section">
@@ -213,42 +279,66 @@ export function StatsPage() {
       </div>
 
       <div className="seg section">
-        {(['week', 'month', 'year'] as Period[]).map((p) => (
+        {(['week', 'month', 'year', 'all'] as StatsPeriod[]).map((p) => (
           <button key={p} className={period === p ? 'active' : ''} onClick={() => setPeriod(p)}>
-            {PERIOD_LABEL[p]}
+            {LABELS[p]}
           </button>
         ))}
       </div>
 
-      <div className="summary-grid section">
-        <div className="stat-card income">
-          <span className="label">收入</span>
-          <span className="value">+{periodIncome.toLocaleString('zh-CN')}</span>
-        </div>
+      {period !== 'all' && (
+        <MonthSwitcher
+          value={anchor}
+          onChange={setAnchor}
+          mode={period === 'year' ? 'year' : 'month'}
+          label={period === 'week' ? `本周（${anchorLabel.slice(0, 4)}）` : anchorLabel}
+          disableFuture={period !== 'week'}
+          nextDisabled={period === 'week'}
+        />
+      )}
+
+      <div className="summary-grid section four">
         <div className="stat-card expense">
           <span className="label">支出</span>
           <span className="value">−{periodExpense.toLocaleString('zh-CN')}</span>
         </div>
+        <div className="stat-card income">
+          <span className="label">收入</span>
+          <span className="value">+{periodIncome.toLocaleString('zh-CN')}</span>
+        </div>
         <div className="stat-card balance">
           <span className="label">结余</span>
           <span className="value">{periodBalance.toLocaleString('zh-CN')}</span>
+        </div>
+        <div className="stat-card">
+          <span className="label">日均支出</span>
+          <span className="value">{dailyAvg.toLocaleString('zh-CN')}</span>
         </div>
       </div>
 
       <div className="card section">
         <div className="chart-title">
           收支趋势 · {scope === '__all__' ? '全部账本' : books.find((b) => b.id === scope)?.name}
-          <span>（按{period === 'year' ? '月' : '日'}）</span>
+          <span>
+            （{LABELS[period]}
+            {period === 'all' ? ' · 按月' : period === 'year' ? ' · 按月' : ' · 按日'}）
+          </span>
         </div>
         <Chart option={trendOption} height={280} />
       </div>
 
       <div className="chart-grid two section">
         <div className="card">
-          <Chart option={pieOption('支出构成', expenseSlices)} height={250} />
+          <Chart
+            option={pieOption('支出构成', periodExpense, '总支出', expenseSlices)}
+            height={280}
+          />
         </div>
         <div className="card">
-          <Chart option={pieOption('收入构成', incomeSlices)} height={250} />
+          <Chart
+            option={pieOption('收入构成', periodIncome, '总收入', incomeSlices)}
+            height={280}
+          />
         </div>
       </div>
 

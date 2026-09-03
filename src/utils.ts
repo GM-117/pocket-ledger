@@ -34,6 +34,27 @@ export function endOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0);
 }
 
+export function addMonths(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth() + n, 1);
+}
+
+export function sameMonth(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+export function fmtMonthLabel(d: Date): string {
+  return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+}
+
+export function fmtYearLabel(d: Date): string {
+  return `${d.getFullYear()}年`;
+}
+
+/** 该年该月的 YYYY-MM 键 */
+export function ymKey(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
 /** 列表分组用的日期标签：今天 / 昨天 / M月D日 周X */

@@ -9,7 +9,13 @@ export interface StoreState {
   categories: Category[];
   txns: Txn[];
   activeBookId: string;
+  /** 每本账本的月度总预算（bookId → 金额） */
+  budgets: Record<string, number>;
+  /** 隐藏金额（隐私模式） */
+  hideAmounts: boolean;
   setActiveBook: (id: string) => void;
+  setBudget: (bookId: string, amount: number | null) => void;
+  toggleHideAmounts: () => void;
   saveBook: (b: Book) => void;
   removeBook: (id: string) => void;
   saveAccount: (a: Account) => void;
@@ -145,8 +151,20 @@ export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
       ...createDemoData(),
+      budgets: {},
+      hideAmounts: false,
 
       setActiveBook: (id) => set({ activeBookId: id }),
+
+      setBudget: (bookId, amount) =>
+        set((s) => {
+          const budgets = { ...s.budgets };
+          if (amount === null || amount <= 0) delete budgets[bookId];
+          else budgets[bookId] = round2(amount);
+          return { budgets };
+        }),
+
+      toggleHideAmounts: () => set((s) => ({ hideAmounts: !s.hideAmounts })),
 
       saveBook: (b) =>
         set((s) => ({

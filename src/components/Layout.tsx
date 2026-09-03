@@ -1,18 +1,20 @@
 import { type ReactNode } from 'react';
 import { useStore } from '../store';
-import { BookIcon, ChartIcon, PlusIcon, WalletIcon } from './icons';
+import { BookIcon, CalendarIcon, ChartIcon, PlusIcon, WalletIcon } from './icons';
 
-export type TabKey = 'books' | 'assets' | 'stats';
+export type TabKey = 'detail' | 'assets' | 'calendar' | 'stats';
 
 const TABS: { key: TabKey; label: string; icon: ReactNode }[] = [
-  { key: 'books', label: '账本', icon: <BookIcon /> },
+  { key: 'detail', label: '明细', icon: <BookIcon /> },
   { key: 'assets', label: '资产', icon: <WalletIcon /> },
-  { key: 'stats', label: '统计', icon: <ChartIcon /> },
+  { key: 'calendar', label: '日历', icon: <CalendarIcon /> },
+  { key: 'stats', label: '图表', icon: <ChartIcon /> },
 ];
 
 const PAGE_TITLE: Record<TabKey, string> = {
-  books: '账本',
+  detail: '明细',
   assets: '资产',
+  calendar: '日历',
   stats: '统计',
 };
 
@@ -74,7 +76,7 @@ export function Layout({ tab, onTab, onAdd, children }: LayoutProps) {
         <header className="topbar">
           <h1>{PAGE_TITLE[tab]}</h1>
           {activeBook && (
-            <button className="book-chip" style={{ color: activeBook.color }} onClick={() => onTab('books')}>
+            <button className="book-chip" style={{ color: activeBook.color }} onClick={() => onTab('detail')}>
               {activeBook.emoji} {activeBook.name}
             </button>
           )}

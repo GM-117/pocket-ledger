@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { Txn, TxnType } from '../types';
-import { fmtISO, round2, uid } from '../utils';
-import { Modal } from './Modal';
+import { fmtISO, parseISO, round2, uid } from '../utils';
 
 interface TransactionFormProps {
   initial: Txn | null;
   onClose: () => void;
 }
 
+/** iCost 风格快速记账面板：金额大字 + 分类宫格 + 数字键盘 */
 export function TransactionForm({ initial, onClose }: TransactionFormProps) {
   const books = useStore((s) => s.books);
   const accounts = useStore((s) => s.accounts);
@@ -24,6 +24,7 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
   const [bookId, setBookId] = useState(initial?.bookId ?? activeBookId);
   const [date, setDate] = useState(initial?.date ?? fmtISO(new Date()));
   const [note, setNote] = useState(initial?.note ?? '');
+  const [metaOpen, setMetaOpen] = useState(!!initial);
   const [error, setError] = useState('');
 
   const cats = categories.filter((c) => c.type === type);
@@ -33,10 +34,24 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
     setCategoryId('');
   };
 
+  /* ---------- 数字键盘 ---------- */
+  const pressKey = (k: string) => {
+    setError('');
+    setAmount((cur) => {
+      if (k === 'del') return cur.slice(0, -1);
+      if (k === 'clear') return '';
+      if (k === '.') return cur.includes('.') ? cur : cur === '' ? '0.' : cur + '.';
+      if (cur.includes('.') && cur.split('.')[1].length >= 2) return cur;
+      if (cur.replace('.', '').length >= 9) return cur;
+      if (cur === '0') return k;
+      return cur + k;
+    });
+  };
+
   const submit = () => {
     const amt = parseFloat(amount);
-    if (!amt || amt <= 0) return setError('请输入正确的金额');
-    if (!categoryId) return setError('请选择一个分类');
+    if (!amt || amt <= 0) return setError('请输入金额');
+    if (!categoryId) return setError('请选择分类');
     if (!accountId) return setError('请选择账户');
     saveTxn({
       id: initial?.id ?? uid(),
@@ -59,57 +74,41 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
     }
   };
 
+  const selectedCat = categories.find((c) => c.id === categoryId);
+  const selectedAcc = accounts.find((a) => a.id === accountId);
+  const selectedBook = books.find((b) => b.id === bookId);
+
   return (
-    <Modal title={initial ? '编辑记录' : '记一笔'} onClose={onClose}>
-      <div className="seg">
-        <button className={type === 'expense' ? 'active expense' : ''} onClick={() => switchType('expense')}>
-          支出
-        </button>
-        <button className={type === 'income' ? 'active income' : ''} onClick={() => switchType('income')}>
-          收入
-        </button>
-      </div>
+    <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal kp-modal" role="dialog" aria-label="记一笔">
+        <div className="kp-top">
+          <button className="kp-cancel" onClick={onClose} aria-label="取消">
+            ✕
+          </button>
+          <div className="seg kp-seg">
+            <button className={type === 'expense' ? 'active expense' : ''} onClick={() => switchType('expense')}>
+              支出
+            </button>
+            <button className={type === 'income' ? 'active income' : ''} onClick={() => switchType('income')}>
+              收入
+            </button>
+          </div>
+          {initial ? (
+            <button className="kp-del" onClick={del} aria-label="删除">
+              🗑
+            </button>
+          ) : (
+            <span className="kp-placeholder" />
+          )}
+        </div>
 
-      <div className="form-grid">
-        <label className="field">
-          <span>金额</span>
-          <input
-            autoFocus
-            inputMode="decimal"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </label>
-        <label className="field">
-          <span>日期</span>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </label>
-        <label className="field">
-          <span>账户</span>
-          <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.emoji} {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>账本</span>
-          <select value={bookId} onChange={(e) => setBookId(e.target.value)}>
-            {books.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.emoji} {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+        <div className={'kp-amount ' + type}>
+          <span className="kp-cny">¥</span>
+          <span className="kp-num">{amount || '0.00'}</span>
+        </div>
+        {error && <p className="form-error kp-error">{error}</p>}
 
-      <div className="field">
-        <span>分类</span>
-        <div className="cat-grid">
+        <div className="cat-grid kp-cats">
           {cats.map((c) => (
             <button
               key={c.id}
@@ -121,28 +120,69 @@ export function TransactionForm({ initial, onClose }: TransactionFormProps) {
             </button>
           ))}
         </div>
-      </div>
 
-      <label className="field">
-        <span>备注（可选）</span>
-        <input placeholder="记点什么…" value={note} onChange={(e) => setNote(e.target.value)} />
-      </label>
-
-      {error && <p className="form-error">{error}</p>}
-
-      <div className="form-actions">
-        {initial && (
-          <button className="btn danger" onClick={del}>
-            删除
+        <div className="kp-meta">
+          <button className="kp-meta-chip" onClick={() => setMetaOpen((v) => !v)}>
+            <span className="kp-meta-label">账本</span>
+            <select value={bookId} onClick={(e) => e.stopPropagation()} onChange={(e) => setBookId(e.target.value)}>
+              {books.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.emoji} {b.name}
+                </option>
+              ))}
+            </select>
           </button>
+          <button className="kp-meta-chip" onClick={() => setMetaOpen((v) => !v)}>
+            <span className="kp-meta-label">账户</span>
+            <select value={accountId} onClick={(e) => e.stopPropagation()} onChange={(e) => setAccountId(e.target.value)}>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.emoji} {a.name}
+                </option>
+              ))}
+            </select>
+          </button>
+          <button className={'kp-meta-chip' + (metaOpen ? ' open' : '')} onClick={() => setMetaOpen((v) => !v)}>
+            <span className="kp-meta-label">更多</span>
+            {date === fmtISO(new Date()) ? '今天' : `${parseISO(date).getMonth() + 1}/${parseISO(date).getDate()}`}
+          </button>
+        </div>
+
+        {metaOpen && (
+          <div className="kp-more">
+            <label className="kp-field">
+              <span>日期</span>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </label>
+            <label className="kp-field">
+              <span>备注</span>
+              <input placeholder="记点什么…" value={note} onChange={(e) => setNote(e.target.value)} />
+            </label>
+            <p className="kp-current">
+              {selectedBook?.emoji} {selectedBook?.name} · {selectedAcc?.emoji} {selectedAcc?.name}
+              {selectedCat ? ` · ${selectedCat.emoji} ${selectedCat.name}` : ''}
+            </p>
+          </div>
         )}
-        <button className="btn ghost" onClick={onClose}>
-          取消
-        </button>
-        <button className="btn primary" onClick={submit}>
-          保存
-        </button>
+
+        <div className="kp-grid">
+          {['7', '8', '9', 'del', '4', '5', '6', 'clear', '1', '2', '3', '.', '0', '00', 'done'].map((k) => {
+            if (k === 'done')
+              return (
+                <button key={k} className="kp-key done" onClick={submit}>
+                  完成
+                </button>
+              );
+            if (k === 'del') return <button key={k} className="kp-key op" onClick={() => pressKey(k)}>⌫</button>;
+            if (k === 'clear') return <button key={k} className="kp-key op" onClick={() => pressKey(k)}>C</button>;
+            return (
+              <button key={k} className="kp-key" onClick={() => pressKey(k)}>
+                {k}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 }
