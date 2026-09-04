@@ -1383,6 +1383,61 @@ input[type='date'] {
   color: #15803d;
 }
 
+/* 退款关联 */
+.refund-box {
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.refund-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.refund-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 3px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.refund-row .refund-note {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.refund-add {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.refund-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.refund-add .tpl-btn {
+  flex: none;
+}
+
+.reimb-badge.refund {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
 /* 周期记账列表 */
 .recur-list {
   display: flex;

@@ -48,6 +48,8 @@ export interface Txn {
   tags?: string[];
   /** 报销状态（通常用于支出） */
   reimb?: ReimbStatus;
+  /** 退款关联：本笔（收入）是对哪笔支出（id）的退款 */
+  refundForId?: string;
   /** 由周期规则生成时冗余规则 id */
   recurrenceId?: string;
 }

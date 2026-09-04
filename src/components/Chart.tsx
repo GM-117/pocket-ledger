@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 
+/** 与全局 body 字体栈保持一致；ECharts 默认只写 sans-serif，
+ *  部分 WebView 会把中文回退成宋体，导致图表字体与页面不一致 */
+export const CHART_FONT =
+  "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', 'Microsoft YaHei', 'Helvetica Neue', sans-serif";
+
 interface ChartProps {
   option: echarts.EChartsOption;
   height?: number;
@@ -25,7 +30,10 @@ export function Chart({ option, height = 260 }: ChartProps) {
   }, []);
 
   useEffect(() => {
-    chartRef.current?.setOption(option, true);
+    chartRef.current?.setOption(
+      { ...option, textStyle: { fontFamily: CHART_FONT } },
+      true,
+    );
   }, [option]);
 
   return <div ref={elRef} style={{ width: '100%', height }} />;

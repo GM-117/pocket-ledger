@@ -84,6 +84,7 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
                 <span className="txn-main">
                   <span className="txn-cat">
                     {title}
+                    {t.refundForId && <span className="reimb-badge refund">退款</span>}
                     {t.reimb === 'pending' && <span className="reimb-badge pending">待报销</span>}
                     {t.reimb === 'done' && <span className="reimb-badge done">已报销</span>}
                     {book && (

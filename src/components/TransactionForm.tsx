@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { TRANSFER_CATEGORY_ID, type ReimbStatus, type Txn, type TxnType } from '../types';
-import { fmtISO, parseISO, round2, uid } from '../utils';
+import { fmtISO, fmtMoney, parseISO, round2, uid } from '../utils';
 
 interface TransactionFormProps {
   /** 编辑已有记录 */
@@ -43,6 +43,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const [tags, setTags] = useState<string[]>(initial?.tags ?? preset?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [reimb, setReimb] = useState<ReimbStatus>(initial?.reimb ?? preset?.reimb ?? 'none');
+  const [refundAmt, setRefundAmt] = useState('');
 
   // 注意：selector 必须返回稳定引用，派生数据用 useMemo 计算，否则会无限重渲染
   const allTxns = useStore((s) => s.txns);
@@ -51,6 +52,15 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
     for (const t of allTxns) for (const g of t.tags ?? []) set.add(g);
     return [...set].sort();
   }, [allTxns]);
+
+  /** 编辑支出时的退款关联 */
+  const refunds = useMemo(
+    () => (initial && initial.type === 'expense' ? allTxns.filter((t) => t.refundForId === initial.id) : []),
+    [allTxns, initial],
+  );
+  const refunded = round2(refunds.reduce((s, r) => s + r.amount, 0));
+  const refundRemaining =
+    initial && initial.type === 'expense' ? round2(initial.amount - refunded) : 0;
 
   const cats = categories.filter((c) => c.type === type);
 
@@ -86,6 +96,27 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
     setTplSaved(false);
     setTags((cur) => (cur.includes(g) ? cur : [...cur, g]));
     setTagInput('');
+  };
+
+  const addRefund = () => {
+    if (!initial || initial.type !== 'expense') return;
+    const amt = parseFloat(refundAmt);
+    if (!amt || amt <= 0) return;
+    const incCat = categories.find((c) => c.type === 'income');
+    if (!incCat) return;
+    saveTxn({
+      id: uid(),
+      bookId: initial.bookId,
+      accountId: initial.accountId,
+      categoryId: incCat.id,
+      type: 'income',
+      amount: round2(amt),
+      date: fmtISO(new Date()),
+      note: `退款：${initial.note || '原支出'}`,
+      createdAt: new Date().toISOString(),
+      refundForId: initial.id,
+    });
+    setRefundAmt('');
   };
 
   const submit = () => {
@@ -314,6 +345,35 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               {selectedBook?.emoji} {selectedBook?.name}
               {selectedAcc ? ` · ${selectedAcc.emoji} ${selectedAcc.name}` : ''}
             </p>
+          </div>
+        )}
+
+        {initial && type === 'expense' && (
+          <div className="refund-box">
+            <div className="refund-head">
+              <span>
+                退款关联 · 已退 {fmtMoney(refunded)}
+                {refundRemaining > 0 ? ` / 待退 ${fmtMoney(refundRemaining)}` : '（已退完）'}
+              </span>
+            </div>
+            {refunds.map((r) => (
+              <div className="refund-row" key={r.id}>
+                <span>{r.date.slice(5).replace('-', '/')}</span>
+                <span className="refund-note">{r.note}</span>
+                <span className="pos">+{fmtMoney(r.amount)}</span>
+              </div>
+            ))}
+            <div className="refund-add">
+              <input
+                inputMode="decimal"
+                placeholder={refundRemaining > 0 ? `建议 ${refundRemaining}` : '退款金额'}
+                value={refundAmt}
+                onChange={(e) => setRefundAmt(e.target.value)}
+              />
+              <button className="tpl-btn" onClick={addRefund} disabled={!parseFloat(refundAmt)}>
+                ＋ 记退款
+              </button>
+            </div>
           </div>
         )}
 
