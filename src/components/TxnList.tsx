@@ -84,13 +84,20 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
                 <span className="txn-main">
                   <span className="txn-cat">
                     {title}
+                    {t.reimb === 'pending' && <span className="reimb-badge pending">待报销</span>}
+                    {t.reimb === 'done' && <span className="reimb-badge done">已报销</span>}
                     {book && (
                       <span className="txn-book" style={{ color: book.color }}>
                         {book.emoji} {book.name}
                       </span>
                     )}
                   </span>
-                  <span className="txn-sub">{sub}</span>
+                  <span className="txn-sub">
+                    {sub}
+                    {(t.tags ?? []).length > 0 && (
+                      <span className="txn-tags">{t.tags!.map((g) => `#${g}`).join(' ')}</span>
+                    )}
+                  </span>
                 </span>
                 <span className={'amount ' + (isTransfer ? 'trf' : t.type === 'income' ? 'pos' : 'neg')}>
                   {t.type === 'income' ? '+' : isTransfer ? '' : '−'}

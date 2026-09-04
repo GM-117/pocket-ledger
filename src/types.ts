@@ -28,6 +28,9 @@ export interface Category {
 
 export const TRANSFER_CATEGORY_ID = '__transfer__';
 
+/** 报销状态：无 / 待报销 / 已报销 */
+export type ReimbStatus = 'none' | 'pending' | 'done';
+
 export interface Txn {
   id: string;
   bookId: string;
@@ -41,6 +44,10 @@ export interface Txn {
   date: string;
   note: string;
   createdAt: string;
+  /** 标签（自由命名，如：出差、剁手） */
+  tags?: string[];
+  /** 报销状态（通常用于支出） */
+  reimb?: ReimbStatus;
   /** 由周期规则生成时冗余规则 id */
   recurrenceId?: string;
 }

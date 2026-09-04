@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { TRANSFER_CATEGORY_ID, type Txn, type TxnType } from '../types';
+import { TRANSFER_CATEGORY_ID, type ReimbStatus, type Txn, type TxnType } from '../types';
 import { fmtISO, parseISO, round2, uid } from '../utils';
 
 interface TransactionFormProps {
@@ -40,6 +40,17 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const [tplSaving, setTplSaving] = useState(false);
   const [tplName, setTplName] = useState('');
   const [tplSaved, setTplSaved] = useState(false);
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? preset?.tags ?? []);
+  const [tagInput, setTagInput] = useState('');
+  const [reimb, setReimb] = useState<ReimbStatus>(initial?.reimb ?? preset?.reimb ?? 'none');
+
+  // 注意：selector 必须返回稳定引用，派生数据用 useMemo 计算，否则会无限重渲染
+  const allTxns = useStore((s) => s.txns);
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of allTxns) for (const g of t.tags ?? []) set.add(g);
+    return [...set].sort();
+  }, [allTxns]);
 
   const cats = categories.filter((c) => c.type === type);
 
@@ -64,6 +75,19 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
     });
   };
 
+  const toggleTag = (g: string) => {
+    setTplSaved(false);
+    setTags((cur) => (cur.includes(g) ? cur.filter((x) => x !== g) : [...cur, g]));
+  };
+
+  const addTag = () => {
+    const g = tagInput.trim().replace(/^#/, '');
+    if (!g) return;
+    setTplSaved(false);
+    setTags((cur) => (cur.includes(g) ? cur : [...cur, g]));
+    setTagInput('');
+  };
+
   const submit = () => {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return setError('请输入金额');
@@ -84,6 +108,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
       date,
       note: note.trim(),
       createdAt: initial?.createdAt ?? new Date().toISOString(),
+      ...(type === 'transfer' ? {} : { tags, reimb: reimb === 'none' ? undefined : reimb }),
     });
     onClose();
   };
@@ -232,6 +257,59 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               <span>备注</span>
               <input placeholder="记点什么…" value={note} onChange={(e) => setNote(e.target.value)} />
             </label>
+            {!isTransfer && (
+              <div className="kp-field" style={{ gridColumn: '1 / -1' }}>
+                <span>标签（点选或输入）</span>
+                <div className="tag-row">
+                  {allTags.slice(0, 8).map((g) => (
+                    <button key={g} className={'tag-chip' + (tags.includes(g) ? ' active' : '')} onClick={() => toggleTag(g)}>
+                      #{g}
+                    </button>
+                  ))}
+                </div>
+                <div className="tag-add">
+                  <input
+                    placeholder="新标签"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTag();
+                      }
+                    }}
+                  />
+                  <button className="tpl-btn" onClick={addTag}>
+                    ＋ 添加
+                  </button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="tag-row">
+                    {tags.map((g) => (
+                      <button key={g} className="tag-chip active" onClick={() => toggleTag(g)}>
+                        #{g} ✕
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {!isTransfer && type === 'expense' && (
+              <div className="kp-field" style={{ gridColumn: '1 / -1' }}>
+                <span>报销状态</span>
+                <div className="seg">
+                  <button className={reimb === 'none' ? 'active' : ''} onClick={() => setReimb('none')}>
+                    不报销
+                  </button>
+                  <button className={reimb === 'pending' ? 'active expense' : ''} onClick={() => setReimb('pending')}>
+                    待报销
+                  </button>
+                  <button className={reimb === 'done' ? 'active income' : ''} onClick={() => setReimb('done')}>
+                    已报销
+                  </button>
+                </div>
+              </div>
+            )}
             <p className="kp-current">
               {selectedBook?.emoji} {selectedBook?.name}
               {selectedAcc ? ` · ${selectedAcc.emoji} ${selectedAcc.name}` : ''}

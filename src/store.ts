@@ -139,18 +139,26 @@ function createDemoData() {
   addTxn(life.id, 'income', hongbao, wx, 200, iso(addDays(now, -9)), '生日红包');
   addTxn(life.id, 'income', partTime, ali, 1500, iso(addDays(now, -18)), '设计外包');
   addTxn(life.id, 'income', hongbao, wx, 88, iso(addDays(now, -30)), '节日红包');
-  const trips: [number, string, number][] = [
-    [-6, '上海出差 · 高铁', 553],
-    [-7, '酒店两晚', 836],
-    [-8, '客户晚宴', 486],
-    [-21, '深圳出差 · 机票', 1240],
-    [-23, '酒店三晚', 1176],
-    [-40, '杭州出差 · 高铁', 219],
+  const trips: [number, string, number, string[], Txn['reimb']?][] = [
+    [-6, '上海出差 · 高铁', 553, ['出差', '交通'], 'pending'],
+    [-7, '酒店两晚', 836, ['出差'], 'pending'],
+    [-8, '客户晚宴', 486, ['出差', '招待'], 'pending'],
+    [-21, '深圳出差 · 机票', 1240, ['出差'], 'done'],
+    [-23, '酒店三晚', 1176, ['出差'], 'done'],
+    [-40, '杭州出差 · 高铁', 219, ['出差'], 'done'],
   ];
-  for (const [off, note, amt] of trips) {
-    addTxn(work.id, 'expense', off === -8 ? can : trip, credit, amt, iso(addDays(now, off)), note);
+  for (const [off, note, amt, tags, reimb] of trips) {
+    const t: Txn = {
+      id: uid(), bookId: work.id, type: 'expense', categoryId: off === -8 ? can.id : trip.id,
+      accountId: credit.id, amount: amt, date: iso(addDays(now, off)), note, createdAt: `${iso(addDays(now, off))} 12:00`,
+      tags, reimb,
+    };
+    txns.push(t);
   }
   addTxn(work.id, 'income', partTime, cmb, 3000, iso(addDays(now, -14)), '项目奖金');
+  // 日常记录点缀标签
+  txns[0].tags = ['日常'];
+  txns[1].tags = ['日常'];
 
   // 周期记账演示：视频会员（每月 15 日 ¥25），启动时自动补齐
   const recurrences: Recurring[] = [

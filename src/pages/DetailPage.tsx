@@ -5,6 +5,7 @@ import { endOfMonth, fmtISO, fmtMoney, sameMonth, startOfMonth, sumIn, ymKey } f
 import { MonthSwitcher } from '../components/MonthSwitcher';
 import { Modal } from '../components/Modal';
 import { RecurringManager } from '../components/RecurringManager';
+import { SearchPanel } from '../components/SearchPanel';
 import { TxnList } from '../components/TxnList';
 
 interface DetailPageProps {
@@ -26,6 +27,7 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [tplManageOpen, setTplManageOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const book = books.find((b) => b.id === activeBookId) ?? books[0];
   const budget = book ? budgets[book.id] ?? 0 : 0;
@@ -76,6 +78,9 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
             </button>
           );
         })}
+        <button className="book-pill manage" onClick={() => setSearchOpen(true)}>
+          🔍 搜索
+        </button>
         <button className="book-pill manage" onClick={() => setRecurringOpen(true)}>
           🔁 周期
         </button>
@@ -153,6 +158,7 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
         <BudgetModal bookId={book.id} bookName={book.name} current={budget} onClose={() => setBudgetOpen(false)} />
       )}
       {recurringOpen && <RecurringManager bookId={book.id} onClose={() => setRecurringOpen(false)} />}
+      {searchOpen && <SearchPanel onEdit={onEdit} onClose={() => setSearchOpen(false)} />}
       {tplManageOpen && (
         <Modal title="模板管理" onClose={() => setTplManageOpen(false)}>
           <div className="recur-list">
