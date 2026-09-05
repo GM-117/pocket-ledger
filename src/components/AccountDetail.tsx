@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { accountIcon } from '../accountCatalog';
 import { useStore } from '../store';
 import type { Account, Txn } from '../types';
-import { accountBalance, fmtHm, fmtMoney, pad, parseISO, round2 } from '../utils';
+import { accountBalance, fmtHm, fmtMoney, lockBodyScroll, pad, parseISO, round2, unlockBodyScroll } from '../utils';
 import { BalanceAdjustModal } from './BalanceAdjustModal';
 import { TxnDetail } from './TxnDetail';
 
@@ -52,6 +52,13 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
   const [menuOpen, setMenuOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [txnDetailId, setTxnDetailId] = useState<string | null>(null);
+  const [createdDetail, setCreatedDetail] = useState(false);
+
+  // 覆盖页打开期间锁定背景滚动（计数式，叠加页共用）
+  useEffect(() => {
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, []);
 
   const accTxns = useMemo(
     () => txns.filter((t) => t.accountId === a.id || t.toAccountId === a.id),
@@ -72,7 +79,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
             type: 'income',
             amount: Math.abs(a.initialBalance),
             date: a.createdAt.slice(0, 10),
-            note: `初始余额为 ${fmtMoney(a.initialBalance)}`,
+            note: `初始${a.type === 'liability' ? '欠款' : '余额'}为 ${fmtMoney(a.initialBalance)}`,
             createdAt: a.createdAt,
           }
         : null;
@@ -255,7 +262,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                       {d.items.map(({ t, bal, created }) => {
                         if (created) {
                           return (
-                            <div className="txn-row" key={t.id}>
+                            <button className="txn-row" key={t.id} onClick={() => setCreatedDetail(true)}>
                               <span className="emoji-dot created">📝</span>
                               <span className="txn-main">
                                 <span className="txn-cat">账户创建</span>
@@ -264,13 +271,14 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                                 </span>
                               </span>
                               <span className="txn-right">
-                                <span className="amount created">+{fmtMoney(t.amount)}</span>
+                                <span className="amount created">{fmtMoney(t.amount)}</span>
                                 <span className="txn-balance">余额: {fmtMoney(bal)}</span>
                               </span>
-                            </div>
+                            </button>
                           );
                         }
                         const isTransfer = t.type === 'transfer';
+                        const transferIn = isTransfer && t.toAccountId === a.id;
                         const cat = catMap.get(t.categoryId);
                         const from = accMap.get(t.accountId);
                         const to = accMap.get(t.toAccountId ?? '');
@@ -301,9 +309,12 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                             </span>
                             <span className="txn-right">
                               <span
-                                className={'amount ' + (isTransfer ? 'trf' : t.type === 'income' ? 'pos' : 'neg')}
+                                className={
+                                  'amount ' +
+                                  (isTransfer ? (transferIn ? 'pos' : 'neg') : t.type === 'income' ? 'pos' : 'neg')
+                                }
                               >
-                                {t.type === 'income' ? '+' : isTransfer ? '' : '−'}
+                                {t.type === 'income' || transferIn ? '+' : '−'}
                                 {fmtMoney(t.amount)}
                               </span>
                               <span className="txn-balance">余额: {fmtMoney(bal)}</span>
@@ -328,6 +339,9 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
           onClose={() => setTxnDetailId(null)}
           onEdit={onEditTxn}
         />
+      )}
+      {createdDetail && (
+        <TxnDetail createdAccount={a} backLabel="账户详情" onClose={() => setCreatedDetail(false)} />
       )}
     </div>
   );

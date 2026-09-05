@@ -1,18 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { subtypeOf } from '../accountCatalog';
 import { useStore } from '../store';
-import type { ReimbStatus, Txn, TxnType } from '../types';
-import { fmtHm, fmtMoney, parseISO, round2, uid } from '../utils';
+import type { Account, ReimbStatus, Txn, TxnType } from '../types';
+import { fmtHm, fmtMoney, lockBodyScroll, parseISO, round2, uid, unlockBodyScroll } from '../utils';
 import { AmountPadModal } from './AmountPadModal';
 import { CategoryPickModal, DateEditModal, OptionPickerModal } from './EditModals';
 import { Modal } from './Modal';
 
 interface TxnDetailProps {
-  txnId: string;
+  /** 普通模式：流水 id */
+  txnId?: string;
+  /** 账户创建记录模式：传入对应账户 */
+  createdAccount?: Account;
   /** 返回按钮文案（打开方页面名，如「账户详情」） */
   backLabel: string;
   onClose: () => void;
   /** 编辑 → 打开记账面板 */
-  onEdit: (t: Txn) => void;
+  onEdit?: (t: Txn) => void;
 }
 
 const TYPE_LABEL: Record<TxnType, string> = {
@@ -21,10 +25,17 @@ const TYPE_LABEL: Record<TxnType, string> = {
   transfer: '转账',
 };
 
+export function TxnDetail(props: TxnDetailProps) {
+  if (props.createdAccount) {
+    return <CreatedAccountDetail account={props.createdAccount} backLabel={props.backLabel} onClose={props.onClose} />;
+  }
+  return <TxnDetailView {...(props as Required<TxnDetailProps>)} />;
+}
+
 type EditTarget = 'book' | 'account' | 'amount' | 'date' | 'category' | null;
 
 /** iCost 式账单详情：顶部快捷操作 + 明细行（每行可独立编辑，无需打开完整面板） */
-export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps) {
+function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetailProps>) {
   const txns = useStore((s) => s.txns);
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
@@ -472,6 +483,158 @@ export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps)
             </button>
           </div>
         </Modal>
+      )}
+    </div>
+  );
+}
+
+/** 「账户创建」记录详情：仅支持 修改时间 / 修改金额 / 删除（删除即清零期初余额） */
+function CreatedAccountDetail({
+  account: acc0,
+  backLabel,
+  onClose,
+}: {
+  account: Account;
+  backLabel: string;
+  onClose: () => void;
+}) {
+  const accounts = useStore((s) => s.accounts);
+  const saveAccount = useStore((s) => s.saveAccount);
+  const [editOpen, setEditOpen] = useState(false);
+  const [dateEdit, setDateEdit] = useState(false);
+  const [amountEdit, setAmountEdit] = useState(false);
+
+  useEffect(() => {
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, []);
+
+  const acc = accounts.find((a) => a.id === acc0.id) ?? acc0;
+  const st = subtypeOf(acc.kind, acc.subtype);
+  const isLiab = acc.type === 'liability';
+  const note = `初始${isLiab ? '欠款' : '余额'}为 ${fmtMoney(acc.initialBalance)}`;
+  const d = parseISO(acc.createdAt.slice(0, 10));
+  const dateLabel = `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`;
+
+  const del = () => {
+    if (window.confirm('确定删除该「账户创建」记录吗？账户期初余额将清零。')) {
+      saveAccount({ ...acc, initialBalance: 0 });
+      onClose();
+    }
+  };
+
+  return (
+    <div className="overlay-page">
+      <div className="page-head">
+        <button className="page-back" onClick={onClose}>
+          ‹ {backLabel}
+        </button>
+        <span className="page-title">账单详情</span>
+        <span className="page-action placeholder" />
+      </div>
+
+      <div className="page-body">
+        <div className="txn-actions two">
+          <button className="txn-action edit" onClick={() => setEditOpen(true)}>
+            <span className="ic">✏️</span>编辑
+          </button>
+          <button className="txn-action danger" onClick={del}>
+            <span className="ic">🗑️</span>删除
+          </button>
+        </div>
+
+        <div className="card detail-card">
+          <div className="detail-row">
+            <span>类型</span>
+            <span className="value">账户创建</span>
+          </div>
+        </div>
+
+        <div className="card detail-card">
+          <button className="detail-row" onClick={() => setDateEdit(true)}>
+            <span>时间</span>
+            <span className="value ink">
+              {dateLabel} {fmtHm(acc.createdAt)}
+              <span className="arrow">›</span>
+            </span>
+          </button>
+          <button className="detail-row" onClick={() => setAmountEdit(true)}>
+            <span>金额</span>
+            <span className="value ink">
+              {fmtMoney(acc.initialBalance)}
+              <span className="arrow">›</span>
+            </span>
+          </button>
+          <div className="detail-row">
+            <span>货币</span>
+            <span className="value">人民币 (CNY)</span>
+          </div>
+          <div className="detail-row">
+            <span>账户</span>
+            <span className="value">
+              {acc.name}（{st.label}）
+            </span>
+          </div>
+        </div>
+
+        <div className="card detail-card">
+          <div className="detail-row">
+            <span>备注</span>
+            <span className="value">{note}</span>
+          </div>
+        </div>
+      </div>
+
+      {editOpen && (
+        <Modal title="编辑" onClose={() => setEditOpen(false)}>
+          <div className="option-list">
+            <button
+              className="option-row"
+              onClick={() => {
+                setEditOpen(false);
+                setDateEdit(true);
+              }}
+            >
+              <span className="emoji-dot">📅</span>
+              <span className="option-label">修改时间</span>
+              <span className="option-check">›</span>
+            </button>
+            <button
+              className="option-row"
+              onClick={() => {
+                setEditOpen(false);
+                setAmountEdit(true);
+              }}
+            >
+              <span className="emoji-dot">💰</span>
+              <span className="option-label">修改金额</span>
+              <span className="option-check">›</span>
+            </button>
+          </div>
+        </Modal>
+      )}
+      {dateEdit && (
+        <DateEditModal
+          date={acc.createdAt.slice(0, 10)}
+          onSave={(date) => {
+            // 保留原时分秒部分，仅替换日期
+            saveAccount({ ...acc, createdAt: date + acc.createdAt.slice(10) });
+            setDateEdit(false);
+          }}
+          onClose={() => setDateEdit(false)}
+        />
+      )}
+      {amountEdit && (
+        <AmountPadModal
+          title="修改金额"
+          initial={String(Math.abs(acc.initialBalance))}
+          onSubmit={(amount) => {
+            saveAccount({ ...acc, initialBalance: amount });
+            if (amount === 0) onClose();
+            return null;
+          }}
+          onClose={() => setAmountEdit(false)}
+        />
       )}
     </div>
   );

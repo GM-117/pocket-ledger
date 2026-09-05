@@ -7,6 +7,7 @@ import { AccountDetail } from '../components/AccountDetail';
 import { AccountForm, type AccountTypePreset } from '../components/AccountForm';
 import { AccountTypePicker } from '../components/AccountTypePicker';
 import { BorrowPage } from '../components/BorrowPage';
+import { SwipeRow } from '../components/SwipeRow';
 
 interface AssetsPageProps {
   /** 账户详情内点击流水 → 编辑 */
@@ -28,6 +29,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const exportJSON = useStore((s) => s.exportJSON);
   const importJSON = useStore((s) => s.importJSON);
   const loadDemo = useStore((s) => s.loadDemo);
+  const removeAccount = useStore((s) => s.removeAccount);
 
   const [openKinds, setOpenKinds] = useState<Set<AccountKind>>(new Set());
   const [pickOpen, setPickOpen] = useState(false);
@@ -188,8 +190,8 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
               <div className="card kind-body">
                 {rows.map(({ a, bal }) => {
                   const icon = accountIcon(a);
-                  return (
-                    <button className="account-row" key={a.id} onClick={() => setDetailId(a.id)}>
+                  const row = (
+                    <button className="account-row" onClick={() => setDetailId(a.id)}>
                       <span className="icon-circle" style={{ background: icon.color + '22', color: icon.color }}>
                         {icon.icon}
                       </span>
@@ -208,6 +210,22 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
                         {money(Math.abs(bal))}
                       </span>
                     </button>
+                  );
+                  return (
+                    <SwipeRow
+                      key={a.id}
+                      onDelete={() => {
+                        if (
+                          window.confirm(
+                            `您正在执行账户「${a.name}」的删除操作，将同时删除该账户及其全部账单记录，确定继续吗？`,
+                          )
+                        ) {
+                          removeAccount(a.id);
+                        }
+                      }}
+                    >
+                      {row}
+                    </SwipeRow>
                   );
                 })}
                 {rows.length === 0 && <p className="empty-text">该类型下还没有账户</p>}

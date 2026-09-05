@@ -110,10 +110,12 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
 
         {error && <p className="form-error">{error}</p>}
 
-        <CalcKeypad onKey={press} />
-        <button className="kp-key done adj-done" onClick={done}>
-          完成
-        </button>
+        <div className="adj-grid">
+          <CalcKeypad onKey={press} />
+          <button className="kp-key done adj-done" onClick={done}>
+            完成
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -100,6 +100,17 @@ export const uid = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+/* 全屏覆盖页打开时锁定背景滚动（计数式，支持覆盖页叠加） */
+let scrollLockCount = 0;
+export function lockBodyScroll() {
+  scrollLockCount += 1;
+  document.body.style.overflow = 'hidden';
+}
+export function unlockBodyScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) document.body.style.overflow = '';
+}
+
 /** 账户余额 = 期初 + 收入 − 支出 ± 转账（可截止某日期，ISO 字符串可直接比较）。
  *  负债账户余额为欠款额，方向与资产账户相反：消费增加欠款、还款/退款减少欠款 */
 export function accountBalance(acc: Account, txns: Txn[], endISO?: string): number {

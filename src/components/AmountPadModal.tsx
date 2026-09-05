@@ -55,10 +55,12 @@ export function AmountPadModal({ title, initial, onSubmit, onClose }: AmountPadM
         )}
       </div>
       {error && <p className="form-error">{error}</p>}
-      <CalcKeypad onKey={press} />
-      <button className="kp-key done adj-done" onClick={done}>
-        完成
-      </button>
+      <div className="adj-grid">
+        <CalcKeypad onKey={press} />
+        <button className="kp-key done adj-done" onClick={done}>
+          完成
+        </button>
+      </div>
     </Modal>
   );
 }
