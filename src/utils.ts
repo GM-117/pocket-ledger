@@ -118,6 +118,8 @@ export function accountBalance(acc: Account, txns: Txn[], endISO?: string): numb
   const dir = acc.type === 'liability' ? -1 : 1;
   for (const t of txns) {
     if (endISO && t.date > endISO) continue;
+    // 调整流水仅是操作痕迹，差额已并入期初余额，不参与余额计算
+    if (t.type === 'adjust') continue;
     if (t.type === 'transfer') {
       if (t.accountId === acc.id) b -= dir * t.amount;
       if (t.toAccountId === acc.id) b += dir * t.amount;

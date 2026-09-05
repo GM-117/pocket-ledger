@@ -37,6 +37,8 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const [formState, setFormState] = useState<FormState | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [borrowOpen, setBorrowOpen] = useState(false);
+  /** 当前左滑展开的账户行（互斥） */
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -191,7 +193,13 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
                 {rows.map(({ a, bal }) => {
                   const icon = accountIcon(a);
                   const row = (
-                    <button className="account-row" onClick={() => setDetailId(a.id)}>
+                    <button
+                      className="account-row"
+                      onClick={() => {
+                        setOpenSwipeId(null);
+                        setDetailId(a.id);
+                      }}
+                    >
                       <span className="icon-circle" style={{ background: icon.color + '22', color: icon.color }}>
                         {icon.icon}
                       </span>
@@ -214,6 +222,8 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
                   return (
                     <SwipeRow
                       key={a.id}
+                      open={openSwipeId === a.id}
+                      onOpenChange={(open) => setOpenSwipeId(open ? a.id : null)}
                       onDelete={() => {
                         if (
                           window.confirm(

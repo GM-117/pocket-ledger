@@ -352,7 +352,8 @@ export const useStore = create<StoreState>()(
       removeAccount: (id) =>
         set((s) => ({
           accounts: s.accounts.filter((a) => a.id !== id),
-          txns: s.txns.filter((t) => t.accountId !== id),
+          // 同时清理本账户流水与转入本账户的转账（避免悬挂的 toAccountId）
+          txns: s.txns.filter((t) => t.accountId !== id && t.toAccountId !== id),
         })),
 
       saveTxn: (t) =>

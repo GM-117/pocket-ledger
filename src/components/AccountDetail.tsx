@@ -163,7 +163,9 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
   };
 
   return (
-    <div className="overlay-page">
+    <>
+      <div className="overlay-backdrop" onClick={onClose} />
+      <div className="overlay-page">
       <div className="page-head">
         <button className="page-back" onClick={onClose}>
           ‹ 资产
@@ -343,6 +345,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
       {createdDetail && (
         <TxnDetail createdAccount={a} backLabel="账户详情" onClose={() => setCreatedDetail(false)} />
       )}
-    </div>
+      </div>
+    </>
   );
 }

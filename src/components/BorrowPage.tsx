@@ -37,7 +37,9 @@ export function BorrowPage({ onClose, onOpenDetail, onAdd }: BorrowPageProps) {
   const total = useMemo(() => list.reduce((s, x) => s + x.bal, 0), [list]);
 
   return (
-    <div className="overlay-page">
+    <>
+      <div className="overlay-backdrop" onClick={onClose} />
+      <div className="overlay-page">
       <div className="page-head">
         <button className="page-back" onClick={onClose}>
           ‹ 资产
@@ -98,6 +100,7 @@ export function BorrowPage({ onClose, onOpenDetail, onAdd }: BorrowPageProps) {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

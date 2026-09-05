@@ -66,7 +66,19 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
         createdAt: new Date().toISOString(),
       });
     } else {
+      // 差额调整期初余额，同时生成一条「调整」流水留痕（不计入收支统计）
       saveAccount({ ...account, initialBalance: round2(account.initialBalance + delta) });
+      saveTxn({
+        id: uid(),
+        bookId: activeBookId,
+        accountId: account.id,
+        categoryId: delta > 0 ? ADJUST_CATEGORY_IN : ADJUST_CATEGORY_OUT,
+        type: 'adjust',
+        amount: round2(Math.abs(delta)),
+        date: fmtISO(new Date()),
+        note: '余额调整',
+        createdAt: new Date().toISOString(),
+      });
     }
     onClose();
   };
@@ -106,7 +118,7 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
           <input type="checkbox" checked={asTxn} onChange={(e) => setAsTxn(e.target.checked)} />
           将增减金额记为收支
         </label>
-        <p className="adj-hint">当前余额 ¥{current.toLocaleString('zh-CN')}，默认按差额调整期初余额（不影响已有流水）</p>
+        <p className="adj-hint">当前余额 ¥{current.toLocaleString('zh-CN')}，默认按差额调整期初余额，并生成一条「调整」流水（不计入收支统计）</p>
 
         {error && <p className="form-error">{error}</p>}
 

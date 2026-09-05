@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../store';
-import type { Txn } from '../types';
+import { ADJUST_CATEGORY_IN, type Txn } from '../types';
 import { fmtDayLabel, fmtMoney } from '../utils';
 
 interface TxnListProps {
@@ -73,14 +73,16 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
             const toAcc = t.toAccountId ? accMap.get(t.toAccountId) : undefined;
             const book = showBook ? bookMap.get(t.bookId) : undefined;
             const isTransfer = t.type === 'transfer';
-            const title = isTransfer ? '转账' : cat?.name ?? '未知分类';
-            const emoji = isTransfer ? '🔁' : cat?.emoji ?? '❓';
+            const isAdjust = t.type === 'adjust';
+            const adjustIn = isAdjust && t.categoryId === ADJUST_CATEGORY_IN;
+            const title = isTransfer ? '转账' : isAdjust ? '余额调整' : cat?.name ?? '未知分类';
+            const emoji = isTransfer ? '🔁' : isAdjust ? '⚙️' : cat?.emoji ?? '❓';
             const sub = isTransfer
               ? `${acc?.name ?? '?'} → ${toAcc?.name ?? '?'}${t.note ? ` · ${t.note}` : ''}`
               : `${acc?.name ?? '未知账户'}${t.note ? ` · ${t.note}` : ''}`;
             return (
               <button className="txn-row" key={t.id} onClick={() => onEdit(t)}>
-                <span className={'emoji-dot ' + (isTransfer ? 'transfer' : t.type)}>{emoji}</span>
+                <span className={'emoji-dot ' + (isTransfer ? 'transfer' : isAdjust ? 'adjust' : t.type)}>{emoji}</span>
                 <span className="txn-main">
                   <span className="txn-cat">
                     {title}
@@ -100,8 +102,8 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
                     )}
                   </span>
                 </span>
-                <span className={'amount ' + (isTransfer ? 'trf' : t.type === 'income' ? 'pos' : 'neg')}>
-                  {t.type === 'income' ? '+' : isTransfer ? '' : '−'}
+                <span className={'amount ' + (isTransfer ? 'trf' : isAdjust ? 'adj' : t.type === 'income' ? 'pos' : 'neg')}>
+                  {t.type === 'income' ? '+' : isAdjust ? (adjustIn ? '+' : '−') : isTransfer ? '' : '−'}
                   {fmtMoney(t.amount)}
                 </span>
               </button>

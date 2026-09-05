@@ -1,5 +1,6 @@
 export type CategoryType = 'expense' | 'income';
-export type TxnType = 'expense' | 'income' | 'transfer';
+/** adjust = 余额调整痕迹（差额已并入期初余额，不计入收支统计与余额计算） */
+export type TxnType = 'expense' | 'income' | 'transfer' | 'adjust';
 export type AccountType = 'asset' | 'liability';
 
 /** 账户大类：资金 / 信用 / 充值 / 理财 / 应收 / 应付（对齐 iCost） */

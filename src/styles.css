@@ -2046,6 +2046,12 @@ input[type='date'] {
   background: var(--bg);
 }
 
+/* 覆盖页顶栏中的分段控件（借入借出） */
+.page-head .seg button {
+  padding: 9px 26px;
+  font-size: 14px;
+}
+
 .page-back,
 .page-action {
   border: none;
@@ -2378,6 +2384,14 @@ input[type='date'] {
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.swipe-del.show {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .swipe-content {
@@ -2685,4 +2699,46 @@ input[type='date'] {
 
 .adj-done {
   margin-top: 8px;
+}
+
+/* ============ 中屏适配（≥640px）：弹窗居中、覆盖页卡片化 ============ */
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 69;
+  background: transparent;
+}
+
+@media (min-width: 640px) {
+  .overlay-backdrop {
+    background: rgba(15, 20, 32, 0.45);
+  }
+
+  .modal-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .modal {
+    border-radius: 20px;
+    max-height: 86dvh;
+  }
+
+  .kp-modal {
+    max-width: 420px;
+  }
+
+  /* 全屏覆盖页 → 居中浮动卡片（账户详情 / 账单详情 / 借入借出） */
+  .overlay-page {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(560px, calc(100vw - 48px));
+    height: min(86dvh, 880px);
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 80px rgba(15, 20, 32, 0.35);
+    overflow: hidden;
+  }
 }

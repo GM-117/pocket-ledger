@@ -151,14 +151,16 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
   const closeEdit = () => setEditTarget(null);
 
   return (
-    <div className="overlay-page">
-      <div className="page-head">
-        <button className="page-back" onClick={onClose}>
-          ‹ {backLabel}
-        </button>
-        <span className="page-title">账单详情</span>
-        <span className="page-action placeholder" />
-      </div>
+    <>
+      <div className="overlay-backdrop" onClick={onClose} />
+      <div className="overlay-page">
+        <div className="page-head">
+          <button className="page-back" onClick={onClose}>
+            ‹ {backLabel}
+          </button>
+          <span className="page-title">账单详情</span>
+          <span className="page-action placeholder" />
+        </div>
 
       <div className="page-body">
         <div className="txn-actions">
@@ -484,7 +486,8 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
           </div>
         </Modal>
       )}
-    </div>
+        </div>
+      </>
   );
 }
 
@@ -524,14 +527,16 @@ function CreatedAccountDetail({
   };
 
   return (
-    <div className="overlay-page">
-      <div className="page-head">
-        <button className="page-back" onClick={onClose}>
-          ‹ {backLabel}
-        </button>
-        <span className="page-title">账单详情</span>
-        <span className="page-action placeholder" />
-      </div>
+    <>
+      <div className="overlay-backdrop" onClick={onClose} />
+      <div className="overlay-page">
+        <div className="page-head">
+          <button className="page-back" onClick={onClose}>
+            ‹ {backLabel}
+          </button>
+          <span className="page-title">账单详情</span>
+          <span className="page-action placeholder" />
+        </div>
 
       <div className="page-body">
         <div className="txn-actions two">
@@ -636,6 +641,7 @@ function CreatedAccountDetail({
           onClose={() => setAmountEdit(false)}
         />
       )}
-    </div>
+        </div>
+      </>
   );
 }
