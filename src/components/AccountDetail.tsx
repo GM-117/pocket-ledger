@@ -3,21 +3,23 @@ import { accountIcon } from '../accountCatalog';
 import { useStore } from '../store';
 import type { Account, Txn } from '../types';
 import { accountBalance, fmtHm, fmtMoney, pad, parseISO, round2 } from '../utils';
+import { BalanceAdjustModal } from './BalanceAdjustModal';
+import { TxnDetail } from './TxnDetail';
 
 interface AccountDetailProps {
   account: Account;
   onClose: () => void;
-  /** 点击流水 → 编辑 */
+  /** 账单详情「编辑」→ 打开记账面板 */
   onEditTxn: (t: Txn) => void;
   /** 记一笔（预填本账户） */
   onQuickAdd: (preset: Txn) => void;
-  /** 更多菜单 → 编辑账户 */
+  /** 更多菜单 → 修改账户 */
   onEditAccount: (a: Account) => void;
 }
 
 interface DayGroup {
   date: string;
-  items: { t: Txn; bal: number }[];
+  items: { t: Txn; bal: number; created?: boolean }[];
   out: number;
   in: number;
 }
@@ -36,19 +38,20 @@ const outFlow = (a: Account, t: Txn) =>
 const inFlow = (a: Account, t: Txn) =>
   t.type === 'income' || (t.type === 'transfer' && t.toAccountId === a.id);
 
-/** iCost 式账户详情：账户卡 + 按月折叠的收支流水（带每笔后的余额） */
+/** iCost 式账户详情：账户卡 + 按月折叠的收支流水（带每笔后的余额与「账户创建」条目） */
 export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEditAccount }: AccountDetailProps) {
   const txns = useStore((s) => s.txns);
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const books = useStore((s) => s.books);
+  const activeBookId = useStore((s) => s.activeBookId);
   const saveAccount = useStore((s) => s.saveAccount);
   const removeAccount = useStore((s) => s.removeAccount);
 
   const [openMonths, setOpenMonths] = useState<Set<string> | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const activeBookId = useStore((s) => s.activeBookId);
+  const [txnDetailId, setTxnDetailId] = useState<string | null>(null);
 
   const accTxns = useMemo(
     () => txns.filter((t) => t.accountId === a.id || t.toAccountId === a.id),
@@ -58,15 +61,33 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
   const icon = accountIcon(a);
 
   const months = useMemo<MonthBucket[]>(() => {
-    // 正序累加出每笔之后的账户余额
+    // 期初余额不为 0 时，注入一条「账户创建」虚拟流水（黄色，不计入流出/流入）
+    const created: Txn | null =
+      Math.abs(a.initialBalance) > 0.001
+        ? {
+            id: '__created__',
+            bookId: '',
+            accountId: a.id,
+            categoryId: '',
+            type: 'income',
+            amount: Math.abs(a.initialBalance),
+            date: a.createdAt.slice(0, 10),
+            note: `初始余额为 ${fmtMoney(a.initialBalance)}`,
+            createdAt: a.createdAt,
+          }
+        : null;
     const asc = [...accTxns].sort((x, y) =>
       x.date === y.date ? (x.createdAt || '').localeCompare(y.createdAt || '') : x.date.localeCompare(y.date),
     );
+    const all = created ? [created, ...asc] : asc;
+
     const dir = a.type === 'liability' ? -1 : 1;
-    let b = a.initialBalance;
+    let b = 0;
     const balMap = new Map<string, number>();
-    for (const t of asc) {
-      if (t.type === 'transfer') {
+    for (const t of all) {
+      if (t.id === '__created__') {
+        b = a.initialBalance;
+      } else if (t.type === 'transfer') {
         if (t.accountId === a.id) b -= dir * t.amount;
         if (t.toAccountId === a.id) b += dir * t.amount;
       } else {
@@ -76,7 +97,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
     }
 
     const byMonth = new Map<string, Txn[]>();
-    for (const t of asc) {
+    for (const t of all) {
       const ym = t.date.slice(0, 7);
       (byMonth.get(ym) ?? byMonth.set(ym, []).get(ym)!).push(t);
     }
@@ -85,6 +106,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
       .map(([ym, list]) => {
         const [y, m] = ym.split('-').map(Number);
         const lastDay = new Date(y, m, 0).getDate();
+        const real = list.filter((t) => t.id !== '__created__');
         const byDay = new Map<string, Txn[]>();
         for (const t of [...list].sort((x, y2) =>
           x.date === y2.date ? (y2.createdAt || '').localeCompare(x.createdAt || '') : y2.date.localeCompare(x.date),
@@ -93,24 +115,27 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
         }
         const days: DayGroup[] = [...byDay.entries()].map(([date, items]) => ({
           date,
-          items: items.map((t) => ({ t, bal: balMap.get(t.id) ?? 0 })),
-          out: round2(items.filter((t) => outFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
-          in: round2(items.filter((t) => inFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
+          items: items.map((t) => ({
+            t,
+            bal: balMap.get(t.id) ?? 0,
+            created: t.id === '__created__',
+          })),
+          out: round2(items.filter((t) => t.id !== '__created__' && outFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
+          in: round2(items.filter((t) => t.id !== '__created__' && inFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
         }));
         return {
           ym,
           label: `${y} 年 ${m} 月`,
           range: `${pad(m)}月01日 - ${pad(m)}月${lastDay}日`,
           days,
-          out: round2(list.filter((t) => outFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
-          in: round2(list.filter((t) => inFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
+          out: round2(real.filter((t) => outFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
+          in: round2(real.filter((t) => inFlow(a, t)).reduce((s, t) => s + t.amount, 0)),
         };
       });
   }, [accTxns, a]);
 
   // 默认展开最近有记录的月份
-  const effectiveOpen =
-    openMonths ?? new Set(months.length ? [months[0].ym] : []);
+  const effectiveOpen = openMonths ?? new Set(months.length ? [months[0].ym] : []);
   const toggleMonth = (ym: string) => {
     const next = new Set(effectiveOpen);
     if (next.has(ym)) next.delete(ym);
@@ -179,7 +204,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                       onEditAccount(a);
                     }}
                   >
-                    ✏️ 编辑账户
+                    ✏️ 修改账户
                   </button>
                   <button className="danger" onClick={del}>
                     🗑 删除账户
@@ -227,7 +252,24 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                           流出: {fmtMoney(d.out)} 流入: {fmtMoney(d.in)}
                         </span>
                       </div>
-                      {d.items.map(({ t, bal }) => {
+                      {d.items.map(({ t, bal, created }) => {
+                        if (created) {
+                          return (
+                            <div className="txn-row" key={t.id}>
+                              <span className="emoji-dot created">📝</span>
+                              <span className="txn-main">
+                                <span className="txn-cat">账户创建</span>
+                                <span className="txn-sub">
+                                  {t.date.slice(5)} {fmtHm(t.createdAt)} · {t.note}
+                                </span>
+                              </span>
+                              <span className="txn-right">
+                                <span className="amount created">+{fmtMoney(t.amount)}</span>
+                                <span className="txn-balance">余额: {fmtMoney(bal)}</span>
+                              </span>
+                            </div>
+                          );
+                        }
                         const isTransfer = t.type === 'transfer';
                         const cat = catMap.get(t.categoryId);
                         const from = accMap.get(t.accountId);
@@ -235,7 +277,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                         const book = bookMap.get(t.bookId);
                         const hm = fmtHm(t.createdAt);
                         return (
-                          <button className="txn-row" key={t.id} onClick={() => onEditTxn(t)}>
+                          <button className="txn-row" key={t.id} onClick={() => setTxnDetailId(t.id)}>
                             <span className={'emoji-dot ' + (isTransfer ? 'transfer' : t.type)}>
                               {isTransfer ? '🔁' : cat?.emoji ?? '❓'}
                             </span>
@@ -278,58 +320,15 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
         })}
       </div>
 
-      {adjustOpen && (
-        <BalanceAdjustModal
-          account={a}
-          current={balance}
-          onSave={(target) => {
-            const delta = round2(target - balance);
-            saveAccount({ ...a, initialBalance: round2(a.initialBalance + delta) });
-            setAdjustOpen(false);
-          }}
-          onClose={() => setAdjustOpen(false)}
+      {adjustOpen && <BalanceAdjustModal account={a} onClose={() => setAdjustOpen(false)} />}
+      {txnDetailId && (
+        <TxnDetail
+          txnId={txnDetailId}
+          backLabel="账户详情"
+          onClose={() => setTxnDetailId(null)}
+          onEdit={onEditTxn}
         />
       )}
-    </div>
-  );
-}
-
-function BalanceAdjustModal({
-  account,
-  current,
-  onSave,
-  onClose,
-}: {
-  account: Account;
-  current: number;
-  onSave: (target: number) => void;
-  onClose: () => void;
-}) {
-  const [val, setVal] = useState('');
-  const n = parseFloat(val);
-  return (
-    <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-label="余额调整">
-        <div className="modal-head">
-          <h3>余额调整 · {account.name}</h3>
-          <button className="modal-close" onClick={onClose} aria-label="关闭">
-            ✕
-          </button>
-        </div>
-        <p className="field-hint">当前余额 {fmtMoney(current)}，输入目标余额，将按差额调整期初余额（不影响已有流水）</p>
-        <label className="field">
-          <span>目标余额</span>
-          <input autoFocus inputMode="decimal" placeholder="0.00" value={val} onChange={(e) => setVal(e.target.value)} />
-        </label>
-        <div className="form-actions">
-          <button className="btn ghost" onClick={onClose}>
-            取消
-          </button>
-          <button className="btn primary" disabled={!Number.isFinite(n)} onClick={() => onSave(n)}>
-            保存
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

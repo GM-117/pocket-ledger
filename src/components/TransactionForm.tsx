@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { TRANSFER_CATEGORY_ID, type ReimbStatus, type Txn, type TxnType } from '../types';
-import { fmtISO, fmtMoney, parseISO, round2, uid } from '../utils';
+import { TRANSFER_CATEGORY_ID, type Txn, type TxnType } from '../types';
+import { fmtISO, parseISO, round2, uid } from '../utils';
 
 interface TransactionFormProps {
   /** 编辑已有记录 */
@@ -11,7 +11,8 @@ interface TransactionFormProps {
   onClose: () => void;
 }
 
-/** iCost 风格快速记账面板：金额大字 + 分类宫格 + 数字键盘，支持转账与存为模板 */
+/** iCost 风格快速记账面板：金额大字 + 分类宫格 + 数字键盘，支持转账与存为模板。
+ *  备注 / 标签 / 报销 / 退款在「账单详情」页编辑，面板保持精简 */
 export function TransactionForm({ initial, preset, onClose }: TransactionFormProps) {
   const books = useStore((s) => s.books);
   const accounts = useStore((s) => s.accounts);
@@ -44,35 +45,12 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
     initial?.toAccountId ?? selectable.find((a) => a.id !== accountId)?.id ?? '',
   );
   const [bookId, setBookId] = useState(initial?.bookId ?? preset?.bookId ?? activeBookId);
-  const [date, setDate] = useState(initial?.date ?? fmtISO(new Date()));
-  const [note, setNote] = useState(initial?.note ?? preset?.note ?? '');
+  const [date, setDate] = useState(initial?.date ?? preset?.date ?? fmtISO(new Date()));
   const [metaOpen, setMetaOpen] = useState(!!initial);
   const [error, setError] = useState('');
   const [tplSaving, setTplSaving] = useState(false);
   const [tplName, setTplName] = useState('');
   const [tplSaved, setTplSaved] = useState(false);
-  const [tags, setTags] = useState<string[]>(initial?.tags ?? preset?.tags ?? []);
-  const [tagInput, setTagInput] = useState('');
-  const [reimb, setReimb] = useState<ReimbStatus>(initial?.reimb ?? preset?.reimb ?? 'none');
-  const [refundAmt, setRefundAmt] = useState('');
-
-  // 注意：selector 必须返回稳定引用，派生数据用 useMemo 计算，否则会无限重渲染
-  const allTxns = useStore((s) => s.txns);
-
-  const allTags = useMemo(() => {
-    const set = new Set<string>();
-    for (const t of allTxns) for (const g of t.tags ?? []) set.add(g);
-    return [...set].sort();
-  }, [allTxns]);
-
-  /** 编辑支出时的退款关联 */
-  const refunds = useMemo(
-    () => (initial && initial.type === 'expense' ? allTxns.filter((t) => t.refundForId === initial.id) : []),
-    [allTxns, initial],
-  );
-  const refunded = round2(refunds.reduce((s, r) => s + r.amount, 0));
-  const refundRemaining =
-    initial && initial.type === 'expense' ? round2(initial.amount - refunded) : 0;
 
   const cats = categories.filter((c) => c.type === type);
 
@@ -97,40 +75,6 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
     });
   };
 
-  const toggleTag = (g: string) => {
-    setTplSaved(false);
-    setTags((cur) => (cur.includes(g) ? cur.filter((x) => x !== g) : [...cur, g]));
-  };
-
-  const addTag = () => {
-    const g = tagInput.trim().replace(/^#/, '');
-    if (!g) return;
-    setTplSaved(false);
-    setTags((cur) => (cur.includes(g) ? cur : [...cur, g]));
-    setTagInput('');
-  };
-
-  const addRefund = () => {
-    if (!initial || initial.type !== 'expense') return;
-    const amt = parseFloat(refundAmt);
-    if (!amt || amt <= 0) return;
-    const incCat = categories.find((c) => c.type === 'income');
-    if (!incCat) return;
-    saveTxn({
-      id: uid(),
-      bookId: initial.bookId,
-      accountId: initial.accountId,
-      categoryId: incCat.id,
-      type: 'income',
-      amount: round2(amt),
-      date: fmtISO(new Date()),
-      note: `退款：${initial.note || '原支出'}`,
-      createdAt: new Date().toISOString(),
-      refundForId: initial.id,
-    });
-    setRefundAmt('');
-  };
-
   const submit = () => {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return setError('请输入金额');
@@ -149,9 +93,12 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
       type,
       amount: round2(amt),
       date,
-      note: note.trim(),
+      // 备注与标签/报销在账单详情页维护，编辑时原样保留
+      note: initial?.note ?? preset?.note ?? '',
       createdAt: initial?.createdAt ?? new Date().toISOString(),
-      ...(type === 'transfer' ? {} : { tags, reimb: reimb === 'none' ? undefined : reimb }),
+      ...(type === 'transfer'
+        ? {}
+        : { tags: initial?.tags, reimb: initial?.reimb }),
     });
     onClose();
   };
@@ -167,7 +114,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
       categoryId,
       accountId,
       bookId,
-      note: note.trim(),
+      note: initial?.note ?? preset?.note ?? '',
     });
     setTplSaving(false);
     setTplName('');
@@ -274,7 +221,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
           </button>
           <button className={'kp-meta-chip' + (metaOpen ? ' open' : '')} onClick={() => setMetaOpen((v) => !v)}>
             <span className="kp-meta-label">更多</span>
-            备注/账户
+            日期/账户
           </button>
         </div>
 
@@ -296,96 +243,10 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
                 </select>
               </label>
             )}
-            <label className="kp-field" style={{ gridColumn: '1 / -1' }}>
-              <span>备注</span>
-              <input placeholder="记点什么…" value={note} onChange={(e) => setNote(e.target.value)} />
-            </label>
-            {!isTransfer && (
-              <div className="kp-field" style={{ gridColumn: '1 / -1' }}>
-                <span>标签（点选或输入）</span>
-                <div className="tag-row">
-                  {allTags.slice(0, 8).map((g) => (
-                    <button key={g} className={'tag-chip' + (tags.includes(g) ? ' active' : '')} onClick={() => toggleTag(g)}>
-                      #{g}
-                    </button>
-                  ))}
-                </div>
-                <div className="tag-add">
-                  <input
-                    placeholder="新标签"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addTag();
-                      }
-                    }}
-                  />
-                  <button className="tpl-btn" onClick={addTag}>
-                    ＋ 添加
-                  </button>
-                </div>
-                {tags.length > 0 && (
-                  <div className="tag-row">
-                    {tags.map((g) => (
-                      <button key={g} className="tag-chip active" onClick={() => toggleTag(g)}>
-                        #{g} ✕
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {!isTransfer && type === 'expense' && (
-              <div className="kp-field" style={{ gridColumn: '1 / -1' }}>
-                <span>报销状态</span>
-                <div className="seg">
-                  <button className={reimb === 'none' ? 'active' : ''} onClick={() => setReimb('none')}>
-                    不报销
-                  </button>
-                  <button className={reimb === 'pending' ? 'active expense' : ''} onClick={() => setReimb('pending')}>
-                    待报销
-                  </button>
-                  <button className={reimb === 'done' ? 'active income' : ''} onClick={() => setReimb('done')}>
-                    已报销
-                  </button>
-                </div>
-              </div>
-            )}
             <p className="kp-current">
               {selectedBook?.emoji} {selectedBook?.name}
               {selectedAcc ? ` · ${selectedAcc.emoji} ${selectedAcc.name}` : ''}
             </p>
-          </div>
-        )}
-
-        {initial && type === 'expense' && (
-          <div className="refund-box">
-            <div className="refund-head">
-              <span>
-                退款关联 · 已退 {fmtMoney(refunded)}
-                {refundRemaining > 0 ? ` / 待退 ${fmtMoney(refundRemaining)}` : '（已退完）'}
-              </span>
-            </div>
-            {refunds.map((r) => (
-              <div className="refund-row" key={r.id}>
-                <span>{r.date.slice(5).replace('-', '/')}</span>
-                <span className="refund-note">{r.note}</span>
-                <span className="pos">+{fmtMoney(r.amount)}</span>
-              </div>
-            ))}
-            <div className="refund-add">
-              <input
-                inputMode="decimal"
-                placeholder={refundRemaining > 0 ? `建议 ${refundRemaining}` : '退款金额'}
-                value={refundAmt}
-                onChange={(e) => setRefundAmt(e.target.value)}
-              />
-              <button className="tpl-btn" onClick={addRefund} disabled={!parseFloat(refundAmt)}>
-                ＋ 记退款
-              </button>
-            </div>
           </div>
         )}
 

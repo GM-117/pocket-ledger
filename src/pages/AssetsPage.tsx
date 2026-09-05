@@ -251,9 +251,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
         />
       </div>
 
-      {pickOpen && (
-        <AccountTypePicker initialKind={pickInitialKind} onPick={onPickType} onClose={() => setPickOpen(false)} />
-      )}
+      {/* 顺序：表单在下、类型选择在上（同为顶层弹窗，后渲染者覆盖） */}
       {formState && (
         <AccountForm
           initial={editingAccount}
@@ -261,6 +259,9 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
           onPickType={() => openPicker(formState.kind)}
           onClose={() => setFormState(null)}
         />
+      )}
+      {pickOpen && (
+        <AccountTypePicker initialKind={pickInitialKind} onPick={onPickType} onClose={() => setPickOpen(false)} />
       )}
       {borrowOpen && (
         <BorrowPage

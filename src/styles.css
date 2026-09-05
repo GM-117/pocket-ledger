@@ -639,7 +639,9 @@ p {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  /* 必须高于全屏覆盖页（账户详情 .overlay-page z-index:70），
+     否则从账户详情打开的记账/编辑弹窗会被压在下面 */
+  z-index: 80;
   background: rgba(15, 20, 32, 0.45);
   display: flex;
   align-items: flex-end;
@@ -2294,4 +2296,249 @@ input[type='date'] {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+/* ============ 账单详情（TxnDetail） ============ */
+
+/* 顶部快捷操作：编辑 / 删除 / 退款 / 存为模板 */
+.txn-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.txn-action {
+  background: var(--surface);
+  border: none;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 13px 0 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.txn-action .ic {
+  font-size: 19px;
+}
+
+.txn-action.edit {
+  color: var(--primary);
+}
+
+.txn-action.danger {
+  color: var(--red);
+}
+
+.txn-action.tpl {
+  color: var(--warn);
+}
+
+/* 明细行卡片 */
+.detail-card {
+  padding: 2px 14px;
+}
+
+.detail-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 13px 0;
+  font-size: 14px;
+  text-align: left;
+  color: var(--ink);
+}
+
+.detail-row + .detail-row {
+  border-top: 1px solid var(--line);
+}
+
+.detail-row > span:first-child {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.detail-row .value {
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-align: right;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.detail-row .value.ink {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.detail-row .value input {
+  text-align: right;
+  min-width: 0;
+}
+
+.detail-row .arrow {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.detail-row.as-field {
+  flex-direction: row;
+}
+
+.detail-row.as-field input {
+  flex: 1;
+  border: none;
+  background: none;
+  text-align: right;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 0;
+}
+
+.detail-row .seg {
+  flex-shrink: 0;
+}
+
+.detail-row .seg button {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.detail-row b.pos {
+  font-weight: 700;
+}
+
+.refund-head-row .value {
+  flex-wrap: wrap;
+}
+
+.refund-add {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 12px;
+}
+
+.refund-add input {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--field-bg);
+  padding: 9px 12px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* 「账户创建」条目（黄色金额） */
+.amount.created {
+  color: var(--warn);
+}
+
+.emoji-dot.created {
+  background: var(--warn-soft);
+}
+
+/* ============ 余额调整（计算器） ============ */
+
+.adj-modal {
+  max-width: 420px;
+}
+
+.adj-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.adj-top .title {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.adj-top .done {
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.adj-close {
+  border: none;
+  background: var(--seg-bg);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.adj-input-row {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.adj-input-row input {
+  width: 100%;
+  font-size: 20px;
+  font-weight: 800;
+  padding: 13px 44px 13px 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--field-bg);
+  color: var(--ink);
+}
+
+.adj-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--seg-bg);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.adj-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.adj-check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--primary);
+}
+
+.adj-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 6px 0 12px;
+}
+
+.adj-grid .kp-key.done {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #ffd54d, #f5b60a);
+  color: #7a4d00;
+  padding: 13px 0;
+  height: auto;
 }
