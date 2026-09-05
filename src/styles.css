@@ -10,11 +10,48 @@
   --primary-soft: rgba(91, 124, 250, 0.1);
   --green: #16a34a;
   --green-soft: rgba(34, 197, 94, 0.13);
-  --red: #ef5350;
+  --red: #e5484d;
   --red-soft: rgba(239, 83, 80, 0.12);
+  --warn: #b45309;
+  --warn-soft: rgba(245, 158, 11, 0.15);
+  --field-bg: #fafbfc;
+  --seg-bg: #ecedf2;
+  --row-active: #f7f8fa;
+  --key-bg: #f4f5f8;
+  --key-active: #e8eaf0;
+  --surface-blur: rgba(255, 255, 255, 0.94);
+  --bg-blur: rgba(244, 245, 247, 0.86);
   --radius: 16px;
   --shadow: 0 1px 2px rgba(23, 29, 41, 0.04), 0 4px 16px rgba(23, 29, 41, 0.05);
   --tabbar-h: 58px;
+  color-scheme: light;
+}
+
+/* ============ 深色主题 ============ */
+html[data-theme='dark'] {
+  --bg: #12151c;
+  --surface: #1c212b;
+  --ink: #e8ebf2;
+  --muted: #9aa3b5;
+  --line: #2a3140;
+  --primary: #7288ff;
+  --primary-deep: #4a6cf0;
+  --primary-soft: rgba(114, 136, 255, 0.16);
+  --green: #34d399;
+  --green-soft: rgba(52, 211, 153, 0.14);
+  --red: #f26d6a;
+  --red-soft: rgba(242, 109, 106, 0.15);
+  --warn: #fbbf24;
+  --warn-soft: rgba(245, 158, 11, 0.16);
+  --field-bg: #232936;
+  --seg-bg: #262d3a;
+  --row-active: #232936;
+  --key-bg: #262d3a;
+  --key-active: #323a4a;
+  --surface-blur: rgba(28, 33, 43, 0.94);
+  --bg-blur: rgba(18, 21, 28, 0.86);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.28);
+  color-scheme: dark;
 }
 
 * {
@@ -68,7 +105,7 @@ p {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px 10px;
-  background: rgba(244, 245, 247, 0.86);
+  background: var(--bg-blur);
   backdrop-filter: blur(12px);
 }
 
@@ -90,6 +127,38 @@ p {
   font-weight: 700;
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 16px;
+  line-height: 1;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.side-actions .theme-btn {
+  background: var(--seg-bg);
+  box-shadow: none;
+}
+
 /* 底部 TabBar（移动端） */
 .tabbar {
   position: fixed;
@@ -98,7 +167,7 @@ p {
   right: 0;
   z-index: 40;
   display: flex;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--surface-blur);
   backdrop-filter: blur(14px);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
@@ -221,7 +290,7 @@ p {
 
 .book-pill.active {
   border-color: currentColor;
-  background: color-mix(in srgb, currentColor 8%, #ffffff);
+  background: color-mix(in srgb, currentColor 9%, var(--surface));
 }
 
 .book-pill.manage {
@@ -357,7 +426,7 @@ p {
 }
 
 .txn-row:active {
-  background: #f7f8fa;
+  background: var(--row-active);
 }
 
 .emoji-dot {
@@ -455,12 +524,12 @@ p {
 
 .acct-tag.asset {
   background: var(--green-soft);
-  color: #15803d;
+  color: var(--green);
 }
 
 .acct-tag.liability {
   background: var(--red-soft);
-  color: #b91c1c;
+  color: var(--red);
 }
 
 .account-add {
@@ -535,7 +604,7 @@ p {
 
 .seg {
   display: flex;
-  background: #ecedf2;
+  background: var(--seg-bg);
   border-radius: 12px;
   padding: 3px;
   gap: 2px;
@@ -601,7 +670,7 @@ p {
 
 .modal-close {
   border: none;
-  background: #f0f1f5;
+  background: var(--seg-bg);
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -635,7 +704,7 @@ select {
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 15px;
-  background: #fafbfc;
+  background: var(--field-bg);
   color: var(--ink);
   font-family: inherit;
   width: 100%;
@@ -645,7 +714,7 @@ input:focus,
 select:focus {
   border-color: var(--primary);
   outline: none;
-  background: #fff;
+  background: var(--surface);
 }
 
 input[type='date'] {
@@ -666,7 +735,7 @@ input[type='date'] {
   padding: 10px 4px;
   border-radius: 12px;
   border: 1.5px solid var(--line);
-  background: #fafbfc;
+  background: var(--field-bg);
   font-size: 12px;
   color: var(--ink);
 }
@@ -694,7 +763,7 @@ input[type='date'] {
   height: 36px;
   border-radius: 10px;
   border: 1.5px solid var(--line);
-  background: #fafbfc;
+  background: var(--field-bg);
   font-size: 18px;
 }
 
@@ -745,19 +814,19 @@ input[type='date'] {
 }
 
 .btn.ghost {
-  background: #f0f1f5;
+  background: var(--seg-bg);
   color: var(--ink);
 }
 
 .btn.danger {
   background: var(--red-soft);
-  color: #c22a26;
+  color: var(--red);
   margin-right: auto;
 }
 
 .icon-btn {
   border: none;
-  background: #f0f1f5;
+  background: var(--seg-bg);
   width: 32px;
   height: 32px;
   border-radius: 9px;
@@ -766,7 +835,7 @@ input[type='date'] {
 }
 
 .form-error {
-  color: #c22a26;
+  color: var(--red);
   font-size: 13px;
   margin: 2px 0 8px;
 }
@@ -858,7 +927,7 @@ input[type='date'] {
 .budget-track {
   height: 10px;
   border-radius: 999px;
-  background: #ecedf2;
+  background: var(--seg-bg);
   margin: 12px 0 8px;
   overflow: hidden;
 }
@@ -1005,7 +1074,7 @@ input[type='date'] {
 .kp-cancel,
 .kp-del {
   border: none;
-  background: #f0f1f5;
+  background: var(--seg-bg);
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -1075,7 +1144,7 @@ input[type='date'] {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #f4f5f8;
+  background: var(--key-bg);
   border: none;
   border-radius: 10px;
   padding: 8px 10px;
@@ -1146,18 +1215,18 @@ input[type='date'] {
   height: 46px;
   border: none;
   border-radius: 12px;
-  background: #f4f5f8;
+  background: var(--key-bg);
   font-size: 19px;
   font-weight: 700;
   color: var(--ink);
 }
 
 .kp-key:active {
-  background: #e8eaf0;
+  background: var(--key-active);
 }
 
 .kp-key.op {
-  background: #ecedf2;
+  background: var(--seg-bg);
   color: var(--muted);
   font-size: 17px;
 }
@@ -1330,7 +1399,7 @@ input[type='date'] {
   padding: 4px 10px;
   border-radius: 999px;
   border: 1.5px solid var(--line);
-  background: #fafbfc;
+  background: var(--field-bg);
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
@@ -1374,13 +1443,13 @@ input[type='date'] {
 }
 
 .reimb-badge.pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: #b45309;
+  background: var(--warn-soft);
+  color: var(--warn);
 }
 
 .reimb-badge.done {
   background: var(--green-soft);
-  color: #15803d;
+  color: var(--green);
 }
 
 /* 退款关联 */

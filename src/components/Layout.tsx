@@ -29,7 +29,14 @@ export function Layout({ tab, onTab, onAdd, children }: LayoutProps) {
   const books = useStore((s) => s.books);
   const activeBookId = useStore((s) => s.activeBookId);
   const setActiveBook = useStore((s) => s.setActiveBook);
+  const theme = useStore((s) => s.theme);
+  const toggleTheme = useStore((s) => s.toggleTheme);
   const activeBook = books.find((b) => b.id === activeBookId) ?? books[0];
+  const themeBtn = (
+    <button className="theme-btn" onClick={toggleTheme} aria-label="切换深浅主题">
+      {theme === 'dark' ? '☀️' : '🌙'}
+    </button>
+  );
 
   return (
     <div className="app">
@@ -70,16 +77,20 @@ export function Layout({ tab, onTab, onAdd, children }: LayoutProps) {
         <button className="btn primary side-add" onClick={onAdd}>
           <PlusIcon size={16} /> 记一笔
         </button>
+        <div className="side-actions">{themeBtn}</div>
       </aside>
 
       <div className="main">
         <header className="topbar">
           <h1>{PAGE_TITLE[tab]}</h1>
-          {activeBook && (
-            <button className="book-chip" style={{ color: activeBook.color }} onClick={() => onTab('detail')}>
-              {activeBook.emoji} {activeBook.name}
-            </button>
-          )}
+          <div className="topbar-right">
+            {themeBtn}
+            {activeBook && (
+              <button className="book-chip" style={{ color: activeBook.color }} onClick={() => onTab('detail')}>
+                {activeBook.emoji} {activeBook.name}
+              </button>
+            )}
+          </div>
         </header>
 
         <main className="content">{children}</main>

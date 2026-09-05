@@ -21,9 +21,21 @@ import {
   ymKey,
 } from '../utils';
 
-const MUTED = '#7a8194';
-const LINE = '#eef0f4';
-const INK = '#1b2231';
+const MUTED_LIGHT = '#7a8194';
+const MUTED_DARK = '#9aa3b5';
+
+interface ChartColors {
+  muted: string;
+  line: string;
+  ink: string;
+  border: string;
+}
+
+function chartColors(dark: boolean): ChartColors {
+  return dark
+    ? { muted: MUTED_DARK, line: '#2a3140', ink: '#e8ebf2', border: '#1c212b' }
+    : { muted: MUTED_LIGHT, line: '#eef0f4', ink: '#1b2231', border: '#ffffff' };
+}
 
 type StatsPeriod = Period | 'all';
 
@@ -34,6 +46,7 @@ function pieOption(
   total: number,
   totalLabel: string,
   slices: { name: string; emoji: string; value: number }[],
+  C: ChartColors,
 ) {
   return {
     title: {
@@ -41,8 +54,8 @@ function pieOption(
       subtext: totalLabel,
       left: 'center',
       top: '40%',
-      textStyle: { fontSize: 17, color: INK, fontWeight: 700 },
-      subtextStyle: { fontSize: 11, color: MUTED },
+      textStyle: { fontSize: 17, color: C.ink, fontWeight: 700 },
+      subtextStyle: { fontSize: 11, color: C.muted },
     },
     legend: {
       bottom: 0,
@@ -50,10 +63,13 @@ function pieOption(
       icon: 'circle',
       itemWidth: 8,
       itemHeight: 8,
-      textStyle: { color: MUTED, fontSize: 11 },
+      textStyle: { color: C.muted, fontSize: 11 },
     },
     tooltip: {
       trigger: 'item',
+      backgroundColor: C.border,
+      borderColor: C.line,
+      textStyle: { color: C.ink },
       formatter: (p: { name: string; value: number; percent: number }) =>
         `${p.name}<br/>${fmtMoney(p.value)} · ${p.percent}%`,
     },
@@ -63,14 +79,14 @@ function pieOption(
         radius: ['40%', '60%'],
         center: ['50%', '48%'],
         data: slices.map((s) => ({ name: `${s.emoji}${s.name}`, value: s.value })),
-        itemStyle: { borderColor: '#fff', borderWidth: 2, borderRadius: 4 },
+        itemStyle: { borderColor: C.border, borderWidth: 2, borderRadius: 4 },
         label: {
           show: true,
+          color: C.muted,
           formatter: (p: { percent: number; name: string }) => `${p.percent}% ${p.name}`,
           fontSize: 10,
-          color: MUTED,
         },
-        labelLine: { length: 8, length2: 6 },
+        labelLine: { length: 8, length2: 6, lineStyle: { color: C.line } },
       },
     ],
     color: CHART_COLORS,
@@ -82,6 +98,9 @@ export function StatsPage() {
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const txns = useStore((s) => s.txns);
+  const theme = useStore((s) => s.theme);
+  const dark = theme === 'dark';
+  const C = chartColors(dark);
 
   const [period, setPeriod] = useState<StatsPeriod>('month');
   const [scope, setScope] = useState('__all__');
@@ -149,31 +168,31 @@ export function StatsPage() {
   const trendOption = useMemo(
     () =>
       ({
-        tooltip: { trigger: 'axis' },
+        tooltip: { trigger: 'axis', backgroundColor: C.border, borderColor: C.line, textStyle: { color: C.ink } },
         legend: {
           data: ['收入', '支出', '结余'],
           bottom: 0,
           icon: 'roundRect',
           itemWidth: 10,
           itemHeight: 10,
-          textStyle: { color: MUTED, fontSize: 11 },
+          textStyle: { color: C.muted, fontSize: 11 },
         },
         grid: { left: 8, right: 8, top: 28, bottom: 36, containLabel: true },
         xAxis: {
           type: 'category' as const,
           data: buckets.map((b) => b.label),
           axisTick: { show: false },
-          axisLine: { lineStyle: { color: LINE } },
+          axisLine: { lineStyle: { color: C.line } },
           axisLabel: {
-            color: MUTED,
+            color: C.muted,
             fontSize: 10,
             interval: period === 'month' ? 4 : buckets.length > 16 ? 'auto' : 0,
           },
         },
         yAxis: {
           type: 'value' as const,
-          axisLabel: { color: MUTED, fontSize: 10, formatter: (v: number) => fmtShort(v) },
-          splitLine: { lineStyle: { color: LINE } },
+          axisLabel: { color: C.muted, fontSize: 10, formatter: (v: number) => fmtShort(v) },
+          splitLine: { lineStyle: { color: C.line } },
         },
         series: [
           {
@@ -202,7 +221,7 @@ export function StatsPage() {
           },
         ],
       }) as echarts.EChartsOption,
-    [buckets, trend, period],
+    [buckets, trend, period, C],
   );
 
   const expenseSlices = useMemo(() => categoryBreakdown(scoped, categories, 'expense'), [scoped, categories]);
@@ -213,20 +232,26 @@ export function StatsPage() {
   const netOption = useMemo(
     () =>
       ({
-        tooltip: { trigger: 'axis', valueFormatter: (v: unknown) => fmtMoney(Number(v)) },
+        tooltip: {
+          trigger: 'axis',
+          valueFormatter: (v: unknown) => fmtMoney(Number(v)),
+          backgroundColor: C.border,
+          borderColor: C.line,
+          textStyle: { color: C.ink },
+        },
         grid: { left: 8, right: 14, top: 24, bottom: 12, containLabel: true },
         xAxis: {
           type: 'category' as const,
           data: netSeries.map((p) => p.label),
           axisTick: { show: false },
-          axisLine: { lineStyle: { color: LINE } },
-          axisLabel: { color: MUTED, fontSize: 10 },
+          axisLine: { lineStyle: { color: C.line } },
+          axisLabel: { color: C.muted, fontSize: 10 },
           boundaryGap: false,
         },
         yAxis: {
           type: 'value' as const,
-          axisLabel: { color: MUTED, fontSize: 10, formatter: (v: number) => fmtShort(v) },
-          splitLine: { lineStyle: { color: LINE } },
+          axisLabel: { color: C.muted, fontSize: 10, formatter: (v: number) => fmtShort(v) },
+          splitLine: { lineStyle: { color: C.line } },
         },
         series: [
           {
@@ -235,7 +260,7 @@ export function StatsPage() {
             data: netSeries.map((p) => p.value),
             smooth: true,
             symbol: 'none',
-            lineStyle: { color: '#5b7cfa', width: 3 },
+            lineStyle: { color: '#7288ff', width: 3 },
             areaStyle: {
               color: {
                 type: 'linear' as const,
@@ -244,7 +269,7 @@ export function StatsPage() {
                 x2: 0,
                 y2: 1,
                 colorStops: [
-                  { offset: 0, color: 'rgba(91,124,250,0.26)' },
+                  { offset: 0, color: dark ? 'rgba(114,136,255,0.34)' : 'rgba(91,124,250,0.26)' },
                   { offset: 1, color: 'rgba(91,124,250,0.02)' },
                 ],
               },
@@ -252,7 +277,7 @@ export function StatsPage() {
           },
         ],
       }) as echarts.EChartsOption,
-    [netSeries],
+    [netSeries, C, dark],
   );
 
   const anchorLabel =
@@ -330,13 +355,13 @@ export function StatsPage() {
       <div className="chart-grid two section">
         <div className="card">
           <Chart
-            option={pieOption('支出构成', periodExpense, '总支出', expenseSlices)}
+            option={pieOption('支出构成', periodExpense, '总支出', expenseSlices, C)}
             height={280}
           />
         </div>
         <div className="card">
           <Chart
-            option={pieOption('收入构成', periodIncome, '总收入', incomeSlices)}
+            option={pieOption('收入构成', periodIncome, '总收入', incomeSlices, C)}
             height={280}
           />
         </div>

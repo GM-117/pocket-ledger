@@ -13,6 +13,8 @@ export interface StoreState {
   budgets: Record<string, number>;
   /** 隐藏金额（隐私模式） */
   hideAmounts: boolean;
+  /** 主题：浅色 / 深色 */
+  theme: 'light' | 'dark';
   /** 模板快捷记账 */
   templates: Template[];
   /** 周期记账规则 */
@@ -20,6 +22,7 @@ export interface StoreState {
   setActiveBook: (id: string) => void;
   setBudget: (bookId: string, amount: number | null) => void;
   toggleHideAmounts: () => void;
+  toggleTheme: () => void;
   addTemplate: (t: Omit<Template, 'id'>) => void;
   removeTemplate: (id: string) => void;
   saveRecurring: (r: Recurring) => void;
@@ -194,6 +197,7 @@ export const useStore = create<StoreState>()(
       ...createDemoData(),
       budgets: {},
       hideAmounts: false,
+      theme: 'light',
 
       setActiveBook: (id) => set({ activeBookId: id }),
 
@@ -206,6 +210,8 @@ export const useStore = create<StoreState>()(
         }),
 
       toggleHideAmounts: () => set((s) => ({ hideAmounts: !s.hideAmounts })),
+
+      toggleTheme: () => set((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),
 
       addTemplate: (t) =>
         set((s) => ({ templates: [...s.templates, { ...t, id: uid() }] })),

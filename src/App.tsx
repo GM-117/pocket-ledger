@@ -15,6 +15,15 @@ export default function App() {
   const [editing, setEditing] = useState<Txn | null>(null);
   const [preset, setPreset] = useState<Txn | null>(null);
   const [bookMgrOpen, setBookMgrOpen] = useState(false);
+  const theme = useStore((s) => s.theme);
+
+  // 主题：html data-theme + 状态栏颜色跟随
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'dark' ? '#12151c' : '#5b7cfa');
+  }, [theme]);
 
   // 启动时补齐周期账单
   useEffect(() => {
