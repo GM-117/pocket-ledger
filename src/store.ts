@@ -1,9 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Account, AccountKind, Book, Category, Recurring, Template, Txn } from './types';
-import { TRANSFER_CATEGORY_ID } from './types';
+import { ADJUST_CATEGORY_IN, ADJUST_CATEGORY_OUT, TRANSFER_CATEGORY_ID } from './types';
 import { kindToType, normalizeAccount } from './accountCatalog';
 import { addDays, fmtISO, parseISO, round2, stepFreq, uid } from './utils';
+
+/** 确保存在余额调整专用的隐藏「其他」分类（老数据 / 导入数据补齐） */
+export function ensureAdjustCategories(categories: Category[]): Category[] {
+  const need: Category[] = [];
+  if (!categories.some((c) => c.id === ADJUST_CATEGORY_IN)) {
+    need.push({ id: ADJUST_CATEGORY_IN, name: '其他', emoji: '⚙️', type: 'income', hidden: true });
+  }
+  if (!categories.some((c) => c.id === ADJUST_CATEGORY_OUT)) {
+    need.push({ id: ADJUST_CATEGORY_OUT, name: '其他', emoji: '⚙️', type: 'expense', hidden: true });
+  }
+  return need.length ? [...categories, ...need] : categories;
+}
 
 export interface StoreState {
   books: Book[];
@@ -119,7 +131,7 @@ function createDemoData() {
     mkCat('红包', '🧧', 'income'),
     mkCat('兼职', '💼', 'income'),
   ];
-  const categories = [...expenseCats, ...incomeCats];
+  const categories = ensureAdjustCategories([...expenseCats, ...incomeCats]);
   const [can, jiao, shop, house, fun, med, phone, trip] = expenseCats;
   const [salary, inv, hongbao, partTime] = incomeCats;
 
@@ -366,7 +378,7 @@ export const useStore = create<StoreState>()(
           set({
             books: d.books,
             accounts: d.accounts.map((a: Partial<Account> & Pick<Account, 'id' | 'name'>) => normalizeAccount(a)),
-            categories: Array.isArray(d.categories) ? d.categories : [],
+            categories: ensureAdjustCategories(Array.isArray(d.categories) ? d.categories : []),
             txns: d.txns,
             activeBookId: d.books[0]?.id ?? '',
           });
@@ -388,6 +400,9 @@ export const useStore = create<StoreState>()(
           s.accounts = s.accounts
             .filter((a) => a && typeof a.id === 'string')
             .map((a) => normalizeAccount(a as Partial<Account> & Pick<Account, 'id' | 'name'>));
+        }
+        if (Array.isArray(s.categories)) {
+          s.categories = ensureAdjustCategories(s.categories);
         }
         return s as StoreState;
       },

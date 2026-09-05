@@ -52,7 +52,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const [tplName, setTplName] = useState('');
   const [tplSaved, setTplSaved] = useState(false);
 
-  const cats = categories.filter((c) => c.type === type);
+  const cats = categories.filter((c) => c.type === type && !c.hidden);
 
   const switchType = (t: TxnType) => {
     setType(t);

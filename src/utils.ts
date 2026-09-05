@@ -148,6 +148,44 @@ export function fmtHm(createdAt?: string): string {
   return Number.isNaN(d.getTime()) ? '' : `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/** 计算器表达式求值：仅数字与 + - × ÷（含 ×/÷ 记号），先乘除后加减；非法返回 NaN */
+export function evalAmount(raw: string): number {
+  const s = raw.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+  if (!s || !/^[0-9.+\-*/]+$/.test(s) || /[+\-*/]{2,}/.test(s)) return NaN;
+  const tokens = s.match(/\d+\.?\d*|\.\d+|[+\-*/]/g);
+  if (!tokens) return NaN;
+  let k = 0;
+  let sign = 1;
+  if (tokens[0] === '+' || tokens[0] === '-') {
+    sign = tokens[0] === '-' ? -1 : 1;
+    k = 1;
+  }
+  if (k >= tokens.length || /^[+\-*/]$/.test(tokens[k])) return NaN;
+  let cur = sign * parseFloat(tokens[k]);
+  k += 1;
+  const flat: (number | string)[] = [];
+  while (k < tokens.length) {
+    const op = tokens[k];
+    const next = tokens[k + 1];
+    if (!next || /^[+\-*/]$/.test(next)) return NaN;
+    const v = parseFloat(next);
+    if (op === '*' || op === '/') {
+      if (op === '/' && v === 0) return NaN;
+      cur = op === '*' ? cur * v : cur / v;
+    } else {
+      flat.push(cur, op);
+      cur = v;
+    }
+    k += 2;
+  }
+  flat.push(cur);
+  let result = flat[0] as number;
+  for (let j = 1; j < flat.length; j += 2) {
+    result = flat[j] === '+' ? (result as number) + (flat[j + 1] as number) : (result as number) - (flat[j + 1] as number);
+  }
+  return Math.round(result * 10000) / 10000;
+}
+
 /** 近 N 个月每月末的净资产（当前月按今天） */
 export function netWorthSeries(
   accounts: Account[],

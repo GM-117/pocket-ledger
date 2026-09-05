@@ -39,7 +39,13 @@ export interface Category {
   name: string;
   emoji: string;
   type: CategoryType;
+  /** 隐藏分类不出现在分类选择器（如余额调整专用的「其他」） */
+  hidden?: boolean;
 }
+
+/** 余额调整「记为收支」专用的隐藏分类 */
+export const ADJUST_CATEGORY_IN = '__adjust_income__';
+export const ADJUST_CATEGORY_OUT = '__adjust_expense__';
 
 export const TRANSFER_CATEGORY_ID = '__transfer__';
 

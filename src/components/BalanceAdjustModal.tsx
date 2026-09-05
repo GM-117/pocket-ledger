@@ -1,49 +1,12 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import type { Account } from '../types';
-import { accountBalance, fmtISO, round2, uid } from '../utils';
+import { ADJUST_CATEGORY_IN, ADJUST_CATEGORY_OUT, type Account } from '../types';
+import { accountBalance, evalAmount, fmtISO, round2, uid } from '../utils';
+import { CalcKeypad } from './CalcKeypad';
 
 interface BalanceAdjustModalProps {
   account: Account;
   onClose: () => void;
-}
-
-/** 四则运算求值：仅数字与 + - * /，先乘除后加减，支持负号开头；非法返回 NaN */
-export function evalAmount(raw: string): number {
-  const s = raw.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
-  if (!s || !/^[0-9.+\-*/]+$/.test(s) || /[+\-*/]{2,}/.test(s)) return NaN;
-  const tokens = s.match(/\d+\.?\d*|\.\d+|[+\-*/]/g);
-  if (!tokens) return NaN;
-  let k = 0;
-  let sign = 1;
-  if (tokens[0] === '+' || tokens[0] === '-') {
-    sign = tokens[0] === '-' ? -1 : 1;
-    k = 1;
-  }
-  if (k >= tokens.length || /^[+\-*/]$/.test(tokens[k])) return NaN;
-  let cur = sign * parseFloat(tokens[k]);
-  k += 1;
-  const flat: (number | string)[] = [];
-  while (k < tokens.length) {
-    const op = tokens[k];
-    const next = tokens[k + 1];
-    if (!next || /^[+\-*/]$/.test(next)) return NaN;
-    const v = parseFloat(next);
-    if (op === '*' || op === '/') {
-      if (op === '/' && v === 0) return NaN;
-      cur = op === '*' ? cur * v : cur / v;
-    } else {
-      flat.push(cur, op);
-      cur = v;
-    }
-    k += 2;
-  }
-  flat.push(cur);
-  let result = flat[0] as number;
-  for (let j = 1; j < flat.length; j += 2) {
-    result = flat[j] === '+' ? (result as number) + (flat[j + 1] as number) : (result as number) - (flat[j + 1] as number);
-  }
-  return Math.round(result * 10000) / 10000;
 }
 
 /** iCost 式余额调整：带入当前余额、清除按钮、计算器键盘、差额可记为收支 */
@@ -62,7 +25,6 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
   const press = (k: string) => {
     setError('');
     if (k === 'del') return setExpr((e) => e.slice(0, -1));
-    if (k === 'clear') return setExpr('');
     if (k === '.') {
       return setExpr((e) => {
         const seg = e.split(/[+\-*/]/).pop() ?? '';
@@ -83,13 +45,14 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
   const done = () => {
     const target = evalAmount(expr);
     if (!Number.isFinite(target)) return setError('金额格式不对');
+    if (target < 0) return setError('金额不能为负数');
     const delta = round2(target - current);
     if (delta === 0) return onClose();
     if (asTxn) {
-      // 差额生成一笔收支流水，期初余额不动
-      const incCats = categories.filter((c) => c.type === 'income');
-      const expCats = categories.filter((c) => c.type === 'expense');
-      const cat = delta > 0 ? incCats[0] : expCats[0];
+      // 差额生成一笔收支流水（分类为隐藏的「其他」），期初余额不动
+      const cat =
+        categories.find((c) => c.id === (delta > 0 ? ADJUST_CATEGORY_IN : ADJUST_CATEGORY_OUT)) ??
+        categories.find((c) => c.type === (delta > 0 ? 'income' : 'expense') && !c.hidden);
       if (!cat) return setError('缺少可用的收支分类');
       saveTxn({
         id: uid(),
@@ -147,30 +110,10 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
 
         {error && <p className="form-error">{error}</p>}
 
-        <div className="kp-grid adj-grid">
-          {['1', '2', '3', '+', '4', '5', '6', '-', '7', '8', '9', '×', '.', '0', 'del', '÷'].map((k) => {
-            if (k === 'del')
-              return (
-                <button key={k} className="kp-key op" onClick={() => press(k)} aria-label="退格">
-                  ⌫
-                </button>
-              );
-            if ('+-×÷'.includes(k))
-              return (
-                <button key={k} className="kp-key op" onClick={() => press(k)}>
-                  {k}
-                </button>
-              );
-            return (
-              <button key={k} className="kp-key" onClick={() => press(k)}>
-                {k}
-              </button>
-            );
-          })}
-          <button className="kp-key done adj-done" onClick={done}>
-            完成
-          </button>
-        </div>
+        <CalcKeypad onKey={press} />
+        <button className="kp-key done adj-done" onClick={done}>
+          完成
+        </button>
       </div>
     </div>
   );

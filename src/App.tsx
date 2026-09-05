@@ -6,7 +6,7 @@ import { AssetsPage } from './pages/AssetsPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { DetailPage } from './pages/DetailPage';
 import { StatsPage } from './pages/StatsPage';
-import { useStore } from './store';
+import { useStore, ensureAdjustCategories } from './store';
 import type { Txn } from './types';
 
 export default function App() {
@@ -25,8 +25,9 @@ export default function App() {
       ?.setAttribute('content', theme === 'dark' ? '#12151c' : '#5b7cfa');
   }, [theme]);
 
-  // 启动时补齐周期账单
+  // 启动时补齐周期账单与隐藏的系统分类
   useEffect(() => {
+    useStore.setState((s) => ({ categories: ensureAdjustCategories(s.categories) }));
     useStore.getState().runRecurrences();
   }, []);
 

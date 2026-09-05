@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../store';
-import type { ReimbStatus, Txn } from '../types';
+import type { ReimbStatus, Txn, TxnType } from '../types';
 import { fmtHm, fmtMoney, parseISO, round2, uid } from '../utils';
+import { AmountPadModal } from './AmountPadModal';
+import { CategoryPickModal, DateEditModal, OptionPickerModal } from './EditModals';
 import { Modal } from './Modal';
 
 interface TxnDetailProps {
@@ -13,19 +15,20 @@ interface TxnDetailProps {
   onEdit: (t: Txn) => void;
 }
 
-const TYPE_LABEL: Record<Txn['type'], string> = {
+const TYPE_LABEL: Record<TxnType, string> = {
   expense: '支出',
   income: '收入',
   transfer: '转账',
 };
 
-/** iCost 式账单详情：顶部快捷操作 + 明细行（备注/标签/报销/退款可在页内编辑） */
+type EditTarget = 'book' | 'account' | 'amount' | 'date' | 'category' | null;
+
+/** iCost 式账单详情：顶部快捷操作 + 明细行（每行可独立编辑，无需打开完整面板） */
 export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps) {
   const txns = useStore((s) => s.txns);
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const books = useStore((s) => s.books);
-  const allTxns = useStore((s) => s.txns);
   const saveTxn = useStore((s) => s.saveTxn);
   const removeTxn = useStore((s) => s.removeTxn);
   const addTemplate = useStore((s) => s.addTemplate);
@@ -35,6 +38,7 @@ export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps)
     if (!t) onClose();
   }, [t, onClose]);
 
+  const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [noteEditing, setNoteEditing] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
   const [tagOpen, setTagOpen] = useState(false);
@@ -48,9 +52,19 @@ export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps)
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
-    for (const x of allTxns) for (const g of x.tags ?? []) set.add(g);
+    for (const x of txns) for (const g of x.tags ?? []) set.add(g);
     return [...set].sort();
-  }, [allTxns]);
+  }, [txns]);
+
+  /** 行内编辑账户时可选的账户（记账可被选择的 + 当前已选中的） */
+  const selectableAccounts = useMemo(() => {
+    const base = accounts.filter((a) => a.canSelect !== false);
+    if (t && !base.some((b) => b.id === t.accountId)) {
+      const cur = accounts.find((a) => a.id === t.accountId);
+      if (cur) base.push(cur);
+    }
+    return base;
+  }, [accounts, t]);
 
   if (!t) return null;
 
@@ -63,7 +77,7 @@ export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps)
   const dateLabel = `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`;
   const time = fmtHm(t.createdAt);
 
-  const refunds = t.type === 'expense' ? allTxns.filter((x) => x.refundForId === t.id) : [];
+  const refunds = t.type === 'expense' ? txns.filter((x) => x.refundForId === t.id) : [];
   const refunded = round2(refunds.reduce((s, r) => s + r.amount, 0));
   const refundRemaining = t.type === 'expense' ? round2(t.amount - refunded) : 0;
 
@@ -123,6 +137,8 @@ export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps)
 
   const setReimb = (r: ReimbStatus) => saveTxn({ ...t, reimb: r === 'none' ? undefined : r });
 
+  const closeEdit = () => setEditTarget(null);
+
   return (
     <div className="overlay-page">
       <div className="page-head">
@@ -160,52 +176,55 @@ export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps)
         </div>
 
         <div className="card detail-card">
-          <button className="detail-row" onClick={() => onEdit(t)}>
+          <button
+            className="detail-row"
+            onClick={() => (isTransfer ? onEdit(t) : setEditTarget('category'))}
+          >
             <span>类型</span>
             <span className="value">
               （{TYPE_LABEL[t.type]}）{isTransfer ? '转账' : cat?.name ?? '未知分类'}
               <span className="arrow">›</span>
             </span>
           </button>
-          <div className="detail-row">
+          <button className="detail-row" onClick={() => setEditTarget('book')}>
             <span>账本</span>
             <span className="value">
               {book ? `${book.emoji} ${book.name}` : '未知账本'}
               <span className="arrow">›</span>
             </span>
-          </div>
+          </button>
         </div>
 
         <div className="card detail-card">
-          <div className="detail-row">
+          <button className="detail-row" onClick={() => setEditTarget('date')}>
             <span>时间</span>
             <span className="value ink">
               {dateLabel} {time}
               <span className="arrow">›</span>
             </span>
-          </div>
-          <div className="detail-row">
+          </button>
+          <button className="detail-row" onClick={() => setEditTarget('amount')}>
             <span>金额</span>
             <span className="value ink">
               {t.type === 'income' ? '+' : t.type === 'expense' ? '−' : ''}
               {fmtMoney(t.amount)}
               <span className="arrow">›</span>
             </span>
-          </div>
+          </button>
           <div className="detail-row">
             <span>货币</span>
-            <span className="value">
-              人民币 (CNY)
-              <span className="arrow">›</span>
-            </span>
+            <span className="value">人民币 (CNY)</span>
           </div>
-          <div className="detail-row">
+          <button
+            className="detail-row"
+            onClick={() => (isTransfer ? onEdit(t) : setEditTarget('account'))}
+          >
             <span>账户</span>
             <span className="value">
               {isTransfer ? `${acc?.name ?? '?'} → ${toAcc?.name ?? '?'}` : acc?.name ?? '未知账户'}
               <span className="arrow">›</span>
             </span>
-          </div>
+          </button>
         </div>
 
         <div className="card detail-card">
@@ -308,6 +327,63 @@ export function TxnDetail({ txnId, backLabel, onClose, onEdit }: TxnDetailProps)
           </div>
         )}
       </div>
+
+      {editTarget === 'category' && (
+        <CategoryPickModal
+          categories={categories}
+          initialType={t.type}
+          onPick={(type, categoryId) => {
+            saveTxn({ ...t, type, categoryId });
+            closeEdit();
+          }}
+          onClose={closeEdit}
+        />
+      )}
+      {editTarget === 'book' && (
+        <OptionPickerModal
+          title="选择账本"
+          options={books.map((b) => ({ id: b.id, label: b.name, emoji: b.emoji }))}
+          selectedId={t.bookId}
+          onPick={(bookId) => {
+            saveTxn({ ...t, bookId });
+            closeEdit();
+          }}
+          onClose={closeEdit}
+        />
+      )}
+      {editTarget === 'account' && (
+        <OptionPickerModal
+          title="选择账户"
+          options={selectableAccounts.map((a) => ({ id: a.id, label: a.name, emoji: a.emoji }))}
+          selectedId={t.accountId}
+          onPick={(accountId) => {
+            saveTxn({ ...t, accountId });
+            closeEdit();
+          }}
+          onClose={closeEdit}
+        />
+      )}
+      {editTarget === 'amount' && (
+        <AmountPadModal
+          title="修改金额"
+          initial={String(t.amount)}
+          onSubmit={(amount) => {
+            saveTxn({ ...t, amount });
+            return null;
+          }}
+          onClose={closeEdit}
+        />
+      )}
+      {editTarget === 'date' && (
+        <DateEditModal
+          date={t.date}
+          onSave={(date) => {
+            saveTxn({ ...t, date });
+            closeEdit();
+          }}
+          onClose={closeEdit}
+        />
+      )}
 
       {tagOpen && (
         <Modal title="编辑标签" onClose={() => setTagOpen(false)}>
