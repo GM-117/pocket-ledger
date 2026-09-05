@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { FREQ_LABEL, type CategoryType, type Freq, type Recurring } from '../types';
 import { fmtISO, fmtMoney, round2, uid } from '../utils';
@@ -21,7 +21,9 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const [type, setType] = useState<CategoryType>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [accountId, setAccountId] = useState(accounts[0]?.id ?? '');
+  /** 周期记账只允许选择 canSelect 的账户 */
+  const selectable = useMemo(() => accounts.filter((a) => a.canSelect !== false), [accounts]);
+  const [accountId, setAccountId] = useState(selectable[0]?.id ?? '');
   const [freq, setFreq] = useState<Freq>('monthly');
   const [startDate, setStartDate] = useState(fmtISO(new Date()));
   const [note, setNote] = useState('');
@@ -94,7 +96,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
         <label className="field">
           <span>账户</span>
           <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            {accounts.map((a) => (
+            {selectable.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.emoji} {a.name}
               </option>

@@ -48,7 +48,7 @@ export default function App() {
         {tab === 'detail' && (
           <DetailPage onEdit={openEditor} onManage={() => setBookMgrOpen(true)} onUseTemplate={openFromTemplate} />
         )}
-        {tab === 'assets' && <AssetsPage onEdit={openEditor} />}
+        {tab === 'assets' && <AssetsPage onEdit={openEditor} onQuickAdd={openFromTemplate} />}
         {tab === 'calendar' && <CalendarPage onEdit={openEditor} />}
         {tab === 'stats' && <StatsPage />}
       </Layout>

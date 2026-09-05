@@ -21,16 +21,27 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const removeTxn = useStore((s) => s.removeTxn);
   const addTemplate = useStore((s) => s.addTemplate);
 
+  /** 记账可选账户：过滤 canSelect=false，但编辑中已选中的账户保留 */
+  const selectable = useMemo(() => {
+    const base = accounts.filter((a) => a.canSelect !== false);
+    const curIds = [initial?.accountId, preset?.accountId, initial?.toAccountId, preset?.toAccountId];
+    for (const id of curIds) {
+      const a = id ? accounts.find((x) => x.id === id) : undefined;
+      if (a && !base.some((b) => b.id === a.id)) base.push(a);
+    }
+    return base;
+  }, [accounts, initial, preset]);
+
   const [type, setType] = useState<TxnType>(initial?.type ?? preset?.type ?? 'expense');
   const [amount, setAmount] = useState(
     initial ? String(initial.amount) : preset ? String(preset.amount) : '',
   );
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? preset?.categoryId ?? '');
   const [accountId, setAccountId] = useState(
-    initial?.accountId ?? preset?.accountId ?? accounts[0]?.id ?? '',
+    initial?.accountId ?? preset?.accountId ?? selectable[0]?.id ?? '',
   );
   const [toAccountId, setToAccountId] = useState(
-    initial?.toAccountId ?? accounts.find((a) => a.id !== accountId)?.id ?? '',
+    initial?.toAccountId ?? selectable.find((a) => a.id !== accountId)?.id ?? '',
   );
   const [bookId, setBookId] = useState(initial?.bookId ?? preset?.bookId ?? activeBookId);
   const [date, setDate] = useState(initial?.date ?? fmtISO(new Date()));
@@ -47,6 +58,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
 
   // 注意：selector 必须返回稳定引用，派生数据用 useMemo 计算，否则会无限重渲染
   const allTxns = useStore((s) => s.txns);
+
   const allTags = useMemo(() => {
     const set = new Set<string>();
     for (const t of allTxns) for (const g of t.tags ?? []) set.add(g);
@@ -212,7 +224,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
             <label className="field">
               <span>转出账户</span>
               <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                {accounts.map((a) => (
+                {selectable.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.emoji} {a.name}
                   </option>
@@ -222,7 +234,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
             <label className="field">
               <span>转入账户</span>
               <select value={toAccountId} onChange={(e) => setToAccountId(e.target.value)}>
-                {accounts.map((a) => (
+                {selectable.map((a) => (
                   <option key={a.id} value={a.id} disabled={a.id === accountId}>
                     {a.emoji} {a.name}
                   </option>
@@ -276,7 +288,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               <label className="kp-field">
                 <span>账户</span>
                 <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                  {accounts.map((a) => (
+                  {selectable.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.emoji} {a.name}
                     </option>

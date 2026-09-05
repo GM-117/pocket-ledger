@@ -1,23 +1,40 @@
 import { useMemo, useRef, useState } from 'react';
+import { accountIcon, ACCOUNT_KINDS, KIND_MAP } from '../accountCatalog';
 import { useStore } from '../store';
-import type { Txn, TxnType } from '../types';
+import type { Account, AccountKind, Txn } from '../types';
 import { accountBalance, computeTotals, fmtISO, fmtMoney } from '../utils';
-import { AccountForm } from '../components/AccountForm';
-import { TxnList } from '../components/TxnList';
+import { AccountDetail } from '../components/AccountDetail';
+import { AccountForm, type AccountTypePreset } from '../components/AccountForm';
+import { AccountTypePicker } from '../components/AccountTypePicker';
+import { BorrowPage } from '../components/BorrowPage';
 
-type Filter = 'all' | TxnType;
+interface AssetsPageProps {
+  /** 账户详情内点击流水 → 编辑 */
+  onEdit: (t: Txn) => void;
+  /** 账户详情「记一笔」（预填账户） */
+  onQuickAdd: (preset: Txn) => void;
+}
 
-export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
+interface FormState extends AccountTypePreset {
+  accountId: 'new' | string;
+}
+
+export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const accounts = useStore((s) => s.accounts);
   const txns = useStore((s) => s.txns);
+  const activeBookId = useStore((s) => s.activeBookId);
   const hideAmounts = useStore((s) => s.hideAmounts);
   const toggleHideAmounts = useStore((s) => s.toggleHideAmounts);
   const exportJSON = useStore((s) => s.exportJSON);
   const importJSON = useStore((s) => s.importJSON);
   const loadDemo = useStore((s) => s.loadDemo);
 
-  const [filter, setFilter] = useState<Filter>('all');
-  const [editingAcc, setEditingAcc] = useState<null | 'new' | string>(null);
+  const [openKinds, setOpenKinds] = useState<Set<AccountKind>>(new Set());
+  const [pickOpen, setPickOpen] = useState(false);
+  const [pickInitialKind, setPickInitialKind] = useState<AccountKind | undefined>(undefined);
+  const [formState, setFormState] = useState<FormState | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [borrowOpen, setBorrowOpen] = useState(false);
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -25,22 +42,52 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
 
   const totals = useMemo(() => computeTotals(accounts, txns), [accounts, txns]);
 
-  const sortedAccounts = useMemo(() => {
-    const bal = (id: string) => {
-      const a = accounts.find((x) => x.id === id)!;
-      return accountBalance(a, txns);
-    };
-    return [...accounts].sort(
-      (a, b) =>
-        (a.type === 'asset' ? 0 : 1) - (b.type === 'asset' ? 0 : 1) ||
-        bal(b.id) - bal(a.id),
-    );
+  const balances = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const a of accounts) map.set(a.id, accountBalance(a, txns));
+    return map;
   }, [accounts, txns]);
 
-  const filteredTxns = useMemo(
-    () => (filter === 'all' ? txns : txns.filter((t) => t.type === filter)),
-    [txns, filter],
+  /** 总借入 / 总借出 */
+  const borrowTotals = useMemo(() => {
+    let debt = 0;
+    let lend = 0;
+    for (const a of accounts) {
+      if (a.includeInNet === false) continue;
+      const b = balances.get(a.id) ?? 0;
+      if (a.kind === 'payable') debt += b;
+      if (a.kind === 'receivable') lend += b;
+    }
+    return { debt: Math.round(debt * 100) / 100, lend: Math.round(lend * 100) / 100 };
+  }, [accounts, balances]);
+
+  const kindRows = useMemo(
+    () =>
+      ACCOUNT_KINDS.map((k) => {
+        const rows = accounts
+          .filter((a) => a.kind === k.id)
+          .map((a) => ({ a, bal: balances.get(a.id) ?? 0 }))
+          .sort((x, y) => y.bal - x.bal);
+        const sum = Math.round(rows.reduce((s, r) => s + r.bal, 0) * 100) / 100;
+        return { kind: k, rows, sum };
+      }),
+    [accounts, balances],
   );
+
+  const detailAccount = detailId ? accounts.find((a) => a.id === detailId) ?? null : null;
+  const editingAccount = formState && formState.accountId !== 'new'
+    ? accounts.find((a) => a.id === formState.accountId) ?? null
+    : null;
+
+  const onPickType = (kind: AccountKind, subtype: string) => {
+    setFormState((cur) => (cur ? { ...cur, kind, subtype } : { accountId: 'new', kind, subtype }));
+    setPickOpen(false);
+  };
+
+  const openPicker = (kind?: AccountKind) => {
+    setPickInitialKind(kind);
+    setPickOpen(true);
+  };
 
   const doExport = () => {
     const blob = new Blob([exportJSON()], { type: 'application/json' });
@@ -63,12 +110,6 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
     r.readAsText(f);
   };
 
-  const editingAccount = (() => {
-    if (editingAcc === 'new') return null;
-    const id = editingAcc;
-    return accounts.find((a) => a.id === id) ?? null;
-  })();
-
   return (
     <>
       <div className="hero">
@@ -88,63 +129,93 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
             <span>总负债</span>
             <strong>{money(totals.liabilities)}</strong>
           </div>
-          <div>
-            <span>账户数</span>
-            <strong>{accounts.length}</strong>
-          </div>
         </div>
       </div>
 
+      <div className="borrow-cards">
+        <button className="borrow-card" onClick={() => setBorrowOpen(true)}>
+          <span className="borrow-icon in">⬇</span>
+          <span className="borrow-main">
+            <span>总借入</span>
+            <b>{money(borrowTotals.debt)}</b>
+          </span>
+        </button>
+        <button className="borrow-card" onClick={() => setBorrowOpen(true)}>
+          <span className="borrow-icon out">⬆</span>
+          <span className="borrow-main">
+            <span>总借出</span>
+            <b>{money(borrowTotals.lend)}</b>
+          </span>
+        </button>
+      </div>
+
       <div className="section-title">
-        <span>我的账户</span>
-        <button className="chip" onClick={() => setEditingAcc('new')}>
+        <span>账户类型</span>
+        <button className="chip" onClick={() => openPicker()}>
           ＋ 添加账户
         </button>
       </div>
-      <div className="card account-list">
-        {sortedAccounts.map((a) => {
-          const b = accountBalance(a, txns);
-          return (
-            <button className="account-row" key={a.id} onClick={() => setEditingAcc(a.id)}>
-              <span className="emoji-dot">{a.emoji}</span>
-              <span className="txn-main">
-                <span className="txn-cat">
-                  {a.name}
-                  <span className={'acct-tag ' + a.type}>{a.type === 'asset' ? '资产' : '负债'}</span>
-                </span>
-                <span className="txn-sub">期初 {fmtMoney(a.initialBalance)}</span>
-              </span>
-              <span className={'amount ' + (a.type === 'asset' ? 'pos' : 'neg')}>
-                {a.type === 'asset' ? '' : '−'}
-                {money(Math.abs(b))}
-              </span>
-            </button>
-          );
-        })}
-        {accounts.length === 0 && <p className="empty-text">还没有账户，添加一个吧</p>}
-        <button className="account-add" onClick={() => setEditingAcc('new')}>
-          ＋ 添加资产 / 负债账户
-        </button>
-      </div>
 
-      <div className="section-title">
-        <span>全部收支记录（{filteredTxns.length}）</span>
-        <div className="chips">
-          {(
-            [
-              ['all', '全部'],
-              ['expense', '支出'],
-              ['income', '收入'],
-              ['transfer', '转账'],
-            ] as [Filter, string][]
-          ).map(([k, label]) => (
-            <button key={k} className={'chip' + (filter === k ? ' active' : '')} onClick={() => setFilter(k)}>
-              {label}
+      {kindRows.map(({ kind, rows, sum }) => {
+        const open = openKinds.has(kind.id);
+        return (
+          <section className="kind-group" key={kind.id}>
+            <button
+              className="kind-head"
+              onClick={() =>
+                setOpenKinds((cur) => {
+                  const next = new Set(cur);
+                  if (next.has(kind.id)) next.delete(kind.id);
+                  else next.add(kind.id);
+                  return next;
+                })
+              }
+            >
+              <span className="kind-name">
+                {kind.label} <em>({rows.length})</em>
+              </span>
+              <span className="kind-sum">
+                {rows.length > 0 && (
+                  <>
+                    {KIND_MAP[kind.id].sum === 'debt' ? '欠款: ' : '余额: '}
+                    <b className={KIND_MAP[kind.id].sum === 'debt' ? 'neg' : ''}>{money(sum)}</b>
+                  </>
+                )}
+                <span className={'type-chev' + (open ? ' open' : '')}>⌄</span>
+              </span>
             </button>
-          ))}
-        </div>
-      </div>
-      <TxnList txns={filteredTxns} onEdit={onEdit} showBook />
+            {open && (
+              <div className="card kind-body">
+                {rows.map(({ a, bal }) => {
+                  const icon = accountIcon(a);
+                  return (
+                    <button className="account-row" key={a.id} onClick={() => setDetailId(a.id)}>
+                      <span className="icon-circle" style={{ background: icon.color + '22', color: icon.color }}>
+                        {icon.icon}
+                      </span>
+                      <span className="txn-main">
+                        <span className="txn-cat">
+                          {a.name}
+                          {!a.includeInNet && <span className="badge-off">不计入</span>}
+                        </span>
+                        <span className="txn-sub">
+                          {kindLabel(a)}
+                          {a.note ? ` · ${a.note}` : ''}
+                        </span>
+                      </span>
+                      <span className={'amount ' + (a.type === 'asset' ? 'pos' : 'neg')}>
+                        {a.type === 'asset' ? '' : '−'}
+                        {money(Math.abs(bal))}
+                      </span>
+                    </button>
+                  );
+                })}
+                {rows.length === 0 && <p className="empty-text">该类型下还没有账户</p>}
+              </div>
+            )}
+          </section>
+        );
+      })}
 
       <div className="section-title">
         <span>数据管理</span>
@@ -180,9 +251,39 @@ export function AssetsPage({ onEdit }: { onEdit: (t: Txn) => void }) {
         />
       </div>
 
-      {editingAcc !== null && (
-        <AccountForm initial={editingAccount} onClose={() => setEditingAcc(null)} />
+      {pickOpen && (
+        <AccountTypePicker initialKind={pickInitialKind} onPick={onPickType} onClose={() => setPickOpen(false)} />
+      )}
+      {formState && (
+        <AccountForm
+          initial={editingAccount}
+          typePreset={{ kind: formState.kind, subtype: formState.subtype }}
+          onPickType={() => openPicker(formState.kind)}
+          onClose={() => setFormState(null)}
+        />
+      )}
+      {borrowOpen && (
+        <BorrowPage
+          onClose={() => setBorrowOpen(false)}
+          onOpenDetail={(a) => setDetailId(a.id)}
+          onAdd={(kind) => openPicker(kind)}
+        />
+      )}
+      {detailAccount && (
+        <AccountDetail
+          account={detailAccount}
+          onClose={() => setDetailId(null)}
+          onEditTxn={onEdit}
+          onQuickAdd={onQuickAdd}
+          onEditAccount={(a) => setFormState({ accountId: a.id, kind: a.kind, subtype: a.subtype })}
+        />
       )}
     </>
   );
+}
+
+function kindLabel(a: Account): string {
+  const k = KIND_MAP[a.kind];
+  const st = k?.subtypes.find((s) => s.id === a.subtype);
+  return st?.label ?? '';
 }

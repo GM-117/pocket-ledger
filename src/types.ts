@@ -2,6 +2,9 @@ export type CategoryType = 'expense' | 'income';
 export type TxnType = 'expense' | 'income' | 'transfer';
 export type AccountType = 'asset' | 'liability';
 
+/** 账户大类：资金 / 信用 / 充值 / 理财 / 应收 / 应付（对齐 iCost） */
+export type AccountKind = 'fund' | 'credit' | 'recharge' | 'invest' | 'receivable' | 'payable';
+
 export interface Book {
   id: string;
   name: string;
@@ -17,6 +20,18 @@ export interface Account {
   type: 'asset' | 'liability';
   initialBalance: number;
   createdAt: string;
+  /** 账户大类（资产/负债归属由 kind 推导） */
+  kind: AccountKind;
+  /** 子类型 id，见 accountCatalog.ts */
+  subtype: string;
+  /** 备注 */
+  note?: string;
+  /** 是否计入总资产/净资产（默认 true，关闭后显示「不计入」徽标） */
+  includeInNet: boolean;
+  /** 记账时是否出现在账户选择器（默认 true） */
+  canSelect: boolean;
+  /** 借款时间（借出 / 借入账户） */
+  lendDate?: string;
 }
 
 export interface Category {

@@ -100,18 +100,20 @@ export const uid = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-/** 账户余额 = 期初 + 收入 − 支出 ± 转账（可截止某日期，ISO 字符串可直接比较） */
+/** 账户余额 = 期初 + 收入 − 支出 ± 转账（可截止某日期，ISO 字符串可直接比较）。
+ *  负债账户余额为欠款额，方向与资产账户相反：消费增加欠款、还款/退款减少欠款 */
 export function accountBalance(acc: Account, txns: Txn[], endISO?: string): number {
   let b = acc.initialBalance;
+  const dir = acc.type === 'liability' ? -1 : 1;
   for (const t of txns) {
     if (endISO && t.date > endISO) continue;
     if (t.type === 'transfer') {
-      if (t.accountId === acc.id) b -= t.amount;
-      if (t.toAccountId === acc.id) b += t.amount;
+      if (t.accountId === acc.id) b -= dir * t.amount;
+      if (t.toAccountId === acc.id) b += dir * t.amount;
       continue;
     }
     if (t.accountId !== acc.id) continue;
-    b += t.type === 'income' ? t.amount : -t.amount;
+    b += dir * (t.type === 'income' ? t.amount : -t.amount);
   }
   return round2(b);
 }
@@ -126,6 +128,7 @@ export function computeTotals(accounts: Account[], txns: Txn[], endISO?: string)
   let assets = 0;
   let liabilities = 0;
   for (const a of accounts) {
+    if (a.includeInNet === false) continue;
     const b = accountBalance(a, txns, endISO);
     if (a.type === 'asset') assets += b;
     else liabilities += b;
@@ -133,6 +136,16 @@ export function computeTotals(accounts: Account[], txns: Txn[], endISO?: string)
   assets = round2(assets);
   liabilities = round2(liabilities);
   return { assets, liabilities, netWorth: round2(assets - liabilities) };
+}
+
+/** 流水的时分（HH:MM），取创建时间；解析失败返回空串 */
+export function fmtHm(createdAt?: string): string {
+  if (!createdAt) return '';
+  // 演示数据为 "YYYY-MM-DD HH:MM"，实时记录为 ISO 字符串
+  const m = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/.exec(createdAt);
+  if (m) return m[2];
+  const d = new Date(createdAt);
+  return Number.isNaN(d.getTime()) ? '' : `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /** 近 N 个月每月末的净资产（当前月按今天） */

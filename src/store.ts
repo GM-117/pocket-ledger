@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Account, Book, Category, Recurring, Template, Txn } from './types';
+import type { Account, AccountKind, Book, Category, Recurring, Template, Txn } from './types';
+import { TRANSFER_CATEGORY_ID } from './types';
+import { kindToType, normalizeAccount } from './accountCatalog';
 import { addDays, fmtISO, parseISO, round2, stepFreq, uid } from './utils';
 
 export interface StoreState {
@@ -64,17 +66,39 @@ function createDemoData() {
   ];
   const [life, work] = books;
 
-  const mkAcc = (name: string, emoji: string, type: Account['type'], initialBalance: number): Account => ({
-    id: uid(), name, emoji, type, initialBalance, createdAt: iso(addDays(now, -120)),
+  const mkAcc = (
+    name: string,
+    icon: string,
+    kind: AccountKind,
+    subtype: string,
+    initialBalance: number,
+    extra?: Partial<Account>,
+  ): Account => ({
+    id: uid(),
+    name,
+    emoji: icon,
+    type: kindToType(kind),
+    kind,
+    subtype,
+    initialBalance,
+    createdAt: iso(addDays(now, -120)),
+    includeInNet: true,
+    canSelect: true,
+    ...extra,
   });
   const accounts: Account[] = [
-    mkAcc('微信零钱', '📱', 'asset', 3200),
-    mkAcc('支付宝', '💵', 'asset', 5800),
-    mkAcc('招商银行卡', '🏦', 'asset', 46000),
-    mkAcc('基金账户', '📈', 'asset', 30000),
-    mkAcc('信用卡', '💳', 'liability', 8600),
+    mkAcc('微信零钱', '微', 'fund', 'wechat', 8000),
+    mkAcc('支付宝', '支', 'fund', 'alipay', 10000),
+    mkAcc('招商银行卡', '💳', 'fund', 'savings', 46000),
+    mkAcc('基金账户', '📊', 'invest', 'fund', 30000),
+    mkAcc('公交卡', '🚌', 'recharge', 'bus_card', 120, { note: '地铁通勤充值' }),
+    mkAcc('信用卡', '💳', 'credit', 'credit_card', 12000, { note: '招行信用卡' }),
+    mkAcc('老妈', '🙏', 'payable', 'borrow_in', 20000, {
+      note: '装修借款',
+      lendDate: iso(addDays(now, -240)),
+    }),
   ];
-  const [wx, ali, cmb, fund, credit] = accounts;
+  const [wx, ali, cmb, fund, bus, credit] = accounts;
 
   const mkCat = (name: string, emoji: string, type: Category['type']): Category => ({
     id: uid(), name, emoji, type,
@@ -159,6 +183,17 @@ function createDemoData() {
     txns.push(t);
   }
   addTxn(work.id, 'income', partTime, cmb, 3000, iso(addDays(now, -14)), '项目奖金');
+  // 转账演示：公交卡充值、还信用卡（负债账户转入即还款）
+  txns.push({
+    id: uid(), bookId: life.id, type: 'transfer', categoryId: TRANSFER_CATEGORY_ID,
+    accountId: wx.id, toAccountId: bus.id, amount: 100,
+    date: iso(addDays(now, -12)), note: '公交卡充值', createdAt: `${iso(addDays(now, -12))} 12:00`,
+  });
+  txns.push({
+    id: uid(), bookId: life.id, type: 'transfer', categoryId: TRANSFER_CATEGORY_ID,
+    accountId: cmb.id, toAccountId: credit.id, amount: 2000,
+    date: iso(addDays(now, -5)), note: '还信用卡', createdAt: `${iso(addDays(now, -5))} 12:00`,
+  });
   // 日常记录点缀标签
   txns[0].tags = ['日常'];
   txns[1].tags = ['日常'];
@@ -319,7 +354,7 @@ export const useStore = create<StoreState>()(
 
       exportJSON: () => {
         const { books, accounts, categories, txns } = get();
-        return JSON.stringify({ app: 'pocket-ledger', version: 1, books, accounts, categories, txns }, null, 2);
+        return JSON.stringify({ app: 'pocket-ledger', version: 2, books, accounts, categories, txns }, null, 2);
       },
 
       importJSON: (raw) => {
@@ -330,7 +365,7 @@ export const useStore = create<StoreState>()(
           }
           set({
             books: d.books,
-            accounts: d.accounts,
+            accounts: d.accounts.map((a: Partial<Account> & Pick<Account, 'id' | 'name'>) => normalizeAccount(a)),
             categories: Array.isArray(d.categories) ? d.categories : [],
             txns: d.txns,
             activeBookId: d.books[0]?.id ?? '',
@@ -343,6 +378,19 @@ export const useStore = create<StoreState>()(
 
       loadDemo: () => set(createDemoData()),
     }),
-    { name: 'pocket-ledger', version: 1 },
+    {
+      name: 'pocket-ledger',
+      version: 2,
+      // v1 → v2：账户补充 kind/subtype/includeInNet/canSelect 字段
+      migrate: (persisted) => {
+        const s = persisted as Partial<StoreState> & { accounts?: Partial<Account>[] };
+        if (Array.isArray(s.accounts)) {
+          s.accounts = s.accounts
+            .filter((a) => a && typeof a.id === 'string')
+            .map((a) => normalizeAccount(a as Partial<Account> & Pick<Account, 'id' | 'name'>));
+        }
+        return s as StoreState;
+      },
+    },
   ),
 );

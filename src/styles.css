@@ -1680,3 +1680,618 @@ input[type='date'] {
     grid-template-columns: 260px minmax(0, 1fr);
   }
 }
+
+/* ============ 资产模块 v2：类型分组 / 账户详情 / 借入借出 ============ */
+
+/* 子类型圆形图标（emoji 或彩色汉字） */
+.icon-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.icon-circle.lg {
+  width: 44px;
+  height: 44px;
+  font-size: 19px;
+}
+
+.icon-circle.xl {
+  width: 52px;
+  height: 52px;
+  font-size: 23px;
+}
+
+/* 「不计入」徽标 */
+.badge-off {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--seg-bg);
+}
+
+/* 折叠箭头 */
+.type-chev {
+  display: inline-block;
+  transition: transform 0.18s;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.type-chev.open {
+  transform: rotate(180deg);
+}
+
+/* 总借入 / 总借出 */
+.borrow-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.borrow-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.borrow-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.borrow-icon.in {
+  background: var(--ink);
+}
+
+.borrow-icon.out {
+  background: var(--green);
+}
+
+.borrow-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.borrow-main span {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.borrow-main b {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 六大账户类型分组 */
+.kind-group {
+  margin-bottom: 4px;
+}
+
+.kind-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 12px 2px;
+  cursor: pointer;
+}
+
+.kind-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.kind-name em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.kind-sum {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.kind-sum b {
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.kind-sum b.neg {
+  color: var(--red);
+}
+
+.kind-body {
+  padding: 4px 14px;
+  margin-bottom: 8px;
+}
+
+.kind-body .account-row {
+  padding: 11px 0;
+}
+
+.kind-body .account-row + .account-row {
+  border-top: 1px solid var(--line);
+}
+
+/* 类型选择页 */
+.type-group {
+  margin-bottom: 8px;
+}
+
+.type-group-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 12px 2px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.type-list {
+  background: var(--field-bg);
+  border-radius: 14px;
+  padding: 2px 12px;
+  margin-bottom: 6px;
+}
+
+.type-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 11px 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.type-row + .type-row {
+  border-top: 1px solid var(--line);
+}
+
+.type-row-label {
+  flex: 1;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.type-row-arrow {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+/* 表单：类型行 / 开关 */
+.form-grid .acc-type-row {
+  grid-column: 1 / -1;
+}
+
+.acc-type-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--field-bg);
+  border: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.acc-type-name {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.acc-type-name em {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.acc-static-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.acc-static-row b {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.inline-card {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+}
+
+.inline-card .field {
+  margin-bottom: 0;
+}
+
+.field-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.switch-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch i {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--seg-bg);
+  transition: background 0.18s;
+}
+
+.switch i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s;
+}
+
+.switch input:checked + i {
+  background: var(--green);
+}
+
+.switch input:checked + i::after {
+  transform: translateX(20px);
+}
+
+/* 全屏覆盖页（账户详情 / 借入借出） */
+.overlay-page {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.page-back,
+.page-action {
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.page-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.page-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 账户详情 */
+.acc-hero {
+  padding: 16px;
+}
+
+.acc-hero-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acc-hero-name {
+  flex: 1;
+  font-size: 16.5px;
+  font-weight: 800;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.acc-more-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.acc-menu {
+  position: absolute;
+  right: 0;
+  top: 34px;
+  z-index: 5;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow), 0 8px 28px rgba(23, 29, 41, 0.16);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  overflow: hidden;
+}
+
+.acc-menu button {
+  border: none;
+  background: none;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.acc-menu button + button {
+  border-top: 1px solid var(--line);
+}
+
+.acc-menu button.danger {
+  color: var(--red);
+}
+
+.acc-hero-label {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.acc-hero-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 2px;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.acc-pencil {
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* 月度记录卡片 */
+.month-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.month-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 13px 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.month-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.month-title em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--seg-bg);
+  border-radius: 6px;
+  padding: 1px 6px;
+  width: fit-content;
+  font-weight: 600;
+}
+
+.month-flows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-end;
+  font-size: 12.5px;
+  font-weight: 700;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.month-flows .neg {
+  color: var(--red);
+}
+
+.month-flows .pos {
+  color: var(--green);
+}
+
+.month-body {
+  border-top: 1px solid var(--line);
+}
+
+.day-group + .day-group {
+  border-top: 1px solid var(--line);
+}
+
+.day-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--row-active);
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.day-flows {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.month-body .txn-row {
+  padding: 10px 14px;
+}
+
+.month-body .txn-row + .txn-row {
+  border-top: 1px solid var(--line);
+}
+
+.txn-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 46%;
+}
+
+.txn-right .amount {
+  font-size: 14.5px;
+}
+
+.txn-balance {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 借入借出列表 */
+.borrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.borrow-row + .borrow-row {
+  margin-top: 2px;
+}
+
+.borrow-row .txn-main {
+  min-width: 0;
+}
+
+.borrow-row .txn-sub {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
