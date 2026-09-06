@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Layout, type TabKey } from './components/Layout';
 import { BookManager } from './components/BookManager';
 import { TransactionForm } from './components/TransactionForm';
+import { TxnDetail } from './components/TxnDetail';
 import { AssetsPage } from './pages/AssetsPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { DetailPage } from './pages/DetailPage';
@@ -15,6 +16,8 @@ export default function App() {
   const [editing, setEditing] = useState<Txn | null>(null);
   const [preset, setPreset] = useState<Txn | null>(null);
   const [bookMgrOpen, setBookMgrOpen] = useState(false);
+  /** 调整流水没有记账表单，列表点击时改走账单详情 */
+  const [adjustDetailId, setAdjustDetailId] = useState<string | null>(null);
   const theme = useStore((s) => s.theme);
 
   // 主题：html data-theme + 状态栏颜色跟随
@@ -32,6 +35,10 @@ export default function App() {
   }, []);
 
   const openEditor = (t: Txn | null) => {
+    if (t && t.type === 'adjust') {
+      setAdjustDetailId(t.id);
+      return;
+    }
     setEditing(t);
     setPreset(null);
     setFormOpen(true);
@@ -56,6 +63,14 @@ export default function App() {
 
       {formOpen && (
         <TransactionForm initial={editing} preset={preset} onClose={() => setFormOpen(false)} />
+      )}
+      {adjustDetailId && (
+        <TxnDetail
+          txnId={adjustDetailId}
+          backLabel="返回"
+          onClose={() => setAdjustDetailId(null)}
+          onEdit={openEditor}
+        />
       )}
       {bookMgrOpen && <BookManager onClose={() => setBookMgrOpen(false)} />}
     </>

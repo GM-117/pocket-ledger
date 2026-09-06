@@ -206,6 +206,17 @@ function createDemoData() {
     accountId: cmb.id, toAccountId: credit.id, amount: 2000,
     date: iso(addDays(now, -5)), note: '还信用卡', createdAt: `${iso(addDays(now, -5))} 12:00`,
   });
+  // 余额调整演示：调整流水仅留痕（差额已并入期初余额），不计入收支统计
+  txns.push({
+    id: uid(), bookId: life.id, type: 'adjust', categoryId: ADJUST_CATEGORY_IN,
+    accountId: fund.id, amount: 66.6,
+    date: iso(addDays(now, -6)), note: '余额调整', createdAt: `${iso(addDays(now, -6))} 12:00`,
+  });
+  txns.push({
+    id: uid(), bookId: life.id, type: 'adjust', categoryId: ADJUST_CATEGORY_OUT,
+    accountId: ali.id, amount: 30,
+    date: iso(addDays(now, -9)), note: '余额调整', createdAt: `${iso(addDays(now, -9))} 12:00`,
+  });
   // 日常记录点缀标签
   txns[0].tags = ['日常'];
   txns[1].tags = ['日常'];

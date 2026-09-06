@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { subtypeOf } from '../accountCatalog';
 import { useStore } from '../store';
-import type { Account, ReimbStatus, Txn, TxnType } from '../types';
+import { ADJUST_CATEGORY_IN, type Account, type ReimbStatus, type Txn, type TxnType } from '../types';
 import { fmtHm, fmtMoney, lockBodyScroll, parseISO, round2, uid, unlockBodyScroll } from '../utils';
 import { AmountPadModal } from './AmountPadModal';
 import { CategoryPickModal, DateEditModal, OptionPickerModal } from './EditModals';
@@ -23,6 +23,7 @@ const TYPE_LABEL: Record<TxnType, string> = {
   expense: '支出',
   income: '收入',
   transfer: '转账',
+  adjust: '调整',
 };
 
 export function TxnDetail(props: TxnDetailProps) {
@@ -80,6 +81,9 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
   if (!t) return null;
 
   const isTransfer = t.type === 'transfer';
+  // 调整流水的金额与期初余额变动一一对应，类型/金额/账户不可改，只留时间/账本/备注
+  const isAdjust = t.type === 'adjust';
+  const adjustIn = isAdjust && t.categoryId === ADJUST_CATEGORY_IN;
   const cat = categories.find((c) => c.id === t.categoryId);
   const acc = accounts.find((a) => a.id === t.accountId);
   const toAcc = accounts.find((a) => a.id === t.toAccountId);
@@ -164,9 +168,11 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
 
       <div className="page-body">
         <div className="txn-actions">
-          <button className="txn-action edit" onClick={() => onEdit(t)}>
-            <span className="ic">✏️</span>编辑
-          </button>
+          {!isAdjust && (
+            <button className="txn-action edit" onClick={() => onEdit(t)}>
+              <span className="ic">✏️</span>编辑
+            </button>
+          )}
           <button className="txn-action danger" onClick={del}>
             <span className="ic">🗑️</span>删除
           </button>
@@ -181,7 +187,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
               <span className="ic">🛒</span>退款
             </button>
           )}
-          {!isTransfer && (
+          {!isTransfer && !isAdjust && (
             <button className="txn-action tpl" onClick={() => setTplOpen(true)}>
               <span className="ic">⚡</span>存为模板
             </button>
@@ -189,16 +195,23 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
         </div>
 
         <div className="card detail-card">
-          <button
-            className="detail-row"
-            onClick={() => (isTransfer ? onEdit(t) : setEditTarget('category'))}
-          >
-            <span>类型</span>
-            <span className="value">
-              （{TYPE_LABEL[t.type]}）{isTransfer ? '转账' : cat?.name ?? '未知分类'}
-              <span className="arrow">›</span>
-            </span>
-          </button>
+          {isAdjust ? (
+            <div className="detail-row">
+              <span>类型</span>
+              <span className="value">（调整）余额调整</span>
+            </div>
+          ) : (
+            <button
+              className="detail-row"
+              onClick={() => (isTransfer ? onEdit(t) : setEditTarget('category'))}
+            >
+              <span>类型</span>
+              <span className="value">
+                （{TYPE_LABEL[t.type]}）{isTransfer ? '转账' : cat?.name ?? '未知分类'}
+                <span className="arrow">›</span>
+              </span>
+            </button>
+          )}
           <button className="detail-row" onClick={() => setEditTarget('book')}>
             <span>账本</span>
             <span className="value">
@@ -216,28 +229,45 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
               <span className="arrow">›</span>
             </span>
           </button>
-          <button className="detail-row" onClick={() => setEditTarget('amount')}>
-            <span>金额</span>
-            <span className="value ink">
-              {t.type === 'income' ? '+' : t.type === 'expense' ? '−' : ''}
-              {fmtMoney(t.amount)}
-              <span className="arrow">›</span>
-            </span>
-          </button>
+          {isAdjust ? (
+            <div className="detail-row">
+              <span>金额</span>
+              <span className="value ink">
+                {adjustIn ? '+' : '−'}
+                {fmtMoney(t.amount)}
+              </span>
+            </div>
+          ) : (
+            <button className="detail-row" onClick={() => setEditTarget('amount')}>
+              <span>金额</span>
+              <span className="value ink">
+                {t.type === 'income' ? '+' : t.type === 'expense' ? '−' : ''}
+                {fmtMoney(t.amount)}
+                <span className="arrow">›</span>
+              </span>
+            </button>
+          )}
           <div className="detail-row">
             <span>货币</span>
             <span className="value">人民币 (CNY)</span>
           </div>
-          <button
-            className="detail-row"
-            onClick={() => (isTransfer ? onEdit(t) : setEditTarget('account'))}
-          >
-            <span>账户</span>
-            <span className="value">
-              {isTransfer ? `${acc?.name ?? '?'} → ${toAcc?.name ?? '?'}` : acc?.name ?? '未知账户'}
-              <span className="arrow">›</span>
-            </span>
-          </button>
+          {isAdjust ? (
+            <div className="detail-row">
+              <span>账户</span>
+              <span className="value">{acc?.name ?? '未知账户'}</span>
+            </div>
+          ) : (
+            <button
+              className="detail-row"
+              onClick={() => (isTransfer ? onEdit(t) : setEditTarget('account'))}
+            >
+              <span>账户</span>
+              <span className="value">
+                {isTransfer ? `${acc?.name ?? '?'} → ${toAcc?.name ?? '?'}` : acc?.name ?? '未知账户'}
+                <span className="arrow">›</span>
+              </span>
+            </button>
+          )}
         </div>
 
         <div className="card detail-card">
@@ -268,7 +298,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
               </button>
             )}
           </div>
-          {!isTransfer && (
+          {!isTransfer && !isAdjust && (
             <div className="detail-row">
               <span>标签</span>
               <button

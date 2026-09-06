@@ -92,6 +92,7 @@ export function SearchPanel({ onEdit, onClose }: SearchPanelProps) {
             <option value="expense">支出</option>
             <option value="income">收入</option>
             <option value="transfer">转账</option>
+            <option value="adjust">调整</option>
           </select>
         </label>
         <label className="field">

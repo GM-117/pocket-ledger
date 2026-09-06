@@ -1337,6 +1337,15 @@ input[type='date'] {
   color: var(--primary);
 }
 
+/* 「余额调整」流水（与「账户创建」同用警示黄） */
+.emoji-dot.adjust {
+  background: var(--warn-soft);
+}
+
+.amount.adj {
+  color: var(--warn);
+}
+
 .seg button.active.transfer {
   color: var(--primary);
 }

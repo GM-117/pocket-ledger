@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { accountIcon } from '../accountCatalog';
 import { useStore } from '../store';
-import type { Account, Txn } from '../types';
-import { accountBalance, fmtHm, fmtMoney, lockBodyScroll, pad, parseISO, round2, unlockBodyScroll } from '../utils';
+import { ADJUST_CATEGORY_IN, type Account, type Txn } from '../types';
+import { accountBalance, createdTs, fmtHm, fmtMoney, lockBodyScroll, pad, parseISO, round2, unlockBodyScroll } from '../utils';
 import { BalanceAdjustModal } from './BalanceAdjustModal';
 import { TxnDetail } from './TxnDetail';
 
@@ -84,7 +84,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
           }
         : null;
     const asc = [...accTxns].sort((x, y) =>
-      x.date === y.date ? (x.createdAt || '').localeCompare(y.createdAt || '') : x.date.localeCompare(y.date),
+      x.date === y.date ? createdTs(x.createdAt) - createdTs(y.createdAt) : x.date.localeCompare(y.date),
     );
     const all = created ? [created, ...asc] : asc;
 
@@ -94,6 +94,8 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
     for (const t of all) {
       if (t.id === '__created__') {
         b = a.initialBalance;
+      } else if (t.type === 'adjust') {
+        // 调整差额已并入期初余额，此处仅留痕，不改变运行余额
       } else if (t.type === 'transfer') {
         if (t.accountId === a.id) b -= dir * t.amount;
         if (t.toAccountId === a.id) b += dir * t.amount;
@@ -116,7 +118,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
         const real = list.filter((t) => t.id !== '__created__');
         const byDay = new Map<string, Txn[]>();
         for (const t of [...list].sort((x, y2) =>
-          x.date === y2.date ? (y2.createdAt || '').localeCompare(x.createdAt || '') : y2.date.localeCompare(x.date),
+          x.date === y2.date ? createdTs(y2.createdAt) - createdTs(x.createdAt) : y2.date.localeCompare(x.date),
         )) {
           (byDay.get(t.date) ?? byDay.set(t.date, []).get(t.date)!).push(t);
         }
@@ -280,6 +282,8 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                           );
                         }
                         const isTransfer = t.type === 'transfer';
+                        const isAdjust = t.type === 'adjust';
+                        const adjustIn = isAdjust && t.categoryId === ADJUST_CATEGORY_IN;
                         const transferIn = isTransfer && t.toAccountId === a.id;
                         const cat = catMap.get(t.categoryId);
                         const from = accMap.get(t.accountId);
@@ -288,12 +292,12 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                         const hm = fmtHm(t.createdAt);
                         return (
                           <button className="txn-row" key={t.id} onClick={() => setTxnDetailId(t.id)}>
-                            <span className={'emoji-dot ' + (isTransfer ? 'transfer' : t.type)}>
-                              {isTransfer ? '🔁' : cat?.emoji ?? '❓'}
+                            <span className={'emoji-dot ' + (isTransfer ? 'transfer' : isAdjust ? 'adjust' : t.type)}>
+                              {isTransfer ? '🔁' : isAdjust ? '⚙️' : cat?.emoji ?? '❓'}
                             </span>
                             <span className="txn-main">
                               <span className="txn-cat">
-                                {isTransfer ? '转账' : cat?.name ?? '未知分类'}
+                                {isTransfer ? '转账' : isAdjust ? '余额调整' : cat?.name ?? '未知分类'}
                                 {book && (
                                   <span className="txn-book" style={{ color: book.color }}>
                                     {book.emoji} {book.name}
@@ -313,10 +317,18 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                               <span
                                 className={
                                   'amount ' +
-                                  (isTransfer ? (transferIn ? 'pos' : 'neg') : t.type === 'income' ? 'pos' : 'neg')
+                                  (isTransfer
+                                    ? transferIn
+                                      ? 'pos'
+                                      : 'neg'
+                                    : isAdjust
+                                      ? 'adj'
+                                      : t.type === 'income'
+                                        ? 'pos'
+                                        : 'neg')
                                 }
                               >
-                                {t.type === 'income' || transferIn ? '+' : '−'}
+                                {isAdjust ? (adjustIn ? '+' : '−') : t.type === 'income' || transferIn ? '+' : '−'}
                                 {fmtMoney(t.amount)}
                               </span>
                               <span className="txn-balance">余额: {fmtMoney(bal)}</span>
