@@ -999,6 +999,8 @@ input[type='date'] {
 }
 
 .cal-cell {
+  min-width: 0; /* 防止长数字把 1fr 轨道撑宽导致整行偏移 */
+  overflow: hidden;
   min-height: 52px;
   border: none;
   background: none;

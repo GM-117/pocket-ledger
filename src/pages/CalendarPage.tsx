@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import type { Txn } from '../types';
-import { fmtISO, fmtMoney, parseISO, sameMonth, ymKey } from '../utils';
+import { fmtCellAmount, fmtISO, fmtMoney, parseISO, sameMonth, ymKey } from '../utils';
 import { MonthSwitcher } from '../components/MonthSwitcher';
 import { TxnList } from '../components/TxnList';
 
@@ -111,8 +111,8 @@ export function CalendarPage({ onEdit }: CalendarPageProps) {
                 onClick={() => setSelected(iso)}
               >
                 <span className="cal-day">{c.date.getDate()}</span>
-                {sum && sum.expense > 0 && <span className="cal-exp">−{Math.round(sum.expense)}</span>}
-                {sum && sum.income > 0 && <span className="cal-inc">+{Math.round(sum.income)}</span>}
+                {sum && sum.expense > 0 && <span className="cal-exp">−{fmtCellAmount(sum.expense)}</span>}
+                {sum && sum.income > 0 && <span className="cal-inc">+{fmtCellAmount(sum.income)}</span>}
               </button>
             );
           })}

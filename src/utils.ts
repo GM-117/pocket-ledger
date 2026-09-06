@@ -95,6 +95,17 @@ export function fmtShort(n: number): string {
   return String(Math.round(n));
 }
 
+/** 日历格子金额缩写：≥1万用「万」、≥1000万用「亿」，小数最多 1 位去尾零（「万」是全角，超过 5 字符会撑破格子） */
+export function fmtCellAmount(n: number): string {
+  const abs = Math.abs(n);
+  const trimZeros = (s: string) => s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  const fix = (v: number) => trimZeros(v.toFixed(v >= 10 ? 0 : 1));
+  const wan = abs / 10000;
+  if (Math.round(wan) >= 1000) return fix(n / 100000000) + '亿';
+  if (wan >= 1) return fix(wan) + '万';
+  return String(Math.round(n));
+}
+
 export const uid = () =>
   typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
