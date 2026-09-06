@@ -28,7 +28,7 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [tplManageOpen, setTplManageOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [allFilter, setAllFilter] = useState<'all' | TxnType>('all');
+  const [flowFilter, setFlowFilter] = useState<'all' | TxnType>('all');
 
   const book = books.find((b) => b.id === activeBookId) ?? books[0];
   const budget = book ? budgets[book.id] ?? 0 : 0;
@@ -46,9 +46,9 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
     return { expense, income, balance: Math.round((income - expense) * 100) / 100 };
   }, [monthTxns, month]);
 
-  const filteredTxns = useMemo(
-    () => (allFilter === 'all' ? txns : txns.filter((t) => t.type === allFilter)),
-    [txns, allFilter],
+  const flowTxns = useMemo(
+    () => (flowFilter === 'all' ? monthTxns : monthTxns.filter((t) => t.type === flowFilter)),
+    [monthTxns, flowFilter],
   );
 
   if (!book) {
@@ -155,13 +155,8 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
 
       <div className="section-title">
         <span>
-          {book.emoji} {book.name} · 流水（{monthTxns.length}）
+          {book.emoji} {book.name} · 流水（{flowTxns.length}）
         </span>
-      </div>
-      <TxnList txns={monthTxns} onEdit={onEdit} emptyText="这个月还没有记录，点右下角「＋」记一笔吧" />
-
-      <div className="section-title">
-        <span>全部收支记录（{filteredTxns.length}）</span>
         <div className="chips">
           {(
             [
@@ -169,15 +164,16 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
               ['expense', '支出'],
               ['income', '收入'],
               ['transfer', '转账'],
+              ['adjust', '调整'],
             ] as ['all' | TxnType, string][]
           ).map(([k, label]) => (
-            <button key={k} className={'chip' + (allFilter === k ? ' active' : '')} onClick={() => setAllFilter(k)}>
+            <button key={k} className={'chip' + (flowFilter === k ? ' active' : '')} onClick={() => setFlowFilter(k)}>
               {label}
             </button>
           ))}
         </div>
       </div>
-      <TxnList txns={filteredTxns} onEdit={onEdit} showBook emptyText="还没有任何收支记录" />
+      <TxnList txns={flowTxns} onEdit={onEdit} emptyText="这个月还没有记录，点右下角「＋」记一笔吧" />
 
       {budgetOpen && (
         <BudgetModal bookId={book.id} bookName={book.name} current={budget} onClose={() => setBudgetOpen(false)} />
