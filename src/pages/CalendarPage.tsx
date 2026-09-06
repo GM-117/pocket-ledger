@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../store';
 import type { Txn } from '../types';
 import { fmtCellAmount, fmtISO, fmtMoney, parseISO, sameMonth, ymKey } from '../utils';
@@ -19,6 +19,11 @@ export function CalendarPage({ onEdit }: CalendarPageProps) {
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [scope, setScope] = useState(activeBookId || '__all__');
   const [selected, setSelected] = useState(() => fmtISO(new Date()));
+
+  // 顶右切换账本时，日历自动跟随当前账本
+  useEffect(() => {
+    setScope(activeBookId || '__all__');
+  }, [activeBookId]);
 
   const scoped = useMemo(
     () => (scope === '__all__' ? txns : txns.filter((t) => t.bookId === scope)),

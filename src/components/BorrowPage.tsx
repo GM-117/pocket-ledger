@@ -6,6 +6,8 @@ import { accountBalance, fmtMoney, lockBodyScroll, unlockBodyScroll } from '../u
 import { useEffect } from 'react';
 
 interface BorrowPageProps {
+  /** 初始选中的分段（由总借入/总借出卡片决定） */
+  initialTab?: 'borrow' | 'lend';
   onClose: () => void;
   /** 点击条目 → 账户详情 */
   onOpenDetail: (a: Account) => void;
@@ -14,11 +16,12 @@ interface BorrowPageProps {
 }
 
 /** iCost 式借入/借出列表：显示借款时间与金额 */
-export function BorrowPage({ onClose, onOpenDetail, onAdd }: BorrowPageProps) {
+export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd }: BorrowPageProps) {
   const accounts = useStore((s) => s.accounts);
   const txns = useStore((s) => s.txns);
+  const activeBookId = useStore((s) => s.activeBookId);
   const hideAmounts = useStore((s) => s.hideAmounts);
-  const [tab, setTab] = useState<'borrow' | 'lend'>('borrow');
+  const [tab, setTab] = useState<'borrow' | 'lend'>(initialTab);
 
   useEffect(() => {
     lockBodyScroll();
@@ -27,12 +30,18 @@ export function BorrowPage({ onClose, onOpenDetail, onAdd }: BorrowPageProps) {
 
   const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));
 
+  // 借入借出随账本走：只统计当前账本名下的流水
+  const bookTxns = useMemo(
+    () => txns.filter((t) => t.bookId === activeBookId),
+    [txns, activeBookId],
+  );
+
   const list = useMemo(
     () =>
       accounts
         .filter((a) => (tab === 'borrow' ? a.kind === 'payable' : a.kind === 'receivable'))
-        .map((a) => ({ a, bal: accountBalance(a, txns) })),
-    [accounts, txns, tab],
+        .map((a) => ({ a, bal: accountBalance(a, bookTxns) })),
+    [accounts, bookTxns, tab],
   );
   const total = useMemo(() => list.reduce((s, x) => s + x.bal, 0), [list]);
 

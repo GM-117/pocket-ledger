@@ -37,6 +37,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const [formState, setFormState] = useState<FormState | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [borrowOpen, setBorrowOpen] = useState(false);
+  const [borrowTab, setBorrowTab] = useState<'borrow' | 'lend'>('borrow');
   /** 当前左滑展开的账户行（互斥） */
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
@@ -44,13 +45,19 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
 
   const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));
 
-  const totals = useMemo(() => computeTotals(accounts, txns), [accounts, txns]);
+  // 资产随账本走：只统计当前账本名下的流水（账户与期初余额为全局，收支影响按账本隔离）
+  const bookTxns = useMemo(
+    () => txns.filter((t) => t.bookId === activeBookId),
+    [txns, activeBookId],
+  );
+
+  const totals = useMemo(() => computeTotals(accounts, bookTxns), [accounts, bookTxns]);
 
   const balances = useMemo(() => {
     const map = new Map<string, number>();
-    for (const a of accounts) map.set(a.id, accountBalance(a, txns));
+    for (const a of accounts) map.set(a.id, accountBalance(a, bookTxns));
     return map;
-  }, [accounts, txns]);
+  }, [accounts, bookTxns]);
 
   /** 总借入 / 总借出 */
   const borrowTotals = useMemo(() => {
@@ -137,14 +144,26 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
       </div>
 
       <div className="borrow-cards">
-        <button className="borrow-card" onClick={() => setBorrowOpen(true)}>
+        <button
+          className="borrow-card"
+          onClick={() => {
+            setBorrowTab('borrow');
+            setBorrowOpen(true);
+          }}
+        >
           <span className="borrow-icon in">⬇</span>
           <span className="borrow-main">
             <span>总借入</span>
             <b>{money(borrowTotals.debt)}</b>
           </span>
         </button>
-        <button className="borrow-card" onClick={() => setBorrowOpen(true)}>
+        <button
+          className="borrow-card"
+          onClick={() => {
+            setBorrowTab('lend');
+            setBorrowOpen(true);
+          }}
+        >
           <span className="borrow-icon out">⬆</span>
           <span className="borrow-main">
             <span>总借出</span>
@@ -293,6 +312,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
       )}
       {borrowOpen && (
         <BorrowPage
+          initialTab={borrowTab}
           onClose={() => setBorrowOpen(false)}
           onOpenDetail={(a) => setDetailId(a.id)}
           onAdd={(kind) => openPicker(kind)}

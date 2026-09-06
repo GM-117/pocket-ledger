@@ -22,10 +22,12 @@ interface LayoutProps {
   tab: TabKey;
   onTab: (t: TabKey) => void;
   onAdd: () => void;
+  /** 顶右账本芯片 → 打开账本管理（切换/创建/编辑/删除） */
+  onOpenBooks: () => void;
   children: ReactNode;
 }
 
-export function Layout({ tab, onTab, onAdd, children }: LayoutProps) {
+export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps) {
   const books = useStore((s) => s.books);
   const activeBookId = useStore((s) => s.activeBookId);
   const setActiveBook = useStore((s) => s.setActiveBook);
@@ -86,8 +88,14 @@ export function Layout({ tab, onTab, onAdd, children }: LayoutProps) {
           <div className="topbar-right">
             {themeBtn}
             {activeBook && (
-              <button className="book-chip" style={{ color: activeBook.color }} onClick={() => onTab('detail')}>
+              <button
+                className="book-chip"
+                style={{ color: activeBook.color }}
+                onClick={onOpenBooks}
+                title="切换 / 管理账本"
+              >
                 {activeBook.emoji} {activeBook.name}
+                <span className="book-chip-chev">⌄</span>
               </button>
             )}
           </div>

@@ -128,23 +128,25 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
             <span className="arrow">›</span>
           </span>
         </div>
-        <div className="detail-row">
+        {/* label 使整行可点：开关的 checkbox 本身 0×0，点行任意处都能切换 */}
+        <label className="detail-row">
           <span>计入总资产</span>
           <span className="switch">
             <input type="checkbox" checked={includeInNet} onChange={(e) => setIncludeInNet(e.target.checked)} />
             <i />
           </span>
-        </div>
+        </label>
       </div>
 
       <div className="card detail-card">
-        <div className="detail-row">
+        {/* label 使整行可点：开关的 checkbox 本身 0×0，点行任意处都能切换 */}
+        <label className="detail-row">
           <span>记账时可被选择</span>
           <span className="switch">
             <input type="checkbox" checked={canSelect} onChange={(e) => setCanSelect(e.target.checked)} />
             <i />
           </span>
-        </div>
+        </label>
         <p className="field-hint">关闭后，该账户不出现在记账面板与周期记账的账户列表中</p>
       </div>
 

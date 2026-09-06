@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { TRANSFER_CATEGORY_ID, type Txn, type TxnType } from '../types';
-import { fmtISO, parseISO, round2, uid } from '../utils';
+import { fmtISO, round2, uid } from '../utils';
+import { DateEditModal, OptionPickerModal } from './EditModals';
 
 interface TransactionFormProps {
   /** 编辑已有记录 */
@@ -46,7 +47,8 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   );
   const [bookId, setBookId] = useState(initial?.bookId ?? preset?.bookId ?? activeBookId);
   const [date, setDate] = useState(initial?.date ?? preset?.date ?? fmtISO(new Date()));
-  const [metaOpen, setMetaOpen] = useState(!!initial);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [accOpen, setAccOpen] = useState(false);
   const [error, setError] = useState('');
   const [tplSaving, setTplSaving] = useState(false);
   const [tplName, setTplName] = useState('');
@@ -130,8 +132,11 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   };
 
   const selectedAcc = accounts.find((a) => a.id === accountId);
-  const selectedBook = books.find((b) => b.id === bookId);
   const isTransfer = type === 'transfer';
+  const dateLabel =
+    date === fmtISO(new Date())
+      ? '今天'
+      : `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`;
 
   return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -205,9 +210,21 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
         )}
 
         <div className="kp-meta">
-          <button className="kp-meta-chip" onClick={() => setMetaOpen((v) => !v)}>
+          <button className="kp-meta-chip" onClick={() => setDateOpen(true)}>
+            <span className="kp-meta-label">日期</span>
+            {dateLabel}
+          </button>
+          {!isTransfer && (
+            <button className="kp-meta-chip" onClick={() => setAccOpen(true)}>
+              <span className="kp-meta-label">账户</span>
+              <span className="kp-meta-value">
+                {selectedAcc ? `${selectedAcc.emoji} ${selectedAcc.name}` : '选择账户'}
+              </span>
+            </button>
+          )}
+          <button className="kp-meta-chip">
             <span className="kp-meta-label">账本</span>
-            <select value={bookId} onClick={(e) => e.stopPropagation()} onChange={(e) => setBookId(e.target.value)}>
+            <select value={bookId} onChange={(e) => setBookId(e.target.value)}>
               {books.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.emoji} {b.name}
@@ -215,39 +232,29 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               ))}
             </select>
           </button>
-          <button className="kp-meta-chip" onClick={() => setMetaOpen((v) => !v)}>
-            <span className="kp-meta-label">日期</span>
-            {date === fmtISO(new Date()) ? '今天' : `${parseISO(date).getMonth() + 1}/${parseISO(date).getDate()}`}
-          </button>
-          <button className={'kp-meta-chip' + (metaOpen ? ' open' : '')} onClick={() => setMetaOpen((v) => !v)}>
-            <span className="kp-meta-label">更多</span>
-            日期/账户
-          </button>
         </div>
 
-        {metaOpen && (
-          <div className="kp-more">
-            <label className="kp-field">
-              <span>日期</span>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            {!isTransfer && (
-              <label className="kp-field">
-                <span>账户</span>
-                <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                  {selectable.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.emoji} {a.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <p className="kp-current">
-              {selectedBook?.emoji} {selectedBook?.name}
-              {selectedAcc ? ` · ${selectedAcc.emoji} ${selectedAcc.name}` : ''}
-            </p>
-          </div>
+        {dateOpen && (
+          <DateEditModal
+            date={date}
+            onSave={(d) => {
+              setDate(d);
+              setDateOpen(false);
+            }}
+            onClose={() => setDateOpen(false)}
+          />
+        )}
+        {accOpen && (
+          <OptionPickerModal
+            title="选择账户"
+            options={selectable.map((a) => ({ id: a.id, label: a.name, emoji: a.emoji }))}
+            selectedId={accountId}
+            onPick={(id) => {
+              setAccountId(id);
+              setAccOpen(false);
+            }}
+            onClose={() => setAccOpen(false)}
+          />
         )}
 
         {!isTransfer && (

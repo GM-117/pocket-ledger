@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as echarts from 'echarts';
 import { useStore } from '../store';
 import { Chart, CHART_COLORS } from '../components/Chart';

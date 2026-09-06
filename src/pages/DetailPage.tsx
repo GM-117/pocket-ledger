@@ -21,7 +21,6 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
   const templates = useStore((s) => s.templates);
   const removeTemplate = useStore((s) => s.removeTemplate);
   const activeBookId = useStore((s) => s.activeBookId);
-  const setActiveBook = useStore((s) => s.setActiveBook);
 
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -70,28 +69,11 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
   return (
     <>
       <div className="book-pills scroll-x">
-        {books.map((b) => {
-          const active = b.id === book.id;
-          return (
-            <button
-              key={b.id}
-              className={'book-pill' + (active ? ' active' : '')}
-              style={active ? { color: b.color } : undefined}
-              onClick={() => setActiveBook(b.id)}
-            >
-              <span>{b.emoji}</span>
-              {b.name}
-            </button>
-          );
-        })}
         <button className="book-pill manage" onClick={() => setSearchOpen(true)}>
           🔍 搜索
         </button>
         <button className="book-pill manage" onClick={() => setRecurringOpen(true)}>
           🔁 周期
-        </button>
-        <button className="book-pill manage" onClick={onManage}>
-          ⚙️ 管理
         </button>
       </div>
 
@@ -164,7 +146,6 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
               ['expense', '支出'],
               ['income', '收入'],
               ['transfer', '转账'],
-              ['adjust', '调整'],
             ] as ['all' | TxnType, string][]
           ).map(([k, label]) => (
             <button key={k} className={'chip' + (flowFilter === k ? ' active' : '')} onClick={() => setFlowFilter(k)}>

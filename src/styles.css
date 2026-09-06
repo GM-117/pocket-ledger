@@ -705,7 +705,8 @@ select {
   border: 1.5px solid var(--line);
   border-radius: 10px;
   padding: 10px 12px;
-  font-size: 15px;
+  /* ≥16px：iOS Safari 聚焦字号小于 16px 的输入框时会自动放大页面 */
+  font-size: 16px;
   background: var(--field-bg);
   color: var(--ink);
   font-family: inherit;
@@ -1211,7 +1212,7 @@ input[type='date'] {
 
 .kp-more .kp-field input {
   padding: 8px 10px;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .kp-current {
@@ -1310,7 +1311,7 @@ input[type='date'] {
 .tpl-save-row input {
   flex: 1;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .tpl-save-row .btn {
@@ -1445,7 +1446,7 @@ input[type='date'] {
 .tag-add input {
   flex: 1;
   padding: 7px 10px;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .tag-add .tpl-btn {
@@ -1520,7 +1521,7 @@ input[type='date'] {
   flex: 1;
   min-width: 0;
   padding: 7px 10px;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .refund-add .tpl-btn {
@@ -2547,7 +2548,7 @@ input[type='date'] {
   border: none;
   background: none;
   text-align: right;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--ink);
   padding: 0;
 }
@@ -2581,7 +2582,7 @@ input[type='date'] {
   border-radius: 10px;
   background: var(--field-bg);
   padding: 9px 12px;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--ink);
 }
 
@@ -2773,4 +2774,160 @@ input[type='date'] {
     box-shadow: 0 24px 80px rgba(15, 20, 32, 0.35);
     overflow: hidden;
   }
+}
+
+/* ============ 明细流水筛选：不换行，横向滑动 ============ */
+.section-title > span {
+  flex: none;
+}
+
+.section-title .chips {
+  flex: 1 1 0;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: flex-start;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to right, #000 calc(100% - 14px), transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 14px), transparent);
+}
+
+.section-title .chips::-webkit-scrollbar {
+  display: none;
+}
+
+.section-title .chips .chip {
+  flex: none;
+}
+
+/* ============ 记账面板：meta 芯片与完成键 ============ */
+.kp-meta-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* 键盘末行 [0][00][完成×2]：完成键拉宽到右缘 */
+.kp-grid > .kp-key.done {
+  grid-column: span 2;
+}
+
+/* ============ 我的账本管理页（iCost 式宫格） ============ */
+.book-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.book-card {
+  position: relative;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1.5px solid transparent;
+  padding: 14px;
+  min-height: 96px;
+}
+
+.book-card.current {
+  border-color: var(--primary);
+}
+
+.book-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+}
+
+.book-card .emoji-dot.book {
+  width: 46px;
+  height: 46px;
+  font-size: 23px;
+  border-radius: 14px;
+}
+
+.book-card-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  max-width: 100%;
+}
+
+.book-card-name em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.book-card-check {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-card-more {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: var(--key-bg);
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.book-menu {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  z-index: 30;
+  min-width: 132px;
+}
+
+.book-add {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.book-chip-chev {
+  font-size: 10px;
+  opacity: 0.55;
+  margin-left: -2px;
+}
+
+/* 更多菜单点击外部关闭的透明遮罩 */
+.pop-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  background: transparent;
 }

@@ -60,11 +60,15 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
     return () => unlockBodyScroll();
   }, []);
 
+  // 账户详情随账本走：只展示当前账本名下与该账户相关的流水（余额口径与资产页一致）
   const accTxns = useMemo(
-    () => txns.filter((t) => t.accountId === a.id || t.toAccountId === a.id),
-    [txns, a.id],
+    () =>
+      txns.filter(
+        (t) => t.bookId === activeBookId && (t.accountId === a.id || t.toAccountId === a.id),
+      ),
+    [txns, a.id, activeBookId],
   );
-  const balance = useMemo(() => accountBalance(a, txns), [a, txns]);
+  const balance = useMemo(() => accountBalance(a, accTxns), [a, accTxns]);
   const icon = accountIcon(a);
 
   const months = useMemo<MonthBucket[]>(() => {
@@ -207,6 +211,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
               <button className="chip" onClick={() => setMenuOpen((v) => !v)}>
                 更多
               </button>
+              {menuOpen && <div className="pop-mask" onClick={() => setMenuOpen(false)} />}
               {menuOpen && (
                 <div className="acc-menu">
                   <button

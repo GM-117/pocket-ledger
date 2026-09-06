@@ -52,7 +52,12 @@ export default function App() {
 
   return (
     <>
-      <Layout tab={tab} onTab={setTab} onAdd={() => openEditor(null)}>
+      <Layout
+        tab={tab}
+        onTab={setTab}
+        onAdd={() => openEditor(null)}
+        onOpenBooks={() => setBookMgrOpen(true)}
+      >
         {tab === 'detail' && (
           <DetailPage onEdit={openEditor} onManage={() => setBookMgrOpen(true)} onUseTemplate={openFromTemplate} />
         )}
