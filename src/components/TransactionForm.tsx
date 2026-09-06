@@ -15,7 +15,6 @@ interface TransactionFormProps {
 /** iCost 风格快速记账面板：金额大字 + 分类宫格 + 数字键盘，支持转账与存为模板。
  *  备注 / 标签 / 报销 / 退款在「账单详情」页编辑，面板保持精简 */
 export function TransactionForm({ initial, preset, onClose }: TransactionFormProps) {
-  const books = useStore((s) => s.books);
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const activeBookId = useStore((s) => s.activeBookId);
@@ -23,29 +22,35 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const removeTxn = useStore((s) => s.removeTxn);
   const addTemplate = useStore((s) => s.addTemplate);
 
-  /** 记账可选账户：过滤 canSelect=false 与非本账本账户，编辑中已选中的账户保留 */
+  /** 表单所属账本：新建固定为右上角当前账本；编辑锁定为记录原账本（账本不在此切换） */
+  const contextBookId = initial?.bookId ?? activeBookId;
+
+  /** 记账可选账户：只列所属账本的账户（canSelect=false 除外），编辑旧数据引用的他账本账户保留 */
   const selectable = useMemo(() => {
-    const base = accounts.filter((a) => a.canSelect !== false && a.bookId === activeBookId);
-    const curIds = [initial?.accountId, preset?.accountId, initial?.toAccountId, preset?.toAccountId];
-    for (const id of curIds) {
-      const a = id ? accounts.find((x) => x.id === id) : undefined;
-      if (a && !base.some((b) => b.id === a.id)) base.push(a);
+    const base = accounts.filter((a) => a.canSelect !== false && a.bookId === contextBookId);
+    if (initial) {
+      for (const id of [initial.accountId, initial.toAccountId]) {
+        const a = id ? accounts.find((x) => x.id === id) : undefined;
+        if (a && !base.some((b) => b.id === a.id)) base.push(a);
+      }
     }
     return base;
-  }, [accounts, activeBookId, initial, preset]);
+  }, [accounts, contextBookId, initial]);
 
   const [type, setType] = useState<TxnType>(initial?.type ?? preset?.type ?? 'expense');
   const [amount, setAmount] = useState(
     initial ? String(initial.amount) : preset ? String(preset.amount) : '',
   );
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? preset?.categoryId ?? '');
-  const [accountId, setAccountId] = useState(
-    initial?.accountId ?? preset?.accountId ?? selectable[0]?.id ?? '',
-  );
+  const [accountId, setAccountId] = useState(() => {
+    if (initial?.accountId) return initial.accountId;
+    // 模板账户若不属于当前账本，则回退到当前账本的第一个账户
+    if (preset?.accountId && selectable.some((a) => a.id === preset.accountId)) return preset.accountId;
+    return selectable[0]?.id ?? '';
+  });
   const [toAccountId, setToAccountId] = useState(
     initial?.toAccountId ?? selectable.find((a) => a.id !== accountId)?.id ?? '',
   );
-  const [bookId, setBookId] = useState(initial?.bookId ?? preset?.bookId ?? activeBookId);
   const [date, setDate] = useState(initial?.date ?? preset?.date ?? fmtISO(new Date()));
   const [dateOpen, setDateOpen] = useState(false);
   const [accOpen, setAccOpen] = useState(false);
@@ -80,6 +85,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const submit = () => {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return setError('请输入金额');
+    if (!accountId) return setError('当前账本还没有账户，请先在「资产」添加账户');
     if (type === 'transfer') {
       if (!accountId || !toAccountId) return setError('请选择转出与转入账户');
       if (accountId === toAccountId) return setError('转出与转入不能是同一账户');
@@ -88,7 +94,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
     }
     saveTxn({
       id: initial?.id ?? uid(),
-      bookId,
+      bookId: contextBookId,
       accountId,
       ...(type === 'transfer' ? { toAccountId } : {}),
       categoryId: type === 'transfer' ? TRANSFER_CATEGORY_ID : categoryId,
@@ -115,7 +121,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
       amount: round2(amt),
       categoryId,
       accountId,
-      bookId,
+      bookId: contextBookId,
       note: initial?.note ?? preset?.note ?? '',
     });
     setTplSaving(false);
@@ -222,16 +228,6 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               </span>
             </button>
           )}
-          <button className="kp-meta-chip">
-            <span className="kp-meta-label">账本</span>
-            <select value={bookId} onChange={(e) => setBookId(e.target.value)}>
-              {books.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.emoji} {b.name}
-                </option>
-              ))}
-            </select>
-          </button>
         </div>
 
         {dateOpen && (

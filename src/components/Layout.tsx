@@ -58,24 +58,26 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps
             </button>
           ))}
         </nav>
-        {books.length > 0 && (
-          <>
-            <div className="side-label">账本切换</div>
-            <div className="side-books">
-              {books.map((b) => (
-                <button
-                  key={b.id}
-                  className={'side-book' + (b.id === activeBook?.id ? ' active' : '')}
-                  style={b.id === activeBook?.id ? { color: b.color } : undefined}
-                  onClick={() => setActiveBook(b.id)}
-                >
-                  <span>{b.emoji}</span>
-                  {b.name}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+        <div className="side-label">
+          <span>账本切换</span>
+          <button className="side-label-btn" onClick={onOpenBooks} title="新建 / 编辑 / 删除账本">
+            ＋ 管理
+          </button>
+        </div>
+        <div className="side-books">
+          {books.map((b) => (
+            <button
+              key={b.id}
+              className={'side-book' + (b.id === activeBook?.id ? ' active' : '')}
+              style={b.id === activeBook?.id ? { color: b.color } : undefined}
+              onClick={() => setActiveBook(b.id)}
+            >
+              <span>{b.emoji}</span>
+              {b.name}
+            </button>
+          ))}
+          {books.length === 0 && <p className="side-books-empty">还没有账本，点「＋ 管理」创建</p>}
+        </div>
         <button className="btn primary side-add" onClick={onAdd}>
           <PlusIcon size={16} /> 记一笔
         </button>

@@ -113,6 +113,10 @@ function createDemoData() {
     }),
   ];
   const [wx, ali, cmb, fund, bus, credit] = accounts;
+  // 「工作差旅」账本自有账户，保证其资产页有内容可看
+  const wkFund = mkAcc('出差备用金', '💼', 'fund', 'cash', 20000, { bookId: work.id, note: '差旅专用钱包' });
+  const wkCredit = mkAcc('差旅信用卡', '💳', 'credit', 'credit_card', 30000, { bookId: work.id, note: '出差用卡' });
+  accounts.push(wkFund, wkCredit);
 
   const mkCat = (name: string, emoji: string, type: Category['type']): Category => ({
     id: uid(), name, emoji, type,
@@ -191,12 +195,12 @@ function createDemoData() {
   for (const [off, note, amt, tags, reimb] of trips) {
     const t: Txn = {
       id: uid(), bookId: work.id, type: 'expense', categoryId: off === -8 ? can.id : trip.id,
-      accountId: credit.id, amount: amt, date: iso(addDays(now, off)), note, createdAt: `${iso(addDays(now, off))} 12:00`,
+      accountId: wkCredit.id, amount: amt, date: iso(addDays(now, off)), note, createdAt: `${iso(addDays(now, off))} 12:00`,
       tags, reimb,
     };
     txns.push(t);
   }
-  addTxn(work.id, 'income', partTime, cmb, 3000, iso(addDays(now, -14)), '项目奖金');
+  addTxn(work.id, 'income', partTime, wkFund, 3000, iso(addDays(now, -14)), '项目奖金');
   // 转账演示：公交卡充值、还信用卡（负债账户转入即还款）
   txns.push({
     id: uid(), bookId: life.id, type: 'transfer', categoryId: TRANSFER_CATEGORY_ID,
