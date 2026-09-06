@@ -56,10 +56,21 @@ html[data-theme='dark'] {
 
 * {
   box-sizing: border-box;
+  /* 消除 iOS/WebKit 点击时默认的半透明灰色高亮块（真机可见，桌面无此行为） */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+}
+
+/* 交互元素快速点击：跳过双击缩放判定，点按响应更跟手 */
+button,
+a,
+input,
+select,
+label {
+  touch-action: manipulation;
 }
 
 body {
@@ -654,6 +665,8 @@ p {
   max-width: 560px;
   max-height: 88dvh;
   overflow-y: auto;
+  /* 禁止横向滑动：内容超宽时裁剪而不是让整个面板左右晃动 */
+  overflow-x: hidden;
   border-radius: 20px 20px 0 0;
   padding: 18px 18px calc(20px + env(safe-area-inset-bottom));
 }
@@ -678,6 +691,29 @@ p {
   border-radius: 50%;
   color: var(--muted);
   font-size: 12px;
+}
+
+/* 紧凑表单弹窗（账单搜索 / 周期记账）：收窄控件与间距，统一控件高度 */
+.modal.compact input,
+.modal.compact select {
+  padding: 8px 11px;
+  line-height: 1.3;
+  height: 40px;
+}
+
+/* 日期输入显式高度下垂直居中由内部容器处理，只保留水平内边距 */
+.modal.compact input[type='date'] {
+  height: 40px;
+  padding: 0 11px;
+}
+
+.modal.compact .field {
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.modal.compact .seg button {
+  padding: 7px 0;
 }
 
 /* ============ 表单 ============ */
@@ -711,6 +747,8 @@ select {
   color: var(--ink);
   font-family: inherit;
   width: 100%;
+  /* 允许在 1fr 栅格/弹性布局中收缩，否则 iOS 日期输入的原生固有宽度会撑破轨道 */
+  min-width: 0;
 }
 
 input:focus,
@@ -720,8 +758,21 @@ select:focus {
   background: var(--surface);
 }
 
+/* 日期输入：移除原生外观后，iOS 不再像文本框那样用 padding 撑高度，
+   必须给显式 height，否则输入框塌陷成细线且「年/月/日」文字不可见 */
 input[type='date'] {
-  min-height: 42px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 42px;
+  padding: 0 12px;
+  text-align: left;
+}
+
+/* 两列表单栅格：子项允许收缩（见 input 的 min-width 说明） */
+.form-grid > *,
+.search-grid > *,
+.kp-more > * {
+  min-width: 0;
 }
 
 .cat-grid {
@@ -1547,6 +1598,57 @@ input[type='date'] {
   padding: 8px 10px;
   border: 1.5px solid var(--line);
   border-radius: 14px;
+  /* 详情展开时换行占满一行 */
+  flex-wrap: wrap;
+}
+
+/* 规则主体可点击（展开配置详情） */
+.recur-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.recur-main .txn-main {
+  flex: 1;
+}
+
+.recur-detail {
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  padding: 10px 2px 4px;
+  border-top: 1px dashed var(--line);
+}
+
+.recur-detail > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.recur-detail span {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.recur-detail b {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ============ 响应式：≥820px 切换为桌面布局 ============ */
@@ -2006,6 +2108,11 @@ input[type='date'] {
   font-size: 11.5px;
   color: var(--muted);
   margin-top: 6px;
+}
+
+/* 详情卡内的说明文字：作为所属行的脚注，紧贴行尾并留出卡片底部空间 */
+.detail-card .field-hint {
+  margin: -2px 0 10px;
 }
 
 .switch-row {
@@ -2934,4 +3041,35 @@ input[type='date'] {
   inset: 0;
   z-index: 4;
   background: transparent;
+}
+
+/* 侧边栏「账本切换」管理入口（宽屏布局） */
+.side-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.side-label-btn {
+  border: none;
+  background: var(--key-bg);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  touch-action: manipulation;
+}
+
+.side-label-btn:active {
+  background: var(--key-active);
+  color: var(--ink);
+}
+
+.side-books-empty {
+  margin: 0;
+  padding: 6px 12px 2px;
+  font-size: 11px;
+  color: var(--muted);
 }

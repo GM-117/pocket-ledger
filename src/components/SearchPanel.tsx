@@ -75,7 +75,7 @@ export function SearchPanel({ onEdit, onClose }: SearchPanelProps) {
   }, [results]);
 
   return (
-    <Modal title="账单搜索" onClose={onClose}>
+    <Modal title="账单搜索" onClose={onClose} className="compact">
       <input
         className="search-kw"
         autoFocus

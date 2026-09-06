@@ -4,9 +4,11 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** 附加到 .modal 上的修饰类（如 compact） */
+  className?: string;
 }
 
-export function Modal({ title, onClose, children }: ModalProps) {
+export function Modal({ title, onClose, children, className }: ModalProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -21,7 +23,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
 
   return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-label={title}>
+      <div className={'modal' + (className ? ` ${className}` : '')} role="dialog" aria-label={title}>
         <div className="modal-head">
           <h3>{title}</h3>
           <button className="modal-close" onClick={onClose} aria-label="关闭">

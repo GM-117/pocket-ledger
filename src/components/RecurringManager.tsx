@@ -13,6 +13,7 @@ interface RecurringManagerProps {
 
 export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const recurrences = useStore((s) => s.recurrences);
+  const books = useStore((s) => s.books);
   const categories = useStore((s) => s.categories);
   const accounts = useStore((s) => s.accounts);
   const activeBookId = useStore((s) => s.activeBookId);
@@ -22,6 +23,8 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const [type, setType] = useState<CategoryType>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  /** 当前展开查看配置详情的规则 id */
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   /** 周期记账只允许选择 canSelect 的账户 */
   const selectable = useMemo(
     () => accounts.filter((a) => a.canSelect !== false && a.bookId === activeBookId),
@@ -36,6 +39,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const cats = categories.filter((c) => c.type === type);
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const accMap = new Map(accounts.map((a) => [a.id, a]));
+  const bookMap = new Map(books.map((b) => [b.id, b]));
 
   const submit = () => {
     const amt = parseFloat(amount);
@@ -61,7 +65,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   };
 
   return (
-    <Modal title="周期记账" onClose={onClose}>
+    <Modal title="周期记账" onClose={onClose} className="compact">
       <div className="seg">
         <button className={type === 'expense' ? 'active expense' : ''} onClick={() => setType('expense')}>
           支出
@@ -126,30 +130,92 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
 
       <div className="section-title">已有规则（{recurrences.length}）</div>
       <div className="recur-list">
-        {recurrences.map((r) => (
-          <div className="recur-row" key={r.id}>
-            <span
-              className={'emoji-dot ' + r.type}
-              style={{ background: r.type === 'income' ? 'var(--green-soft)' : 'var(--red-soft)' }}
-            >
-              {catMap.get(r.categoryId)?.emoji ?? '❓'}
-            </span>
-            <span className="txn-main">
-              <span className="txn-cat">{r.note || catMap.get(r.categoryId)?.name || '周期账单'}</span>
-              <span className="txn-sub">
-                {FREQ_LABEL[r.freq]} · 期初 {r.startDate}
-                {r.lastGenerated ? ` · 已记到 ${r.lastGenerated}` : ' · 待开始'}
-              </span>
-            </span>
-            <span className={'amount ' + (r.type === 'income' ? 'pos' : 'neg')}>
-              {r.type === 'income' ? '+' : '−'}
-              {fmtMoney(r.amount)}
-            </span>
-            <button className="icon-btn" onClick={() => removeRecurring(r.id)} aria-label="删除">
-              🗑️
-            </button>
-          </div>
-        ))}
+        {recurrences.map((r) => {
+          const cat = catMap.get(r.categoryId);
+          const acc = accMap.get(r.accountId);
+          const bk = bookMap.get(r.bookId);
+          const open = expandedId === r.id;
+          const label = r.note || cat?.name || '周期账单';
+          return (
+            <div className="recur-row" key={r.id}>
+              <button className="recur-main" onClick={() => setExpandedId(open ? null : r.id)}>
+                <span
+                  className={'emoji-dot ' + r.type}
+                  style={{ background: r.type === 'income' ? 'var(--green-soft)' : 'var(--red-soft)' }}
+                >
+                  {cat?.emoji ?? '❓'}
+                </span>
+                <span className="txn-main">
+                  <span className="txn-cat">{label}</span>
+                  <span className="txn-sub">
+                    {FREQ_LABEL[r.freq]} · 期初 {r.startDate}
+                    {r.lastGenerated ? ` · 已记到 ${r.lastGenerated}` : ' · 待开始'}
+                  </span>
+                </span>
+                <span className={'amount ' + (r.type === 'income' ? 'pos' : 'neg')}>
+                  {r.type === 'income' ? '+' : '−'}
+                  {fmtMoney(r.amount)}
+                </span>
+                <span className={'type-chev' + (open ? ' open' : '')}>▾</span>
+              </button>
+              <button
+                className="icon-btn"
+                aria-label="删除"
+                onClick={() => {
+                  if (window.confirm(`确定删除周期规则「${label}」吗？已生成的账单记录会保留。`)) {
+                    removeRecurring(r.id);
+                  }
+                }}
+              >
+                🗑️
+              </button>
+              {open && (
+                <div className="recur-detail">
+                  <div>
+                    <span>类型</span>
+                    <b>{r.type === 'income' ? '收入' : '支出'}</b>
+                  </div>
+                  <div>
+                    <span>金额</span>
+                    <b>{fmtMoney(r.amount)}</b>
+                  </div>
+                  <div>
+                    <span>分类</span>
+                    <b>{cat ? `${cat.emoji} ${cat.name}` : '未知分类'}</b>
+                  </div>
+                  <div>
+                    <span>账户</span>
+                    <b>{acc ? `${acc.emoji} ${acc.name}` : '未知账户'}</b>
+                  </div>
+                  <div>
+                    <span>重复频率</span>
+                    <b>{FREQ_LABEL[r.freq]}</b>
+                  </div>
+                  <div>
+                    <span>开始日期</span>
+                    <b>{r.startDate}</b>
+                  </div>
+                  <div>
+                    <span>备注</span>
+                    <b>{r.note || '—'}</b>
+                  </div>
+                  <div>
+                    <span>所属账本</span>
+                    <b>{bk ? `${bk.emoji} ${bk.name}` : '—'}</b>
+                  </div>
+                  <div>
+                    <span>状态</span>
+                    <b>{r.enabled ? '启用中' : '已停用'}</b>
+                  </div>
+                  <div>
+                    <span>已记到</span>
+                    <b>{r.lastGenerated ?? '尚未生成'}</b>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
         {recurrences.length === 0 && <p className="empty-text">还没有周期规则，添加一个吧（如每月房租）</p>}
       </div>
     </Modal>

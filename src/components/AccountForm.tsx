@@ -139,10 +139,6 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
             <i />
           </span>
         </label>
-      </div>
-
-      <div className="card detail-card">
-        {/* label 使整行可点：开关的 checkbox 本身 0×0，点行任意处都能切换 */}
         <label className="detail-row">
           <span>记账时可被选择</span>
           <span className="switch">
