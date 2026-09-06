@@ -30,7 +30,7 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
 
   const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));
 
-  // 借入借出随账本走：只统计当前账本名下的流水
+  // 借入借出随账本走：只统计当前账本的账户及其名下流水
   const bookTxns = useMemo(
     () => txns.filter((t) => t.bookId === activeBookId),
     [txns, activeBookId],
@@ -39,9 +39,10 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
   const list = useMemo(
     () =>
       accounts
+        .filter((a) => a.bookId === activeBookId)
         .filter((a) => (tab === 'borrow' ? a.kind === 'payable' : a.kind === 'receivable'))
         .map((a) => ({ a, bal: accountBalance(a, bookTxns) })),
-    [accounts, bookTxns, tab],
+    [accounts, bookTxns, activeBookId, tab],
   );
   const total = useMemo(() => list.reduce((s, x) => s + x.bal, 0), [list]);
 

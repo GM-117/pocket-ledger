@@ -15,6 +15,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const recurrences = useStore((s) => s.recurrences);
   const categories = useStore((s) => s.categories);
   const accounts = useStore((s) => s.accounts);
+  const activeBookId = useStore((s) => s.activeBookId);
   const saveRecurring = useStore((s) => s.saveRecurring);
   const removeRecurring = useStore((s) => s.removeRecurring);
 
@@ -22,7 +23,10 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   /** 周期记账只允许选择 canSelect 的账户 */
-  const selectable = useMemo(() => accounts.filter((a) => a.canSelect !== false), [accounts]);
+  const selectable = useMemo(
+    () => accounts.filter((a) => a.canSelect !== false && a.bookId === activeBookId),
+    [accounts, activeBookId],
+  );
   const [accountId, setAccountId] = useState(selectable[0]?.id ?? '');
   const [freq, setFreq] = useState<Freq>('monthly');
   const [startDate, setStartDate] = useState(fmtISO(new Date()));

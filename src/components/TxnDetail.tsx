@@ -41,6 +41,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const books = useStore((s) => s.books);
+  const activeBookId = useStore((s) => s.activeBookId);
   const saveTxn = useStore((s) => s.saveTxn);
   const removeTxn = useStore((s) => s.removeTxn);
   const addTemplate = useStore((s) => s.addTemplate);
@@ -70,13 +71,14 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
 
   /** 行内编辑账户时可选的账户（记账可被选择的 + 当前已选中的） */
   const selectableAccounts = useMemo(() => {
-    const base = accounts.filter((a) => a.canSelect !== false);
+    // 账户归属账本：只列当前账本的账户，编辑中的记录若引用其他账本账户则保留
+    const base = accounts.filter((a) => a.canSelect !== false && a.bookId === activeBookId);
     if (t && !base.some((b) => b.id === t.accountId)) {
       const cur = accounts.find((a) => a.id === t.accountId);
       if (cur) base.push(cur);
     }
     return base;
-  }, [accounts, t]);
+  }, [accounts, activeBookId, t]);
 
   if (!t) return null;
 

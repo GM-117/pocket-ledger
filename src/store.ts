@@ -90,6 +90,8 @@ function createDemoData() {
     name,
     emoji: icon,
     type: kindToType(kind),
+    // 演示账户全部归属「日常生活」账本（工作差旅账本演示跨账本用卡记账的场景）
+    bookId: life.id,
     kind,
     subtype,
     initialBalance,
@@ -349,6 +351,8 @@ export const useStore = create<StoreState>()(
           return {
             books,
             txns: s.txns.filter((t) => t.bookId !== id),
+            // 账户归属账本：删除账本时其名下账户一并删除
+            accounts: s.accounts.filter((a) => a.bookId !== id),
             activeBookId: s.activeBookId === id ? books[0]?.id ?? '' : s.activeBookId,
           };
         }),
@@ -389,7 +393,9 @@ export const useStore = create<StoreState>()(
           }
           set({
             books: d.books,
-            accounts: d.accounts.map((a: Partial<Account> & Pick<Account, 'id' | 'name'>) => normalizeAccount(a)),
+            accounts: d.accounts
+              .map((a: Partial<Account> & Pick<Account, 'id' | 'name'>) => normalizeAccount(a))
+              .map((a: Account) => (a.bookId ? a : { ...a, bookId: d.books[0]?.id ?? '' })),
             categories: ensureAdjustCategories(Array.isArray(d.categories) ? d.categories : []),
             txns: d.txns,
             activeBookId: d.books[0]?.id ?? '',
@@ -404,14 +410,19 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: 'pocket-ledger',
-      version: 2,
+      version: 3,
       // v1 → v2：账户补充 kind/subtype/includeInNet/canSelect 字段
+      // v2 → v3：账户归属账本（历史数据全部归入第一个账本）
       migrate: (persisted) => {
         const s = persisted as Partial<StoreState> & { accounts?: Partial<Account>[] };
         if (Array.isArray(s.accounts)) {
+          const fallbackBook = Array.isArray(s.books) ? s.books[0]?.id ?? '' : '';
           s.accounts = s.accounts
             .filter((a) => a && typeof a.id === 'string')
-            .map((a) => normalizeAccount(a as Partial<Account> & Pick<Account, 'id' | 'name'>));
+            .map((a) => {
+              const acc = normalizeAccount(a as Partial<Account> & Pick<Account, 'id' | 'name'>);
+              return acc.bookId ? acc : { ...acc, bookId: fallbackBook };
+            });
         }
         if (Array.isArray(s.categories)) {
           s.categories = ensureAdjustCategories(s.categories);

@@ -21,6 +21,8 @@ export interface Account {
   type: 'asset' | 'liability';
   initialBalance: number;
   createdAt: string;
+  /** 所属账本（账户归属账本，资产/借入借出随账本切换） */
+  bookId: string;
   /** 账户大类（资产/负债归属由 kind 推导） */
   kind: AccountKind;
   /** 子类型 id，见 accountCatalog.ts */

@@ -23,16 +23,16 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const removeTxn = useStore((s) => s.removeTxn);
   const addTemplate = useStore((s) => s.addTemplate);
 
-  /** 记账可选账户：过滤 canSelect=false，但编辑中已选中的账户保留 */
+  /** 记账可选账户：过滤 canSelect=false 与非本账本账户，编辑中已选中的账户保留 */
   const selectable = useMemo(() => {
-    const base = accounts.filter((a) => a.canSelect !== false);
+    const base = accounts.filter((a) => a.canSelect !== false && a.bookId === activeBookId);
     const curIds = [initial?.accountId, preset?.accountId, initial?.toAccountId, preset?.toAccountId];
     for (const id of curIds) {
       const a = id ? accounts.find((x) => x.id === id) : undefined;
       if (a && !base.some((b) => b.id === a.id)) base.push(a);
     }
     return base;
-  }, [accounts, initial, preset]);
+  }, [accounts, activeBookId, initial, preset]);
 
   const [type, setType] = useState<TxnType>(initial?.type ?? preset?.type ?? 'expense');
   const [amount, setAmount] = useState(

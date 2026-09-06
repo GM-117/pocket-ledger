@@ -27,6 +27,7 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
   const accounts = useStore((s) => s.accounts);
   const saveAccount = useStore((s) => s.saveAccount);
   const removeAccount = useStore((s) => s.removeAccount);
+  const activeBookId = useStore((s) => s.activeBookId);
 
   const [name, setName] = useState(initial?.name ?? '');
   const [note, setNote] = useState(initial?.note ?? '');
@@ -56,6 +57,8 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
       name: name.trim(),
       emoji: icon.icon,
       type: kindToType(kind),
+      // 新建账户归属当前账本；编辑保持原归属
+      bookId: live?.bookId ?? activeBookId,
       initialBalance: live ? live.initialBalance : round2(b),
       createdAt: live?.createdAt ?? new Date().toISOString(),
       kind,

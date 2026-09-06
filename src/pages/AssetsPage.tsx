@@ -45,44 +45,48 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
 
   const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));
 
-  // 资产随账本走：只统计当前账本名下的流水（账户与期初余额为全局，收支影响按账本隔离）
+  // 资产随账本走：只统计当前账本的账户与其名下流水
+  const bookAccounts = useMemo(
+    () => accounts.filter((a) => a.bookId === activeBookId),
+    [accounts, activeBookId],
+  );
   const bookTxns = useMemo(
     () => txns.filter((t) => t.bookId === activeBookId),
     [txns, activeBookId],
   );
 
-  const totals = useMemo(() => computeTotals(accounts, bookTxns), [accounts, bookTxns]);
+  const totals = useMemo(() => computeTotals(bookAccounts, bookTxns), [bookAccounts, bookTxns]);
 
   const balances = useMemo(() => {
     const map = new Map<string, number>();
-    for (const a of accounts) map.set(a.id, accountBalance(a, bookTxns));
+    for (const a of bookAccounts) map.set(a.id, accountBalance(a, bookTxns));
     return map;
-  }, [accounts, bookTxns]);
+  }, [bookAccounts, bookTxns]);
 
   /** 总借入 / 总借出 */
   const borrowTotals = useMemo(() => {
     let debt = 0;
     let lend = 0;
-    for (const a of accounts) {
+    for (const a of bookAccounts) {
       if (a.includeInNet === false) continue;
       const b = balances.get(a.id) ?? 0;
       if (a.kind === 'payable') debt += b;
       if (a.kind === 'receivable') lend += b;
     }
     return { debt: Math.round(debt * 100) / 100, lend: Math.round(lend * 100) / 100 };
-  }, [accounts, balances]);
+  }, [bookAccounts, balances]);
 
   const kindRows = useMemo(
     () =>
       ACCOUNT_KINDS.map((k) => {
-        const rows = accounts
+        const rows = bookAccounts
           .filter((a) => a.kind === k.id)
           .map((a) => ({ a, bal: balances.get(a.id) ?? 0 }))
           .sort((x, y) => y.bal - x.bal);
         const sum = Math.round(rows.reduce((s, r) => s + r.bal, 0) * 100) / 100;
         return { kind: k, rows, sum };
       }),
-    [accounts, balances],
+    [bookAccounts, balances],
   );
 
   const detailAccount = detailId ? accounts.find((a) => a.id === detailId) ?? null : null;

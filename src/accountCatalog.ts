@@ -184,6 +184,7 @@ export function normalizeAccount(a: Partial<Account> & Pick<Account, 'id' | 'nam
     emoji: a.emoji ?? '💵',
     type: kindToType(kind),
     initialBalance: a.initialBalance ?? 0,
+    bookId: a.bookId ?? '',
     createdAt: a.createdAt ?? new Date().toISOString(),
     kind,
     subtype: st,
