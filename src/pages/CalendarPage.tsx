@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import type { Txn } from '../types';
 import { fmtCellAmount, fmtISO, fmtMoney, parseISO, sameMonth, ymKey } from '../utils';
@@ -12,22 +12,16 @@ interface CalendarPageProps {
 }
 
 export function CalendarPage({ onEdit }: CalendarPageProps) {
-  const books = useStore((s) => s.books);
   const txns = useStore((s) => s.txns);
   const activeBookId = useStore((s) => s.activeBookId);
 
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const [scope, setScope] = useState(activeBookId || '__all__');
   const [selected, setSelected] = useState(() => fmtISO(new Date()));
 
-  // 顶右切换账本时，日历自动跟随当前账本
-  useEffect(() => {
-    setScope(activeBookId || '__all__');
-  }, [activeBookId]);
-
+  // 日历完全跟随右上角当前账本
   const scoped = useMemo(
-    () => (scope === '__all__' ? txns : txns.filter((t) => t.bookId === scope)),
-    [txns, scope],
+    () => txns.filter((t) => t.bookId === activeBookId),
+    [txns, activeBookId],
   );
 
   /** 日 → 当日收支合计 */
@@ -75,17 +69,6 @@ export function CalendarPage({ onEdit }: CalendarPageProps) {
 
   return (
     <>
-      <div className="chips section">
-        <button className={'chip' + (scope === '__all__' ? ' active' : '')} onClick={() => setScope('__all__')}>
-          全部账本
-        </button>
-        {books.map((b) => (
-          <button key={b.id} className={'chip' + (scope === b.id ? ' active' : '')} onClick={() => setScope(b.id)}>
-            {b.emoji} {b.name}
-          </button>
-        ))}
-      </div>
-
       <MonthSwitcher value={month} onChange={setMonth} label={`${month.getFullYear()}年${month.getMonth() + 1}月`} disableFuture />
 
       <div className="card section cal-card">

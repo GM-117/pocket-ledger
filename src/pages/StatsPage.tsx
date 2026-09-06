@@ -98,17 +98,18 @@ export function StatsPage() {
   const accounts = useStore((s) => s.accounts);
   const categories = useStore((s) => s.categories);
   const txns = useStore((s) => s.txns);
+  const activeBookId = useStore((s) => s.activeBookId);
   const theme = useStore((s) => s.theme);
   const dark = theme === 'dark';
   const C = chartColors(dark);
 
   const [period, setPeriod] = useState<StatsPeriod>('month');
-  const [scope, setScope] = useState('__all__');
   const [anchor, setAnchor] = useState(() => startOfMonth(new Date()));
 
+  // 图表完全跟随右上角当前账本
   const scoped = useMemo(
-    () => (scope === '__all__' ? txns : txns.filter((t) => t.bookId === scope)),
-    [txns, scope],
+    () => txns.filter((t) => t.bookId === activeBookId),
+    [txns, activeBookId],
   );
 
   const range = useMemo(() => {
@@ -285,24 +286,6 @@ export function StatsPage() {
 
   return (
     <>
-      <div className="chips section">
-        <button
-          className={'chip' + (scope === '__all__' ? ' active' : '')}
-          onClick={() => setScope('__all__')}
-        >
-          全部账本
-        </button>
-        {books.map((b) => (
-          <button
-            key={b.id}
-            className={'chip' + (scope === b.id ? ' active' : '')}
-            onClick={() => setScope(b.id)}
-          >
-            {b.emoji} {b.name}
-          </button>
-        ))}
-      </div>
-
       <div className="seg section">
         {(['week', 'month', 'year', 'all'] as StatsPeriod[]).map((p) => (
           <button key={p} className={period === p ? 'active' : ''} onClick={() => setPeriod(p)}>
@@ -343,7 +326,7 @@ export function StatsPage() {
 
       <div className="card section">
         <div className="chart-title">
-          收支趋势 · {scope === '__all__' ? '全部账本' : books.find((b) => b.id === scope)?.name}
+          收支趋势 · {books.find((b) => b.id === activeBookId)?.name}
           <span>
             （{LABELS[period]}
             {period === 'all' ? ' · 按月' : period === 'year' ? ' · 按月' : ' · 按日'}）
