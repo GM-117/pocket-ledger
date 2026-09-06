@@ -1060,6 +1060,18 @@ input[type='date'] {
   font-variant-numeric: tabular-nums;
 }
 
+/* 日历页选中日标题：滚动吸顶（背景延展到屏幕两缘，盖住滑过的列表） */
+.cal-day-title {
+  position: sticky;
+  top: 58px; /* 移动端顶栏高度 */
+  z-index: 20;
+  background: var(--bg-blur);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  margin: 12px -18px 2px;
+  padding: 8px 18px;
+}
+
 /* iCost 式数字键盘记账面板 */
 .kp-modal {
   padding-bottom: calc(10px + env(safe-area-inset-bottom));
@@ -1646,6 +1658,15 @@ input[type='date'] {
   .tabbar,
   .fab {
     display: none !important;
+  }
+
+  /* 桌面端无顶栏，直接吸页面顶部；内容左右留白为 36px */
+  .cal-day-title {
+    top: 0;
+    margin-left: -38px;
+    margin-right: -38px;
+    padding-left: 38px;
+    padding-right: 38px;
   }
 
   .content {

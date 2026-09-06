@@ -119,7 +119,7 @@ export function CalendarPage({ onEdit }: CalendarPageProps) {
         </div>
       </div>
 
-      <div className="section-title">
+      <div className="section-title cal-day-title">
         <span>
           {parseISO(selected).getMonth() + 1}月{parseISO(selected).getDate()}日 · 收支
           {!sameMonth(parseISO(selected), month) && '（非本月）'}
