@@ -64,6 +64,8 @@ export function BookManager({ onClose }: BookManagerProps) {
         </div>
 
         <div className="page-body">
+          {/* ⋯ 菜单打开时铺透明遮罩：点击任意其他位置即收起（与账户详情「更多」一致） */}
+          {menuId && <div className="pop-mask" onClick={() => setMenuId(null)} />}
           {books.length === 0 && (
             <div className="empty">
               <span className="empty-emoji">📒</span>

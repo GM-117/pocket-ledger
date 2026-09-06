@@ -2844,6 +2844,10 @@ input[type='date'] {
   width: 100%;
   text-align: left;
   padding: 0;
+  border: none;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .book-card .emoji-dot.book {
