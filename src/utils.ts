@@ -151,10 +151,21 @@ export function computeTotals(accounts: Account[], txns: Txn[], endISO?: string)
   return { assets, liabilities, netWorth: round2(assets - liabilities) };
 }
 
+/** 创建时间排序键：兼容 "YYYY-MM-DD HH:MM"（演示数据，本地时区）与 ISO（UTC）两种格式 */
+export function createdTs(s?: string): number {
+  if (!s) return 0;
+  const n = Date.parse(s);
+  return Number.isNaN(n) ? 0 : n;
+}
+
 /** 流水的时分（HH:MM），取创建时间；解析失败返回空串 */
 export function fmtHm(createdAt?: string): string {
   if (!createdAt) return '';
-  // 演示数据为 "YYYY-MM-DD HH:MM"，实时记录为 ISO 字符串
+  // 演示数据为 "YYYY-MM-DD HH:MM"（本地时间），实时记录为 ISO 字符串（UTC，需转本地时区）
+  if (createdAt.includes('T')) {
+    const d = new Date(createdAt);
+    if (!Number.isNaN(d.getTime())) return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
   const m = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/.exec(createdAt);
   if (m) return m[2];
   const d = new Date(createdAt);

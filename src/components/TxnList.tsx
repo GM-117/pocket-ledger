@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useStore } from '../store';
 import { ADJUST_CATEGORY_IN, type Txn } from '../types';
-import { fmtDayLabel, fmtMoney } from '../utils';
+import { createdTs, fmtDayLabel, fmtMoney } from '../utils';
 
 interface TxnListProps {
   txns: Txn[];
@@ -23,8 +23,9 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
   const books = useStore((s) => s.books);
 
   const groups = useMemo<Group[]>(() => {
+    // 同日内按创建时间倒序；createdAt 有本地与 ISO 两种格式，用时间戳比较
     const sorted = [...txns].sort((a, b) =>
-      a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date),
+      a.date === b.date ? createdTs(b.createdAt) - createdTs(a.createdAt) : b.date.localeCompare(a.date),
     );
     const map = new Map<string, Txn[]>();
     for (const t of sorted) {
