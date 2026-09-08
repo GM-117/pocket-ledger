@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import { ADJUST_CATEGORY_IN, ADJUST_CATEGORY_OUT, type Account } from '../types';
 import { accountBalance, evalAmount, fmtISO, round2, uid } from '../utils';
 import { CalcKeypad } from './CalcKeypad';
+import { CloseIcon } from './icons';
 
 interface BalanceAdjustModalProps {
   account: Account;
@@ -88,7 +89,7 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
       <div className="modal adj-modal" role="dialog" aria-label="余额调整">
         <div className="adj-top">
           <button className="adj-close" onClick={onClose} aria-label="关闭">
-            ✕
+            <CloseIcon size={13} />
           </button>
           <span className="title">余额调整</span>
           <button className="done" onClick={done}>
@@ -109,7 +110,7 @@ export function BalanceAdjustModal({ account, onClose }: BalanceAdjustModalProps
           />
           {expr && (
             <button className="adj-clear" onClick={() => setExpr('')} aria-label="清除">
-              ✕
+              <CloseIcon size={11} />
             </button>
           )}
         </div>

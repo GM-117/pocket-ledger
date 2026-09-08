@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import { FREQ_LABEL, type CategoryType, type Freq, type Recurring } from '../types';
 import { fmtISO, fmtMoney, round2, uid } from '../utils';
 import { Modal } from './Modal';
+import { ChevronDownIcon, LIcon, TrashIcon } from './icons';
 
 const FREQS: Freq[] = ['daily', 'weekly', 'monthly', 'yearly'];
 
@@ -96,7 +97,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
             <option value="">选择分类</option>
             {cats.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.emoji} {c.name}
+                {c.name}
               </option>
             ))}
           </select>
@@ -106,7 +107,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
           <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
             {selectable.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.emoji} {a.name}
+                {a.name}
               </option>
             ))}
           </select>
@@ -139,11 +140,8 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
           return (
             <div className="recur-row" key={r.id}>
               <button className="recur-main" onClick={() => setExpandedId(open ? null : r.id)}>
-                <span
-                  className={'emoji-dot ' + r.type}
-                  style={{ background: r.type === 'income' ? 'var(--green-soft)' : 'var(--red-soft)' }}
-                >
-                  {cat?.emoji ?? '❓'}
+                <span className={'emoji-dot ' + r.type}>
+                  <LIcon emoji={cat?.emoji} size={18} />
                 </span>
                 <span className="txn-main">
                   <span className="txn-cat">{label}</span>
@@ -156,7 +154,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
                   {r.type === 'income' ? '+' : '−'}
                   {fmtMoney(r.amount)}
                 </span>
-                <span className={'type-chev' + (open ? ' open' : '')}>▾</span>
+                <ChevronDownIcon size={15} className={'type-chev' + (open ? ' open' : '')} />
               </button>
               <button
                 className="icon-btn"
@@ -167,7 +165,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
                   }
                 }}
               >
-                🗑️
+                <TrashIcon size={15} />
               </button>
               {open && (
                 <div className="recur-detail">
@@ -181,11 +179,11 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
                   </div>
                   <div>
                     <span>分类</span>
-                    <b>{cat ? `${cat.emoji} ${cat.name}` : '未知分类'}</b>
+                    <b>{cat?.name ?? '未知分类'}</b>
                   </div>
                   <div>
                     <span>账户</span>
-                    <b>{acc ? `${acc.emoji} ${acc.name}` : '未知账户'}</b>
+                    <b>{acc?.name ?? '未知账户'}</b>
                   </div>
                   <div>
                     <span>重复频率</span>
@@ -201,7 +199,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
                   </div>
                   <div>
                     <span>所属账本</span>
-                    <b>{bk ? `${bk.emoji} ${bk.name}` : '—'}</b>
+                    <b>{bk?.name ?? '—'}</b>
                   </div>
                   <div>
                     <span>状态</span>

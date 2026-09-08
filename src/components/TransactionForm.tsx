@@ -3,6 +3,8 @@ import { useStore } from '../store';
 import { TRANSFER_CATEGORY_ID, type Txn, type TxnType } from '../types';
 import { fmtISO, round2, uid } from '../utils';
 import { DateEditModal, OptionPickerModal } from './EditModals';
+import { BackspaceIcon, CloseIcon, LIcon, StarIcon, TrashIcon } from './icons';
+import { accountIcon } from '../accountCatalog';
 
 interface TransactionFormProps {
   /** 编辑已有记录 */
@@ -116,7 +118,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
     if (!amt || amt <= 0 || !categoryId) return;
     const cat = categories.find((c) => c.id === categoryId);
     addTemplate({
-      name: tplName.trim() || `${cat?.emoji ?? ''} ${cat?.name ?? '模板'}`,
+      name: tplName.trim() || (cat?.name ?? '模板'),
       type: type === 'income' ? 'income' : 'expense',
       amount: round2(amt),
       categoryId,
@@ -149,7 +151,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
       <div className="modal kp-modal" role="dialog" aria-label="记一笔">
         <div className="kp-top">
           <button className="kp-cancel" onClick={onClose} aria-label="取消">
-            ✕
+            <CloseIcon size={14} />
           </button>
           <div className="seg kp-seg">
             <button className={type === 'expense' ? 'active expense' : ''} onClick={() => switchType('expense')}>
@@ -164,7 +166,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
           </div>
           {initial ? (
             <button className="kp-del" onClick={del} aria-label="删除">
-              🗑
+              <TrashIcon size={14} />
             </button>
           ) : (
             <span className="kp-placeholder" />
@@ -184,7 +186,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
                 {selectable.map((a) => (
                   <option key={a.id} value={a.id}>
-                    {a.emoji} {a.name}
+                    {a.name}
                   </option>
                 ))}
               </select>
@@ -194,7 +196,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               <select value={toAccountId} onChange={(e) => setToAccountId(e.target.value)}>
                 {selectable.map((a) => (
                   <option key={a.id} value={a.id} disabled={a.id === accountId}>
-                    {a.emoji} {a.name}
+                    {a.name}
                   </option>
                 ))}
               </select>
@@ -208,7 +210,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
                 className={'cat-chip' + (categoryId === c.id ? ' active' : '')}
                 onClick={() => setCategoryId(c.id)}
               >
-                <span>{c.emoji}</span>
+                <span><LIcon emoji={c.emoji} size={21} /></span>
                 {c.name}
               </button>
             ))}
@@ -224,7 +226,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
             <button className="kp-meta-chip" onClick={() => setAccOpen(true)}>
               <span className="kp-meta-label">账户</span>
               <span className="kp-meta-value">
-                {selectedAcc ? `${selectedAcc.emoji} ${selectedAcc.name}` : '选择账户'}
+                {selectedAcc ? (<><LIcon emoji={accountIcon(selectedAcc).icon} size={13} /> {selectedAcc.name}</>) : '选择账户'}
               </span>
             </button>
           )}
@@ -243,7 +245,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
         {accOpen && (
           <OptionPickerModal
             title="选择账户"
-            options={selectable.map((a) => ({ id: a.id, label: a.name, emoji: a.emoji }))}
+            options={selectable.map((a) => ({ id: a.id, label: a.name, emoji: accountIcon(a).icon }))}
             selectedId={accountId}
             onPick={(id) => {
               setAccountId(id);
@@ -259,7 +261,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
               <>
                 <input
                   autoFocus
-                  placeholder="模板名称，如：☕ 咖啡"
+                  placeholder="模板名称，如：咖啡"
                   value={tplName}
                   onChange={(e) => setTplName(e.target.value)}
                 />
@@ -273,7 +275,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
             ) : (
               <>
                 <button className="tpl-btn" onClick={() => setTplSaving(true)}>
-                  ⭐ 存为模板
+                  <StarIcon size={13} /> 存为模板
                 </button>
                 {tplSaved && <span className="tpl-saved">已保存 ✓</span>}
               </>
@@ -289,7 +291,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
                   完成
                 </button>
               );
-            if (k === 'del') return <button key={k} className="kp-key op" onClick={() => pressKey(k)}>⌫</button>;
+            if (k === 'del') return <button key={k} className="kp-key op" onClick={() => pressKey(k)} aria-label="退格"><BackspaceIcon size={20} /></button>;
             if (k === 'clear') return <button key={k} className="kp-key op" onClick={() => pressKey(k)}>C</button>;
             return (
               <button key={k} className="kp-key" onClick={() => pressKey(k)}>

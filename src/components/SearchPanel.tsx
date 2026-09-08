@@ -101,7 +101,7 @@ export function SearchPanel({ onEdit, onClose }: SearchPanelProps) {
             <option value="__all__">全部账本</option>
             {books.map((b) => (
               <option key={b.id} value={b.id}>
-                {b.emoji} {b.name}
+                {b.name}
               </option>
             ))}
           </select>
@@ -112,7 +112,7 @@ export function SearchPanel({ onEdit, onClose }: SearchPanelProps) {
             <option value="__all__">全部账户</option>
             {accounts.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.emoji} {a.name}
+                {a.name}
               </option>
             ))}
           </select>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Category, TxnType } from '../types';
 import { Modal } from './Modal';
+import { CheckIcon, LIcon } from './icons';
 
 export interface PickerOption {
   id: string;
@@ -27,9 +28,17 @@ export function OptionPickerModal({ title, options, selectedId, onPick, onClose 
             className={'option-row' + (o.id === selectedId ? ' active' : '')}
             onClick={() => onPick(o.id)}
           >
-            {o.emoji && <span className="emoji-dot">{o.emoji}</span>}
+            {o.emoji && (
+              <span className="emoji-dot">
+                <LIcon emoji={o.emoji} size={17} />
+              </span>
+            )}
             <span className="option-label">{o.label}</span>
-            {o.id === selectedId && <span className="option-check">✓</span>}
+            {o.id === selectedId && (
+              <span className="option-check">
+                <CheckIcon size={14} />
+              </span>
+            )}
           </button>
         ))}
         {options.length === 0 && <p className="empty-text">暂无可选项</p>}
@@ -68,7 +77,7 @@ export function CategoryPickModal({ categories, initialType, onPick, onClose }: 
             className={'cat-chip' + (categoryId === c.id ? ' active' : '')}
             onClick={() => setCategoryId(c.id)}
           >
-            <span>{c.emoji}</span>
+            <span><LIcon emoji={c.emoji} size={21} /></span>
             {c.name}
           </button>
         ))}

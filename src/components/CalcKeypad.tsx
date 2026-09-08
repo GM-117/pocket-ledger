@@ -1,3 +1,5 @@
+import { BackspaceIcon } from './icons';
+
 interface CalcKeypadProps {
   /** 按键回调：'0'-'9'、'.'、'+'、'-'、'*'、'/'、'del' */
   onKey: (k: string) => void;
@@ -12,7 +14,7 @@ export function CalcKeypad({ onKey }: CalcKeypadProps) {
         if (k === 'del')
           return (
             <button key={k} type="button" className="kp-key op" onClick={() => onKey(k)} aria-label="退格">
-              ⌫
+              <BackspaceIcon size={20} />
             </button>
           );
         if ('+-×÷'.includes(k))

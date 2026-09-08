@@ -246,8 +246,8 @@ function createDemoData() {
 
   // 模板快捷记账演示
   const templates: Template[] = [
-    { id: uid(), name: '☕ 咖啡', type: 'expense', amount: 15, categoryId: can.id, accountId: wx.id, bookId: life.id, note: '' },
-    { id: uid(), name: '💰 月度工资', type: 'income', amount: 12800, categoryId: salary.id, accountId: cmb.id, bookId: life.id, note: '月度工资' },
+    { id: uid(), name: '咖啡', type: 'expense', amount: 15, categoryId: can.id, accountId: wx.id, bookId: life.id, note: '' },
+    { id: uid(), name: '月度工资', type: 'income', amount: 12800, categoryId: salary.id, accountId: cmb.id, bookId: life.id, note: '月度工资' },
   ];
 
   return { books, accounts, categories, txns, recurrences, templates, activeBookId: books[0].id };

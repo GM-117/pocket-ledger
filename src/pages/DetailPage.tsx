@@ -7,6 +7,7 @@ import { Modal } from '../components/Modal';
 import { RecurringManager } from '../components/RecurringManager';
 import { SearchPanel } from '../components/SearchPanel';
 import { TxnList } from '../components/TxnList';
+import { LIcon, NotebookIcon, RepeatIcon, SearchIcon, TargetIcon, TrashIcon } from '../components/icons';
 
 interface DetailPageProps {
   onEdit: (t: Txn) => void;
@@ -19,6 +20,7 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
   const txns = useStore((s) => s.txns);
   const budgets = useStore((s) => s.budgets);
   const templates = useStore((s) => s.templates);
+  const categories = useStore((s) => s.categories);
   const removeTemplate = useStore((s) => s.removeTemplate);
   const activeBookId = useStore((s) => s.activeBookId);
 
@@ -53,7 +55,9 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
   if (!book) {
     return (
       <div className="empty">
-        <span className="empty-emoji">📒</span>
+        <span className="empty-emoji">
+          <NotebookIcon size={44} />
+        </span>
         <p>还没有账本，先创建一个吧</p>
         <button className="btn primary" onClick={onManage}>
           去创建账本
@@ -70,10 +74,10 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
     <>
       <div className="book-pills scroll-x">
         <button className="book-pill manage" onClick={() => setSearchOpen(true)}>
-          🔍 搜索
+          <SearchIcon size={14} /> 搜索
         </button>
         <button className="book-pill manage" onClick={() => setRecurringOpen(true)}>
-          🔁 周期
+          <RepeatIcon size={14} /> 周期
         </button>
       </div>
 
@@ -131,13 +135,13 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
       )}
       {budget <= 0 && (
         <button className="account-add section" onClick={() => setBudgetOpen(true)}>
-          🎯 给「{book.name}」设个月度预算
+          <TargetIcon size={15} /> 给「{book.name}」设个月度预算
         </button>
       )}
 
       <div className="section-title">
         <span>
-          {book.emoji} {book.name} · 流水（{flowTxns.length}）
+          <LIcon emoji={book.emoji} size={14} /> {book.name} · 流水（{flowTxns.length}）
         </span>
         <div className="chips">
           {(
@@ -164,21 +168,26 @@ export function DetailPage({ onEdit, onManage, onUseTemplate }: DetailPageProps)
       {tplManageOpen && (
         <Modal title="模板管理" onClose={() => setTplManageOpen(false)}>
           <div className="recur-list">
-            {templates.map((t) => (
-              <div className="recur-row" key={t.id}>
-                <span className="emoji-dot expense">{t.name.slice(0, 2)}</span>
-                <span className="txn-main">
-                  <span className="txn-cat">{t.name}</span>
-                  <span className="txn-sub">
-                    {t.type === 'income' ? '收入' : '支出'} · {fmtMoney(t.amount)}
+            {templates.map((t) => {
+              const catEmoji = categories.find((c) => c.id === t.categoryId)?.emoji;
+              return (
+                <div className="recur-row" key={t.id}>
+                  <span className={'emoji-dot ' + (t.type === 'income' ? 'income' : 'expense')}>
+                    <LIcon emoji={catEmoji} size={18} />
                   </span>
-                </span>
-                <button className="icon-btn" onClick={() => removeTemplate(t.id)} aria-label="删除">
-                  🗑️
-                </button>
-              </div>
-            ))}
-            {templates.length === 0 && <p className="empty-text">还没有模板，记一笔时点「⭐ 存为模板」创建</p>}
+                  <span className="txn-main">
+                    <span className="txn-cat">{t.name}</span>
+                    <span className="txn-sub">
+                      {t.type === 'income' ? '收入' : '支出'} · {fmtMoney(t.amount)}
+                    </span>
+                  </span>
+                  <button className="icon-btn" onClick={() => removeTemplate(t.id)} aria-label="删除">
+                    <TrashIcon size={15} />
+                  </button>
+                </div>
+              );
+            })}
+            {templates.length === 0 && <p className="empty-text">还没有模板，记一笔时点「存为模板」创建</p>}
           </div>
         </Modal>
       )}

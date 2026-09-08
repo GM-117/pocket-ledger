@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useStore } from '../store';
 import { ADJUST_CATEGORY_IN, type Txn } from '../types';
 import { createdTs, fmtDayLabel, fmtMoney } from '../utils';
+import { InboxIcon, LIcon } from './icons';
 
 interface TxnListProps {
   txns: Txn[];
@@ -47,7 +48,9 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
   if (txns.length === 0) {
     return (
       <div className="empty">
-        <span className="empty-emoji">🪹</span>
+        <span className="empty-emoji">
+          <InboxIcon size={44} />
+        </span>
         <p>{emptyText ?? '还没有记录，点右下角「＋」记一笔吧'}</p>
       </div>
     );
@@ -77,13 +80,15 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
             const isAdjust = t.type === 'adjust';
             const adjustIn = isAdjust && t.categoryId === ADJUST_CATEGORY_IN;
             const title = isTransfer ? '转账' : isAdjust ? '余额调整' : cat?.name ?? '未知分类';
-            const emoji = isTransfer ? '🔁' : isAdjust ? '⚙️' : cat?.emoji ?? '❓';
+            const emoji = isTransfer ? '🔁' : isAdjust ? '⚙️' : cat?.emoji;
             const sub = isTransfer
               ? `${acc?.name ?? '?'} → ${toAcc?.name ?? '?'}${t.note ? ` · ${t.note}` : ''}`
               : `${acc?.name ?? '未知账户'}${t.note ? ` · ${t.note}` : ''}`;
             return (
               <button className="txn-row" key={t.id} onClick={() => onEdit(t)}>
-                <span className={'emoji-dot ' + (isTransfer ? 'transfer' : isAdjust ? 'adjust' : t.type)}>{emoji}</span>
+                <span className={'emoji-dot ' + (isTransfer ? 'transfer' : isAdjust ? 'adjust' : t.type)}>
+                  <LIcon emoji={emoji} size={18} />
+                </span>
                 <span className="txn-main">
                   <span className="txn-cat">
                     {title}
@@ -92,7 +97,7 @@ export function TxnList({ txns, onEdit, showBook = false, emptyText }: TxnListPr
                     {t.reimb === 'done' && <span className="reimb-badge done">已报销</span>}
                     {book && (
                       <span className="txn-book" style={{ color: book.color }}>
-                        {book.emoji} {book.name}
+                        <LIcon emoji={book.emoji} size={11} /> {book.name}
                       </span>
                     )}
                   </span>

@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import type { Account, AccountKind } from '../types';
 import { accountBalance, fmtMoney, lockBodyScroll, unlockBodyScroll } from '../utils';
 import { useEffect } from 'react';
+import { CalendarIcon, ChevronLeftIcon, HandshakeIcon, LIcon } from './icons';
 
 interface BorrowPageProps {
   /** 初始选中的分段（由总借入/总借出卡片决定） */
@@ -52,7 +53,7 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
       <div className="overlay-page">
       <div className="page-head">
         <button className="page-back" onClick={onClose}>
-          ‹ 资产
+          <ChevronLeftIcon size={17} /> 资产
         </button>
         <div className="seg">
           <button className={tab === 'borrow' ? 'active expense' : ''} onClick={() => setTab('borrow')}>
@@ -76,7 +77,7 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
         )}
         {list.length === 0 && (
           <div className="empty">
-            <span className="empty-emoji">🤝</span>
+            <span className="empty-emoji"><HandshakeIcon size={44} /></span>
             <p>{tab === 'borrow' ? '没有借入账户，点右上角「＋」添加' : '没有借出账户，点右上角「＋」添加'}</p>
           </div>
         )}
@@ -88,7 +89,7 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
               return (
                 <button className="borrow-row" key={a.id} onClick={() => onOpenDetail(a)}>
                   <span className="icon-circle" style={{ background: icon.color + '22', color: icon.color }}>
-                    {icon.icon}
+                    <LIcon emoji={icon.icon} size={17} />
                   </span>
                   <span className="txn-main">
                     <span className="txn-cat">
@@ -97,7 +98,7 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
                     </span>
                     {a.note && <span className="txn-sub">{a.note}</span>}
                     <span className="txn-sub borrow-date">
-                      📅 {dateParts ? `${dateParts[0]}年${dateParts[1]}月${dateParts[2]}日` : '未记录借款时间'}
+                      <CalendarIcon size={12} /> {dateParts ? `${dateParts[0]}年${dateParts[1]}月${dateParts[2]}日` : '未记录借款时间'}
                     </span>
                   </span>
                   <span className={'amount ' + (tab === 'borrow' ? 'neg' : 'pos')}>

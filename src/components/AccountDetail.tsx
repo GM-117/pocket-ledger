@@ -5,6 +5,7 @@ import { ADJUST_CATEGORY_IN, type Account, type Txn } from '../types';
 import { accountBalance, createdTs, fmtHm, fmtMoney, lockBodyScroll, pad, parseISO, round2, unlockBodyScroll } from '../utils';
 import { BalanceAdjustModal } from './BalanceAdjustModal';
 import { TxnDetail } from './TxnDetail';
+import { ChevronDownIcon, ChevronLeftIcon, FileTextIcon, InboxIcon, LIcon, PencilIcon, TrashIcon } from './icons';
 
 interface AccountDetailProps {
   account: Account;
@@ -174,7 +175,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
       <div className="overlay-page">
       <div className="page-head">
         <button className="page-back" onClick={onClose}>
-          ‹ 资产
+          <ChevronLeftIcon size={17} /> 资产
         </button>
         <span className="page-title">账户详情</span>
         <button
@@ -201,7 +202,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
         <div className="card acc-hero">
           <div className="acc-hero-head">
             <span className="icon-circle xl" style={{ background: icon.color + '22', color: icon.color }}>
-              {icon.icon}
+              <LIcon emoji={icon.icon} size={24} />
             </span>
             <span className="acc-hero-name">
               {a.name}
@@ -220,10 +221,10 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                       onEditAccount(a);
                     }}
                   >
-                    ✏️ 修改账户
+                    <PencilIcon size={15} /> 修改账户
                   </button>
                   <button className="danger" onClick={del}>
-                    🗑 删除账户
+                    <TrashIcon size={15} /> 删除账户
                   </button>
                 </div>
               )}
@@ -232,13 +233,13 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
           <div className="acc-hero-label">账户余额（CNY）</div>
           <button className="acc-hero-balance" onClick={() => setAdjustOpen(true)} title="调整余额">
             {fmtMoney(balance)}
-            <span className="acc-pencil">✏️</span>
+            <span className="acc-pencil"><PencilIcon size={14} /></span>
           </button>
         </div>
 
         {months.length === 0 && (
           <div className="empty">
-            <span className="empty-emoji">🪹</span>
+            <span className="empty-emoji"><InboxIcon size={44} /></span>
             <p>这个账户还没有收支记录</p>
           </div>
         )}
@@ -256,7 +257,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                   <span className="neg">流出: {fmtMoney(m.out)}</span>
                   <span className="pos">流入: {fmtMoney(m.in)}</span>
                 </span>
-                <span className={'type-chev' + (open ? ' open' : '')}>⌄</span>
+                <ChevronDownIcon size={16} className={'type-chev' + (open ? ' open' : '')} />
               </button>
               {open && (
                 <div className="month-body">
@@ -272,7 +273,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                         if (created) {
                           return (
                             <button className="txn-row" key={t.id} onClick={() => setCreatedDetail(true)}>
-                              <span className="emoji-dot created">📝</span>
+                              <span className="emoji-dot created"><FileTextIcon size={18} /></span>
                               <span className="txn-main">
                                 <span className="txn-cat">账户创建</span>
                                 <span className="txn-sub">
@@ -298,14 +299,14 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                         return (
                           <button className="txn-row" key={t.id} onClick={() => setTxnDetailId(t.id)}>
                             <span className={'emoji-dot ' + (isTransfer ? 'transfer' : isAdjust ? 'adjust' : t.type)}>
-                              {isTransfer ? '🔁' : isAdjust ? '⚙️' : cat?.emoji ?? '❓'}
+                              <LIcon emoji={isTransfer ? '🔁' : isAdjust ? '⚙️' : cat?.emoji} size={18} />
                             </span>
                             <span className="txn-main">
                               <span className="txn-cat">
                                 {isTransfer ? '转账' : isAdjust ? '余额调整' : cat?.name ?? '未知分类'}
                                 {book && (
                                   <span className="txn-book" style={{ color: book.color }}>
-                                    {book.emoji} {book.name}
+                                    <LIcon emoji={book.emoji} size={11} /> {book.name}
                                   </span>
                                 )}
                               </span>

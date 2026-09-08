@@ -3,6 +3,7 @@ import { BOOK_EMOJIS, useStore } from '../store';
 import type { Book } from '../types';
 import { lockBodyScroll, uid, unlockBodyScroll } from '../utils';
 import { Modal } from './Modal';
+import { CheckIcon, ChevronLeftIcon, LIcon, NotebookIcon, PencilIcon, TrashIcon } from './icons';
 
 const COLORS = ['#5b7cfa', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
@@ -55,7 +56,7 @@ export function BookManager({ onClose }: BookManagerProps) {
       <div className="overlay-page">
         <div className="page-head">
           <button className="page-back" onClick={onClose}>
-            ‹ 返回
+            <ChevronLeftIcon size={17} /> 返回
           </button>
           <span className="page-title">我的账本</span>
           <button className="page-action" onClick={openCreate} aria-label="新建账本">
@@ -68,7 +69,7 @@ export function BookManager({ onClose }: BookManagerProps) {
           {menuId && <div className="pop-mask" onClick={() => setMenuId(null)} />}
           {books.length === 0 && (
             <div className="empty">
-              <span className="empty-emoji">📒</span>
+              <span className="empty-emoji"><NotebookIcon size={44} /></span>
               <p>还没有账本，点右上角「＋」创建</p>
             </div>
           )}
@@ -80,14 +81,18 @@ export function BookManager({ onClose }: BookManagerProps) {
                 <div className={'book-card' + (current ? ' current' : '')} key={b.id}>
                   <button className="book-card-main" onClick={() => setActiveBook(b.id)}>
                     <span className="emoji-dot book" style={{ background: b.color + '22', color: b.color }}>
-                      {b.emoji}
+                      <LIcon emoji={b.emoji} size={22} />
                     </span>
                     <span className="book-card-name">
                       {b.name}
                       <em>{n} 笔记录</em>
                     </span>
                   </button>
-                  {current && <span className="book-card-check">✓</span>}
+                  {current && (
+                    <span className="book-card-check">
+                      <CheckIcon size={12} />
+                    </span>
+                  )}
                   <button
                     className="book-card-more"
                     onClick={() => setMenuId(menuId === b.id ? null : b.id)}
@@ -97,9 +102,11 @@ export function BookManager({ onClose }: BookManagerProps) {
                   </button>
                   {menuId === b.id && (
                     <div className="acc-menu book-menu">
-                      <button onClick={() => openEdit(b)}>✏️ 编辑账本</button>
+                      <button onClick={() => openEdit(b)}>
+                        <PencilIcon size={15} /> 编辑账本
+                      </button>
                       <button className="danger" onClick={() => del(b)}>
-                        🗑 删除账本
+                        <TrashIcon size={15} /> 删除账本
                       </button>
                     </div>
                   )}
@@ -152,8 +159,13 @@ function BookFormModal({ editing, onClose }: { editing: Book | null; onClose: ()
         </div>
         <div className="emoji-row">
           {BOOK_EMOJIS.map((e) => (
-            <button key={e} className={'emoji-pick' + (emoji === e ? ' active' : '')} onClick={() => setEmoji(e)}>
-              {e}
+            <button
+              key={e}
+              className={'emoji-pick' + (emoji === e ? ' active' : '')}
+              onClick={() => setEmoji(e)}
+              aria-label={`图标 ${e}`}
+            >
+              <LIcon emoji={e} size={19} />
             </button>
           ))}
         </div>

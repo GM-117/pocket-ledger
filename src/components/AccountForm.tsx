@@ -5,6 +5,7 @@ import type { Account, AccountKind } from '../types';
 import { accountBalance, fmtMoney, round2, uid } from '../utils';
 import { BalanceAdjustModal } from './BalanceAdjustModal';
 import { Modal } from './Modal';
+import { LIcon } from './icons';
 
 export interface AccountTypePreset {
   kind: AccountKind;
@@ -82,7 +83,7 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
     <Modal title={initial ? '修改账户' : '添加账户'} onClose={onClose}>
       <button className="acc-type-row" onClick={onPickType}>
         <span className="icon-circle lg" style={{ background: icon.color + '22', color: icon.color }}>
-          {icon.icon}
+          <LIcon emoji={icon.icon} size={20} />
         </span>
         <span className="acc-type-name">{name.trim() || st.label}</span>
         <span className="value">

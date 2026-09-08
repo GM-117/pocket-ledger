@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { subtypeOf } from '../accountCatalog';
+import { accountIcon, subtypeOf } from '../accountCatalog';
 import { useStore } from '../store';
 import { ADJUST_CATEGORY_IN, type Account, type ReimbStatus, type Txn, type TxnType } from '../types';
 import { fmtHm, fmtMoney, lockBodyScroll, parseISO, round2, uid, unlockBodyScroll } from '../utils';
 import { AmountPadModal } from './AmountPadModal';
 import { CategoryPickModal, DateEditModal, OptionPickerModal } from './EditModals';
 import { Modal } from './Modal';
+import { CalendarIcon, CartIcon, ChevronLeftIcon, CoinsIcon, LIcon, PencilIcon, TrashIcon, ZapIcon } from './icons';
 
 interface TxnDetailProps {
   /** 普通模式：流水 id */
@@ -140,7 +141,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
   const saveAsTemplate = () => {
     if (isTransfer) return;
     addTemplate({
-      name: tplName.trim() || `${cat?.emoji ?? ''} ${cat?.name ?? '模板'}`,
+      name: tplName.trim() || (cat?.name ?? '模板'),
       type: t.type === 'income' ? 'income' : 'expense',
       amount: t.amount,
       categoryId: t.categoryId,
@@ -162,7 +163,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
       <div className="overlay-page">
         <div className="page-head">
           <button className="page-back" onClick={onClose}>
-            ‹ {backLabel}
+            <ChevronLeftIcon size={17} /> {backLabel}
           </button>
           <span className="page-title">账单详情</span>
           <span className="page-action placeholder" />
@@ -172,11 +173,11 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
         <div className="txn-actions">
           {!isAdjust && (
             <button className="txn-action edit" onClick={() => onEdit(t)}>
-              <span className="ic">✏️</span>编辑
+              <span className="ic"><PencilIcon size={19} /></span>编辑
             </button>
           )}
           <button className="txn-action danger" onClick={del}>
-            <span className="ic">🗑️</span>删除
+            <span className="ic"><TrashIcon size={19} /></span>删除
           </button>
           {t.type === 'expense' && (
             <button
@@ -186,12 +187,12 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
                 refundInputRef.current?.focus();
               }}
             >
-              <span className="ic">🛒</span>退款
+              <span className="ic"><CartIcon size={19} /></span>退款
             </button>
           )}
           {!isTransfer && !isAdjust && (
             <button className="txn-action tpl" onClick={() => setTplOpen(true)}>
-              <span className="ic">⚡</span>存为模板
+              <span className="ic"><ZapIcon size={19} /></span>存为模板
             </button>
           )}
         </div>
@@ -217,7 +218,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
           <button className="detail-row" onClick={() => setEditTarget('book')}>
             <span>账本</span>
             <span className="value">
-              {book ? `${book.emoji} ${book.name}` : '未知账本'}
+              {book ? (<><LIcon emoji={book.emoji} size={14} /> {book.name}</>) : '未知账本'}
               <span className="arrow">›</span>
             </span>
           </button>
@@ -399,7 +400,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
       {editTarget === 'account' && (
         <OptionPickerModal
           title="选择账户"
-          options={selectableAccounts.map((a) => ({ id: a.id, label: a.name, emoji: a.emoji }))}
+          options={selectableAccounts.map((a) => ({ id: a.id, label: a.name, emoji: accountIcon(a).icon }))}
           selectedId={t.accountId}
           onPick={(accountId) => {
             saveTxn({ ...t, accountId });
@@ -500,7 +501,7 @@ function TxnDetailView({ txnId, backLabel, onClose, onEdit }: Required<TxnDetail
             <span>模板名称</span>
             <input
               autoFocus
-              placeholder={`如：${cat?.emoji ?? ''} ${cat?.name ?? '模板'}`}
+              placeholder={`如：${cat?.name ?? '模板'}`}
               value={tplName}
               onChange={(e) => setTplName(e.target.value)}
             />
@@ -564,7 +565,7 @@ function CreatedAccountDetail({
       <div className="overlay-page">
         <div className="page-head">
           <button className="page-back" onClick={onClose}>
-            ‹ {backLabel}
+            <ChevronLeftIcon size={17} /> {backLabel}
           </button>
           <span className="page-title">账单详情</span>
           <span className="page-action placeholder" />
@@ -573,10 +574,10 @@ function CreatedAccountDetail({
       <div className="page-body">
         <div className="txn-actions two">
           <button className="txn-action edit" onClick={() => setEditOpen(true)}>
-            <span className="ic">✏️</span>编辑
+            <span className="ic"><PencilIcon size={19} /></span>编辑
           </button>
           <button className="txn-action danger" onClick={del}>
-            <span className="ic">🗑️</span>删除
+            <span className="ic"><TrashIcon size={19} /></span>删除
           </button>
         </div>
 
@@ -632,7 +633,7 @@ function CreatedAccountDetail({
                 setDateEdit(true);
               }}
             >
-              <span className="emoji-dot">📅</span>
+              <span className="emoji-dot"><CalendarIcon size={17} /></span>
               <span className="option-label">修改时间</span>
               <span className="option-check">›</span>
             </button>
@@ -643,7 +644,7 @@ function CreatedAccountDetail({
                 setAmountEdit(true);
               }}
             >
-              <span className="emoji-dot">💰</span>
+              <span className="emoji-dot"><CoinsIcon size={17} /></span>
               <span className="option-label">修改金额</span>
               <span className="option-check">›</span>
             </button>

@@ -6,6 +6,7 @@ import { accountBalance, computeTotals, fmtISO, fmtMoney } from '../utils';
 import { AccountDetail } from '../components/AccountDetail';
 import { AccountForm, type AccountTypePreset } from '../components/AccountForm';
 import { AccountTypePicker } from '../components/AccountTypePicker';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, DownloadIcon, EyeIcon, EyeOffIcon, LIcon, RotateCcwIcon, UploadIcon } from '../components/icons';
 import { BorrowPage } from '../components/BorrowPage';
 import { SwipeRow } from '../components/SwipeRow';
 
@@ -131,7 +132,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
         <div className="hero-label-row">
           <span className="label">净资产（总资产 − 总负债）</span>
           <button className="eye-btn" onClick={toggleHideAmounts} aria-label="隐藏或显示金额">
-            {hideAmounts ? '🙈' : '👁'}
+            {hideAmounts ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
           </button>
         </div>
         <div className="net">{money(totals.netWorth)}</div>
@@ -155,7 +156,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
             setBorrowOpen(true);
           }}
         >
-          <span className="borrow-icon in">⬇</span>
+          <span className="borrow-icon in"><ArrowDownIcon size={16} /></span>
           <span className="borrow-main">
             <span>总借入</span>
             <b>{money(borrowTotals.debt)}</b>
@@ -168,7 +169,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
             setBorrowOpen(true);
           }}
         >
-          <span className="borrow-icon out">⬆</span>
+          <span className="borrow-icon out"><ArrowUpIcon size={16} /></span>
           <span className="borrow-main">
             <span>总借出</span>
             <b>{money(borrowTotals.lend)}</b>
@@ -208,7 +209,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
                     <b className={KIND_MAP[kind.id].sum === 'debt' ? 'neg' : ''}>{money(sum)}</b>
                   </>
                 )}
-                <span className={'type-chev' + (open ? ' open' : '')}>⌄</span>
+                <ChevronDownIcon size={16} className={'type-chev' + (open ? ' open' : '')} />
               </span>
             </button>
             {open && (
@@ -224,7 +225,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
                       }}
                     >
                       <span className="icon-circle" style={{ background: icon.color + '22', color: icon.color }}>
-                        {icon.icon}
+                        <LIcon emoji={icon.icon} size={17} />
                       </span>
                       <span className="txn-main">
                         <span className="txn-cat">
@@ -274,10 +275,10 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
       </div>
       <div className="card data-actions">
         <button className="btn ghost" onClick={doExport}>
-          ⬇️ 导出数据
+          <DownloadIcon size={15} /> 导出数据
         </button>
         <button className="btn ghost" onClick={() => fileRef.current?.click()}>
-          ⬆️ 导入数据
+          <UploadIcon size={15} /> 导入数据
         </button>
         <button
           className="btn ghost"
@@ -288,7 +289,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
             }
           }}
         >
-          ♻️ 重置演示
+          <RotateCcwIcon size={15} /> 重置演示
         </button>
         <input
           ref={fileRef}

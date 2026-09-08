@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ACCOUNT_KINDS } from '../accountCatalog';
 import type { AccountKind } from '../types';
 import { Modal } from './Modal';
+import { ChevronDownIcon, LIcon } from './icons';
 
 interface AccountTypePickerProps {
   /** 打开时默认展开的大类 */
@@ -23,7 +24,7 @@ export function AccountTypePicker({ initialKind, onPick, onClose }: AccountTypeP
             <div className="type-group" key={k.id}>
               <button className="type-group-head" onClick={() => setOpenKind(open ? null : k.id)}>
                 <span>{k.label}</span>
-                <span className={'type-chev' + (open ? ' open' : '')}>⌄</span>
+                <ChevronDownIcon size={16} className={'type-chev' + (open ? ' open' : '')} />
               </button>
               {open && (
                 <div className="type-list">
@@ -37,7 +38,7 @@ export function AccountTypePicker({ initialKind, onPick, onClose }: AccountTypeP
                         className="icon-circle"
                         style={{ background: s.color + '22', color: s.color }}
                       >
-                        {s.icon}
+                        <LIcon emoji={s.icon} size={17} />
                       </span>
                       <span className="type-row-label">{s.label}</span>
                       <span className="type-row-arrow">›</span>

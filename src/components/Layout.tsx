@@ -1,6 +1,17 @@
 import { type ReactNode } from 'react';
 import { useStore } from '../store';
-import { BookIcon, CalendarIcon, ChartIcon, PlusIcon, WalletIcon } from './icons';
+import {
+  BookIcon,
+  CalendarIcon,
+  ChartIcon,
+  ChevronDownIcon,
+  CoinsIcon,
+  LIcon,
+  MoonIcon,
+  PlusIcon,
+  SunIcon,
+  WalletIcon,
+} from './icons';
 
 export type TabKey = 'detail' | 'assets' | 'calendar' | 'stats';
 
@@ -36,7 +47,7 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps
   const activeBook = books.find((b) => b.id === activeBookId) ?? books[0];
   const themeBtn = (
     <button className="theme-btn" onClick={toggleTheme} aria-label="切换深浅主题">
-      {theme === 'dark' ? '☀️' : '🌙'}
+      {theme === 'dark' ? <SunIcon size={17} /> : <MoonIcon size={17} />}
     </button>
   );
 
@@ -44,7 +55,9 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-logo">💰</span>
+          <span className="brand-logo">
+            <CoinsIcon size={19} />
+          </span>
           <span>
             口袋记账
             <small>PocketLedger</small>
@@ -72,7 +85,7 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps
               style={b.id === activeBook?.id ? { color: b.color } : undefined}
               onClick={() => setActiveBook(b.id)}
             >
-              <span>{b.emoji}</span>
+              <LIcon emoji={b.emoji} size={16} />
               {b.name}
             </button>
           ))}
@@ -96,8 +109,9 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps
                 onClick={onOpenBooks}
                 title="切换 / 管理账本"
               >
-                {activeBook.emoji} {activeBook.name}
-                <span className="book-chip-chev">⌄</span>
+                <LIcon emoji={activeBook.emoji} size={15} />
+                {activeBook.name}
+                <ChevronDownIcon size={12} className="book-chip-chev" />
               </button>
             )}
           </div>

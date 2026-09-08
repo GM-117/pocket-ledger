@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { round2 } from '../utils';
 import { CalcKeypad } from './CalcKeypad';
 import { Modal } from './Modal';
+import { CloseIcon } from './icons';
 
 interface AmountPadModalProps {
   title: string;
@@ -50,7 +51,7 @@ export function AmountPadModal({ title, initial, onSubmit, onClose }: AmountPadM
         />
         {expr && (
           <button className="adj-clear" onClick={() => setExpr('')} aria-label="清除">
-            ✕
+            <CloseIcon size={11} />
           </button>
         )}
       </div>
