@@ -23,34 +23,43 @@
   --bg-blur: rgba(244, 245, 247, 0.86);
   --radius: 16px;
   --shadow: 0 1px 2px rgba(23, 29, 41, 0.04), 0 4px 16px rgba(23, 29, 41, 0.05);
+  /* 卡片描边：浅色透明（靠阴影分层），深色为细边（替代不可见的阴影） */
+  --card-border: transparent;
+  /* 分段控件选中态药丸底色 */
+  --seg-active: #ffffff;
+  /* 输入框聚焦底色 */
+  --field-focus: #ffffff;
   --tabbar-h: 58px;
   color-scheme: light;
 }
 
 /* ============ 深色主题 ============ */
 html[data-theme='dark'] {
-  --bg: #12151c;
-  --surface: #1c212b;
-  --ink: #e8ebf2;
-  --muted: #9aa3b5;
-  --line: #2a3140;
-  --primary: #7288ff;
-  --primary-deep: #4a6cf0;
-  --primary-soft: rgba(114, 136, 255, 0.16);
+  --bg: #0e1118;
+  --surface: #171c26;
+  --ink: #e9ecf4;
+  --muted: #8f99ad;
+  --line: #262e3d;
+  --primary: #8091ff;
+  --primary-deep: #5b6cf0;
+  --primary-soft: rgba(128, 145, 255, 0.14);
   --green: #34d399;
-  --green-soft: rgba(52, 211, 153, 0.14);
+  --green-soft: rgba(52, 211, 153, 0.13);
   --red: #f26d6a;
-  --red-soft: rgba(242, 109, 106, 0.15);
+  --red-soft: rgba(242, 109, 106, 0.13);
   --warn: #fbbf24;
-  --warn-soft: rgba(245, 158, 11, 0.16);
-  --field-bg: #232936;
-  --seg-bg: #262d3a;
-  --row-active: #232936;
-  --key-bg: #262d3a;
-  --key-active: #323a4a;
-  --surface-blur: rgba(28, 33, 43, 0.94);
-  --bg-blur: rgba(18, 21, 28, 0.86);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.28);
+  --warn-soft: rgba(251, 191, 36, 0.13);
+  --field-bg: #1b212d;
+  --seg-bg: #1d2431;
+  --row-active: #1c222e;
+  --key-bg: #1d2431;
+  --key-active: #2b3344;
+  --surface-blur: rgba(23, 28, 38, 0.9);
+  --bg-blur: rgba(14, 17, 24, 0.84);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --card-border: rgba(148, 163, 196, 0.1);
+  --seg-active: #2b3448;
+  --field-focus: #212839;
   color-scheme: dark;
 }
 
@@ -332,7 +341,7 @@ p {
 }
 
 .stat-card .value {
-  font-size: clamp(12px, 3.5vw, 18px);
+  font-size: clamp(11px, 3.3vw, 18px);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -449,15 +458,23 @@ p {
   justify-content: center;
   font-size: 19px;
   background: var(--primary-soft);
+  color: var(--primary);
   flex: none;
 }
 
 .emoji-dot.expense {
   background: var(--red-soft);
+  color: var(--red);
 }
 
 .emoji-dot.income {
   background: var(--green-soft);
+  color: var(--green);
+}
+
+.emoji-dot svg,
+.icon-circle svg {
+  display: block;
 }
 
 .txn-main {
@@ -566,9 +583,11 @@ p {
 }
 
 .empty-emoji {
-  font-size: 42px;
-  display: block;
-  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+  opacity: 0.45;
+  margin-bottom: 12px;
 }
 
 .empty-text {
@@ -584,9 +603,15 @@ p {
 }
 
 .data-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.data-actions .btn {
+  padding: 10px 4px;
+  font-size: 12.5px;
+  gap: 5px;
 }
 
 /* 筛选 chips / 周期切换 */
@@ -633,7 +658,7 @@ p {
 }
 
 .seg button.active {
-  background: var(--surface);
+  background: var(--seg-active);
   color: var(--ink);
   box-shadow: 0 1px 4px rgba(23, 29, 41, 0.1);
 }
@@ -755,7 +780,7 @@ input:focus,
 select:focus {
   border-color: var(--primary);
   outline: none;
-  background: var(--surface);
+  background: var(--field-focus);
 }
 
 /* 日期输入：移除原生外观后，iOS 不再像文本框那样用 padding 撑高度，
@@ -1397,6 +1422,7 @@ input[type='date'] {
 
 .emoji-dot.transfer {
   background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .amount.trf {
@@ -1406,6 +1432,7 @@ input[type='date'] {
 /* 「余额调整」流水（与「账户创建」同用警示黄） */
 .emoji-dot.adjust {
   background: var(--warn-soft);
+  color: var(--warn);
 }
 
 .amount.adj {
@@ -1903,11 +1930,13 @@ input[type='date'] {
 }
 
 .borrow-icon.in {
-  background: var(--ink);
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .borrow-icon.out {
-  background: var(--green);
+  background: var(--green-soft);
+  color: var(--green);
 }
 
 .borrow-main {
@@ -1984,10 +2013,16 @@ input[type='date'] {
 .kind-body {
   padding: 4px 14px;
   margin-bottom: 8px;
+  /* hover 背景贯通到卡片两缘（行用负边距抵消内边距），圆角由这里裁剪 */
+  overflow: hidden;
+}
+
+.kind-body .swipe-row {
+  margin: 0 -14px;
 }
 
 .kind-body .account-row {
-  padding: 11px 0;
+  padding: 11px 14px;
 }
 
 .kind-body .account-row + .account-row {
@@ -2018,16 +2053,19 @@ input[type='date'] {
   border-radius: 14px;
   padding: 2px 12px;
   margin-bottom: 6px;
+  /* hover 背景贯通两缘（行负边距抵消内边距） */
+  overflow: hidden;
 }
 
 .type-row {
-  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
   background: none;
   border: none;
-  padding: 11px 0;
+  width: calc(100% + 24px);
+  margin: 0 -12px;
+  padding: 11px 12px;
   cursor: pointer;
   text-align: left;
 }
@@ -2455,14 +2493,17 @@ input[type='date'] {
 
 .borrow-list {
   padding: 4px 14px;
+  /* hover 背景贯通两缘（行负边距抵消内边距） */
+  overflow: hidden;
 }
 
 .borrow-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
-  padding: 12px 0;
+  width: calc(100% + 28px);
+  margin: 0 -14px;
+  padding: 12px 14px;
   background: none;
   border: none;
   cursor: pointer;
@@ -2700,6 +2741,7 @@ input[type='date'] {
 
 .emoji-dot.created {
   background: var(--warn-soft);
+  color: var(--warn);
 }
 
 /* ============ 余额调整（计算器） ============ */
@@ -2934,7 +2976,7 @@ input[type='date'] {
   background: var(--surface);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  border: 1.5px solid transparent;
+  border: 1.5px solid var(--card-border);
   padding: 14px;
   min-height: 96px;
 }
@@ -3030,9 +3072,9 @@ input[type='date'] {
 }
 
 .book-chip-chev {
-  font-size: 10px;
   opacity: 0.55;
-  margin-left: -2px;
+  margin-left: -1px;
+  flex: none;
 }
 
 /* 更多菜单点击外部关闭的透明遮罩 */
@@ -3072,4 +3114,223 @@ input[type='date'] {
   padding: 6px 12px 2px;
   font-size: 11px;
   color: var(--muted);
+}
+
+/* ============ SVG 图标对齐（emoji → 线性图标改造） ============ */
+
+/* 图标按钮统一居中 */
+.modal-close,
+.adj-close,
+.adj-clear,
+.kp-cancel,
+.kp-del,
+.round-btn,
+.icon-btn,
+.eye-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn {
+  color: var(--muted);
+}
+
+.eye-btn {
+  color: #fff;
+}
+
+.kp-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 标题行内的小图标与文字基线对齐 */
+.section-title > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.txn-book {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.kp-meta-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cat-chip span {
+  display: flex;
+}
+
+.tpl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.txn-action .ic {
+  display: flex;
+}
+
+.acc-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.borrow-row .borrow-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.emoji-pick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.emoji-pick.active {
+  color: var(--primary);
+}
+
+.acc-pencil {
+  display: inline-flex;
+}
+
+.option-check {
+  display: inline-flex;
+}
+
+.detail-row .value svg {
+  flex: none;
+}
+
+/* 弹窗选项行 / 周期规则主体：hover 高亮为圆角色块（直角灰块像选中错位） */
+.option-row,
+.recur-main {
+  border-radius: 10px;
+}
+
+/* ============ 深色模式精修 ============ */
+
+/* 阴影在深色下不可见：用细边勾勒卡片层次（浅色 --card-border 为 transparent 无影响） */
+.card,
+.stat-card,
+.txn-group,
+.month-card,
+.borrow-card,
+.modal,
+.txn-action,
+.book-chip,
+.theme-btn,
+.book-pill,
+.round-btn {
+  border: 1px solid var(--card-border);
+}
+
+html[data-theme='dark'] .hero {
+  background: linear-gradient(135deg, #5a68e8 0%, #4753d4 55%, #3a43b5 100%);
+  box-shadow: 0 12px 28px rgba(43, 52, 150, 0.4);
+}
+
+html[data-theme='dark'] .fab {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='dark'] .modal-overlay {
+  background: rgba(4, 6, 10, 0.62);
+}
+
+@media (min-width: 640px) {
+  html[data-theme='dark'] .overlay-backdrop {
+    background: rgba(4, 6, 10, 0.62);
+  }
+}
+
+html[data-theme='dark'] .acc-menu {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+/* ============ 桌面端 hover（移动端无此状态） ============ */
+@media (hover: hover) {
+  .tab-item:hover,
+  .side-nav button:hover {
+    color: var(--ink);
+  }
+
+  .side-book:hover {
+    background: var(--row-active);
+  }
+
+  .chip:hover {
+    color: var(--ink);
+    border-color: var(--muted);
+  }
+
+  .btn.ghost:hover {
+    background: var(--key-active);
+  }
+
+  .book-pill:hover,
+  .tpl-chip:hover {
+    border-color: var(--muted);
+  }
+
+  .txn-row:hover,
+  .account-row:hover,
+  .borrow-row:hover,
+  .type-row:hover,
+  .option-row:hover,
+  .recur-main:hover {
+    background: var(--row-active);
+  }
+
+  .cat-chip:hover {
+    border-color: var(--muted);
+  }
+
+  .kp-key:hover {
+    background: var(--key-active);
+  }
+
+  .theme-btn:hover,
+  .round-btn:hover,
+  .icon-btn:hover,
+  .modal-close:hover {
+    filter: brightness(0.96);
+  }
+
+  html[data-theme='dark'] .theme-btn:hover,
+  html[data-theme='dark'] .round-btn:hover,
+  html[data-theme='dark'] .icon-btn:hover,
+  html[data-theme='dark'] .modal-close:hover {
+    filter: brightness(1.18);
+  }
+
+  .book-card:hover {
+    border-color: color-mix(in srgb, var(--primary) 40%, var(--card-border));
+  }
+
+  .txn-action:hover {
+    filter: brightness(0.97);
+  }
+
+  html[data-theme='dark'] .txn-action:hover {
+    filter: brightness(1.12);
+  }
 }
