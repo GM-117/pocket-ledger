@@ -22,19 +22,23 @@ import {
 } from '../utils';
 
 const MUTED_LIGHT = '#7a8194';
-const MUTED_DARK = '#9aa3b5';
+const MUTED_DARK = '#8f99ad';
 
 interface ChartColors {
   muted: string;
   line: string;
   ink: string;
   border: string;
+  green: string;
+  red: string;
+  primary: string;
 }
 
+/** 图表配色与 CSS 变量（styles.css 深浅主题）保持一致 */
 function chartColors(dark: boolean): ChartColors {
   return dark
-    ? { muted: MUTED_DARK, line: '#2a3140', ink: '#e8ebf2', border: '#1c212b' }
-    : { muted: MUTED_LIGHT, line: '#eef0f4', ink: '#1b2231', border: '#ffffff' };
+    ? { muted: MUTED_DARK, line: '#232b3a', ink: '#e9ecf4', border: '#1c222e', green: '#34d399', red: '#f26d6a', primary: '#8091ff' }
+    : { muted: MUTED_LIGHT, line: '#eef0f4', ink: '#1b2231', border: '#ffffff', green: '#22c55e', red: '#ef5350', primary: '#5b7cfa' };
 }
 
 type StatsPeriod = Period | 'all';
@@ -78,7 +82,7 @@ function pieOption(
         type: 'pie' as const,
         radius: ['40%', '60%'],
         center: ['50%', '48%'],
-        data: slices.map((s) => ({ name: `${s.emoji}${s.name}`, value: s.value })),
+        data: slices.map((s) => ({ name: s.name, value: s.value })),
         itemStyle: { borderColor: C.border, borderWidth: 2, borderRadius: 4 },
         label: {
           show: true,
@@ -200,14 +204,14 @@ export function StatsPage() {
             name: '收入',
             type: 'bar' as const,
             data: trend.income,
-            itemStyle: { color: '#22c55e', borderRadius: [3, 3, 0, 0] },
+            itemStyle: { color: C.green, borderRadius: [3, 3, 0, 0] },
             barMaxWidth: 14,
           },
           {
             name: '支出',
             type: 'bar' as const,
             data: trend.expense,
-            itemStyle: { color: '#f97316', borderRadius: [3, 3, 0, 0] },
+            itemStyle: { color: C.red, borderRadius: [3, 3, 0, 0] },
             barMaxWidth: 14,
           },
           {
@@ -217,8 +221,8 @@ export function StatsPage() {
             smooth: true,
             symbol: 'circle',
             symbolSize: 5,
-            lineStyle: { color: '#5b7cfa', width: 2 },
-            itemStyle: { color: '#5b7cfa' },
+            lineStyle: { color: C.primary, width: 2 },
+            itemStyle: { color: C.primary },
           },
         ],
       }) as echarts.EChartsOption,
@@ -261,7 +265,7 @@ export function StatsPage() {
             data: netSeries.map((p) => p.value),
             smooth: true,
             symbol: 'none',
-            lineStyle: { color: '#7288ff', width: 3 },
+            lineStyle: { color: C.primary, width: 3 },
             areaStyle: {
               color: {
                 type: 'linear' as const,
@@ -270,7 +274,7 @@ export function StatsPage() {
                 x2: 0,
                 y2: 1,
                 colorStops: [
-                  { offset: 0, color: dark ? 'rgba(114,136,255,0.34)' : 'rgba(91,124,250,0.26)' },
+                  { offset: 0, color: dark ? 'rgba(128,145,255,0.3)' : 'rgba(91,124,250,0.26)' },
                   { offset: 1, color: 'rgba(91,124,250,0.02)' },
                 ],
               },
