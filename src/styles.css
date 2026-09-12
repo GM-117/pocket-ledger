@@ -3268,8 +3268,9 @@ html[data-theme='dark'] .acc-menu {
 
 /* ============ 桌面端 hover（移动端无此状态） ============ */
 @media (hover: hover) {
-  .tab-item:hover,
-  .side-nav button:hover {
+  /* 选中态保持高亮不变，仅未选中项 hover 提亮 */
+  .tab-item:not(.active):hover,
+  .side-nav button:not(.active):hover {
     color: var(--ink);
   }
 
