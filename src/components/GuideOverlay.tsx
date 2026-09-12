@@ -102,8 +102,8 @@ export function GuideOverlay({ onClose }: GuideOverlayProps) {
           <div className="guide-section">
             <h3>小贴士</h3>
             <ul className="guide-tips">
-              <li>数据仅保存在本机浏览器，不上传任何服务器；「资产 → 数据管理」支持导出备份与导入恢复</li>
-              <li>想先随便看看？在「资产 → 数据管理」可一键载入演示数据，也可以随时清空重新开始</li>
+              <li>数据仅保存在本机浏览器，不上传任何服务器；顶栏「⚙ 设置 → 数据管理」支持导出备份与导入恢复</li>
+              <li>想先随便看看？在「设置 → 数据管理」可一键载入模拟数据，也可以随时清空重新开始</li>
               <li>顶栏按钮可切换深浅主题、隐藏金额、再次打开本引导</li>
             </ul>
           </div>

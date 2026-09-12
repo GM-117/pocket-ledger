@@ -6,6 +6,7 @@ import {
   ChartIcon,
   ChevronDownIcon,
   CoinsIcon,
+  GearIcon,
   LIcon,
   MoonIcon,
   PlusIcon,
@@ -38,10 +39,12 @@ interface LayoutProps {
   onOpenBooks: () => void;
   /** 顶栏帮助按钮 → 打开使用引导 */
   onOpenGuide: () => void;
+  /** 顶栏 ⚙ → 打开设置（数据管理：导出 / 导入 / 模拟数据 / 清空） */
+  onOpenSettings: () => void;
   children: ReactNode;
 }
 
-export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, children }: LayoutProps) {
+export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, onOpenSettings, children }: LayoutProps) {
   const books = useStore((s) => s.books);
   const activeBookId = useStore((s) => s.activeBookId);
   const setActiveBook = useStore((s) => s.setActiveBook);
@@ -56,6 +59,11 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, children }
   const guideBtn = (
     <button className="theme-btn" onClick={onOpenGuide} aria-label="使用指南">
       <QuestionIcon size={17} />
+    </button>
+  );
+  const settingsBtn = (
+    <button className="theme-btn" onClick={onOpenSettings} aria-label="设置">
+      <GearIcon size={17} />
     </button>
   );
 
@@ -105,6 +113,7 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, children }
         <div className="side-actions">
           {guideBtn}
           {themeBtn}
+          {settingsBtn}
         </div>
       </aside>
 
@@ -114,6 +123,7 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, children }
           <div className="topbar-right">
             {guideBtn}
             {themeBtn}
+            {settingsBtn}
             {activeBook && (
               <button
                 className="book-chip"

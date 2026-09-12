@@ -1,12 +1,12 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { accountIcon, ACCOUNT_KINDS, KIND_MAP } from '../accountCatalog';
 import { useStore } from '../store';
 import type { Account, AccountKind, Txn } from '../types';
-import { accountBalance, computeTotals, fmtISO, fmtSigned } from '../utils';
+import { accountBalance, computeTotals, fmtSigned } from '../utils';
 import { AccountDetail } from '../components/AccountDetail';
 import { AccountForm, type AccountTypePreset } from '../components/AccountForm';
 import { AccountTypePicker } from '../components/AccountTypePicker';
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, DownloadIcon, EyeIcon, EyeOffIcon, LIcon, RotateCcwIcon, TrashIcon, UploadIcon, WalletIcon } from '../components/icons';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, EyeIcon, EyeOffIcon, LIcon, WalletIcon } from '../components/icons';
 import { BorrowPage } from '../components/BorrowPage';
 import { SwipeRow } from '../components/SwipeRow';
 
@@ -27,10 +27,6 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const activeBookId = useStore((s) => s.activeBookId);
   const hideAmounts = useStore((s) => s.hideAmounts);
   const toggleHideAmounts = useStore((s) => s.toggleHideAmounts);
-  const exportJSON = useStore((s) => s.exportJSON);
-  const importJSON = useStore((s) => s.importJSON);
-  const loadDemo = useStore((s) => s.loadDemo);
-  const resetAll = useStore((s) => s.resetAll);
   const removeAccount = useStore((s) => s.removeAccount);
 
   const [openKinds, setOpenKinds] = useState<Set<AccountKind>>(new Set());
@@ -42,8 +38,6 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const [borrowTab, setBorrowTab] = useState<'borrow' | 'lend'>('borrow');
   /** 当前左滑展开的账户行（互斥） */
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
-  const [msg, setMsg] = useState('');
-  const fileRef = useRef<HTMLInputElement>(null);
 
   // 带符号金额：净资产 / 余额可为负（透支），fmtMoney 会吞掉负号，这里统一用 fmtSigned
   const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtSigned(n));
@@ -106,27 +100,6 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const openPicker = (kind?: AccountKind) => {
     setPickInitialKind(kind);
     setPickOpen(true);
-  };
-
-  const doExport = () => {
-    const blob = new Blob([exportJSON()], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pocket-ledger-${fmtISO(new Date())}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setMsg('已导出备份文件 ✓');
-  };
-
-  const onImportFile = (f: File | undefined) => {
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => {
-      const err = importJSON(String(r.result));
-      setMsg(err ?? '导入成功 ✓');
-    };
-    r.readAsText(f);
   };
 
   return (
@@ -285,55 +258,6 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
         );
         })
       )}
-
-      <div className="section-title">
-        <span>数据管理</span>
-        {msg && <span className="data-msg">{msg}</span>}
-      </div>
-      <div className="card data-actions">
-        <button className="btn ghost" onClick={doExport}>
-          <DownloadIcon size={15} /> 导出数据
-        </button>
-        <button className="btn ghost" onClick={() => fileRef.current?.click()}>
-          <UploadIcon size={15} /> 导入数据
-        </button>
-        <button
-          className="btn ghost"
-          onClick={() => {
-            if (window.confirm('载入演示数据？当前所有数据将被覆盖。')) {
-              loadDemo();
-              setMsg('已载入演示数据 ✓');
-            }
-          }}
-        >
-          <RotateCcwIcon size={15} /> 载入演示
-        </button>
-        <button
-          className="btn ghost danger-text"
-          onClick={() => {
-            if (
-              window.confirm(
-                '清空全部数据并恢复到初始状态？所有账本、账户与账单将被删除且无法恢复，建议先导出备份。',
-              )
-            ) {
-              resetAll();
-              setMsg('已清空，恢复为初始状态 ✓');
-            }
-          }}
-        >
-          <TrashIcon size={15} /> 清空数据
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json"
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            onImportFile(e.target.files?.[0]);
-            e.target.value = '';
-          }}
-        />
-      </div>
 
       {/* 顺序：表单在下、类型选择在上（同为顶层弹窗，后渲染者覆盖） */}
       {formState && (
