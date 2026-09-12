@@ -561,6 +561,10 @@ p {
 }
 
 .account-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: calc(100% - 28px);
   margin: 4px 14px 12px;
   padding: 11px;
