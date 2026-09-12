@@ -288,14 +288,19 @@ export function StatsPage() {
     [pieType, periodExpense, periodIncome, expenseSlices, incomeSlices, C],
   );
 
-  // 资产/负债/净资产趋势：跟随当前周期，取每个分桶截止日的总市值（未来日期按今天截断）
+  // 资产/负债/净资产趋势：跟随当前账本。账户与流水都必须按账本过滤，
+  // 否则会把其他账本的账户余额算进来（空账本显示别的账本的数据）
+  const bookAccounts = useMemo(
+    () => accounts.filter((a) => a.bookId === activeBookId),
+    [accounts, activeBookId],
+  );
   const netSeries = useMemo(() => {
     const todayISO = fmtISO(new Date());
     return buckets.map((b) => {
-      const t = computeTotals(accounts, scoped, b.endISO > todayISO ? todayISO : b.endISO);
+      const t = computeTotals(bookAccounts, scoped, b.endISO > todayISO ? todayISO : b.endISO);
       return { label: b.label, netWorth: t.netWorth, assets: t.assets, liabilities: t.liabilities };
     });
-  }, [buckets, accounts, scoped]);
+  }, [buckets, bookAccounts, scoped]);
 
   const netOption = useMemo(() => {
     const key = netType === 'net' ? 'netWorth' : netType === 'asset' ? 'assets' : 'liabilities';
