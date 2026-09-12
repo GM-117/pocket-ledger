@@ -935,6 +935,14 @@ input[type='date'] {
   margin: 2px 0 8px;
 }
 
+/* 操作成功提醒（与 form-error 同槽位，自动消失） */
+.form-ok {
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 2px 0 8px;
+}
+
 /* 账本管理 */
 .book-manage-list {
   display: flex;
@@ -1731,6 +1739,39 @@ input[type='date'] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 周期记账弹窗优化 */
+/* 金额/频率字段横跨两列栅格 */
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+/* 金额是表单主角，放大突出（≥16px，避免 iOS 聚焦缩放） */
+.recur-amount input {
+  font-size: 19px;
+  font-weight: 700;
+  padding: 12px 14px;
+}
+
+/* 频率四段选择比下拉框更直观 */
+.seg-freq button {
+  padding: 8px 0;
+  font-size: 12.5px;
+}
+
+/* 添加规则是弹窗主操作，通栏按钮 */
+.recur-add {
+  width: 100%;
+}
+
+/* 「已有规则」标题行本身就是展开/收起开关 */
+.recur-toggle {
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
 }
 
 /* ============ 响应式：≥820px 切换为桌面布局 ============ */
@@ -3364,6 +3405,10 @@ html[data-theme='dark'] .acc-menu {
   /* 已选中的分类卡保持主色边框，不随 hover 变色 */
   .cat-chip:not(.active):hover {
     border-color: var(--muted);
+  }
+
+  .recur-toggle:hover {
+    color: var(--ink);
   }
 
   /* 完成键是渐变底白字，hover 只压暗背景，不走灰色底（否则白字看不清） */

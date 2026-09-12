@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { FREQ_LABEL, type CategoryType, type Freq, type Recurring } from '../types';
 import { fmtISO, fmtMoney, round2, uid } from '../utils';
@@ -26,6 +26,12 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const [categoryId, setCategoryId] = useState('');
   /** 当前展开查看配置详情的规则 id */
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  /** 规则较多时默认收起「已有规则」列表，需要时再展开 */
+  const [listOpen, setListOpen] = useState(recurrences.length <= 3);
+  /** 添加成功提醒（展示数秒后自动消失） */
+  const [ok, setOk] = useState('');
+  const okTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(okTimer.current), []);
   /** 周期记账只允许选择 canSelect 的账户 */
   const selectable = useMemo(
     () => accounts.filter((a) => a.canSelect !== false && a.bookId === activeBookId),
@@ -48,6 +54,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
     if (!selectable.length) return setError('当前账本还没有账户，请先在「资产」添加账户');
     if (!categoryId) return setError('请选择分类');
     if (!accountId) return setError('请选择账户');
+    const label = note.trim() || cats.find((c) => c.id === categoryId)?.name || '周期账单';
     saveRecurring({
       id: uid(),
       bookId,
@@ -61,10 +68,17 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
       lastGenerated: null,
       enabled: true,
     });
+    // 保存后立即补账：开始日期 ≤ 今天的规则当场生成账单（未来开始的不会生成），
+    // 让用户马上看到规则确实生效。runRecurrences 幂等，可安全重复执行
+    useStore.getState().runRecurrences();
     setAmount('');
     setCategoryId('');
     setNote('');
     setError('');
+    setListOpen(true);
+    setOk(`已添加「${label}」${FREQ_LABEL[freq]}周期规则 ✓`);
+    window.clearTimeout(okTimer.current);
+    okTimer.current = window.setTimeout(() => setOk(''), 2600);
   };
 
   return (
@@ -79,20 +93,20 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
       </div>
 
       <div className="form-grid" style={{ marginTop: 12 }}>
-        <label className="field">
+        <label className="field field-wide recur-amount">
           <span>金额</span>
           <input inputMode="decimal" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
-        <label className="field">
+        <div className="field field-wide">
           <span>重复频率</span>
-          <select value={freq} onChange={(e) => setFreq(e.target.value as Freq)}>
+          <div className="seg seg-freq">
             {FREQS.map((f) => (
-              <option key={f} value={f}>
+              <button key={f} className={freq === f ? 'active' : ''} onClick={() => setFreq(f)}>
                 {FREQ_LABEL[f]}
-              </option>
+              </button>
             ))}
-          </select>
-        </label>
+          </div>
+        </div>
         <label className="field">
           <span>分类</span>
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
@@ -125,15 +139,23 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
         </label>
       </div>
 
-      {error && <p className="form-error">{error}</p>}
+      {error ? <p className="form-error">{error}</p> : ok ? <p className="form-ok">{ok}</p> : null}
       <div className="form-actions">
-        <button className="btn primary" onClick={submit}>
+        <button className="btn primary recur-add" onClick={submit}>
           添加规则
         </button>
       </div>
 
-      <div className="section-title">已有规则（{recurrences.length}）</div>
-      <div className="recur-list">
+      <button
+        className="section-title recur-toggle"
+        onClick={() => setListOpen((v) => !v)}
+        aria-expanded={listOpen}
+      >
+        <span>已有规则（{recurrences.length}）</span>
+        <ChevronDownIcon size={15} className={'type-chev' + (listOpen ? ' open' : '')} />
+      </button>
+      {listOpen && (
+        <div className="recur-list">
         {recurrences.map((r) => {
           const cat = catMap.get(r.categoryId);
           const acc = accMap.get(r.accountId);
@@ -218,7 +240,8 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
           );
         })}
         {recurrences.length === 0 && <p className="empty-text">还没有周期规则，添加一个吧（如每月房租）</p>}
-      </div>
+        </div>
+      )}
     </Modal>
   );
 }
