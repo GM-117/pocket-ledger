@@ -1444,14 +1444,14 @@ input[type='date'] {
   color: var(--primary);
 }
 
-/* 「余额调整」流水（与「账户创建」同用警示黄） */
+/* 「余额调整」流水（与「账户创建」同用主题蓝） */
 .emoji-dot.adjust {
-  background: var(--warn-soft);
-  color: var(--warn);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .amount.adj {
-  color: var(--warn);
+  color: var(--primary);
 }
 
 .seg button.active.transfer {
@@ -1593,8 +1593,8 @@ input[type='date'] {
 }
 
 .reimb-badge.pending {
-  background: var(--warn-soft);
-  color: var(--warn);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .reimb-badge.done {
@@ -2782,7 +2782,7 @@ input[type='date'] {
 }
 
 .txn-action.tpl {
-  color: var(--warn);
+  color: var(--primary);
 }
 
 /* 明细行卡片 */
@@ -2891,14 +2891,14 @@ input[type='date'] {
   color: var(--ink);
 }
 
-/* 「账户创建」条目（黄色金额） */
+/* 「账户创建」条目（主题蓝金额） */
 .amount.created {
-  color: var(--warn);
+  color: var(--primary);
 }
 
 .emoji-dot.created {
-  background: var(--warn-soft);
-  color: var(--warn);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 /* ============ 余额调整（计算器） ============ */
@@ -2995,8 +2995,9 @@ input[type='date'] {
   margin-top: 8px;
   padding: 13px 0;
   height: auto;
-  background: linear-gradient(135deg, #ffd54d, #f5b60a);
-  color: #7a4d00;
+  /* 主题蓝渐变 + 白字（同 .kp-key.done，不再用警示黄） */
+  background: linear-gradient(135deg, #6c8cff, var(--primary-deep));
+  color: #fff;
 }
 
 /* 单选弹窗（账本/账户等行内编辑） */
