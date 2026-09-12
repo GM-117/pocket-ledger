@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Layout, type TabKey } from './components/Layout';
 import { BookManager } from './components/BookManager';
+import { GuideOverlay } from './components/GuideOverlay';
 import { TransactionForm } from './components/TransactionForm';
 import { TxnDetail } from './components/TxnDetail';
 import { AssetsPage } from './pages/AssetsPage';
@@ -16,9 +17,16 @@ export default function App() {
   const [editing, setEditing] = useState<Txn | null>(null);
   const [preset, setPreset] = useState<Txn | null>(null);
   const [bookMgrOpen, setBookMgrOpen] = useState(false);
+  /** 首次使用引导：未看过时自动弹出，可随时从顶栏「?」再次打开 */
+  const [guideOpen, setGuideOpen] = useState(() => !useStore.getState().guideSeen);
   /** 调整流水没有记账表单，列表点击时改走账单详情 */
   const [adjustDetailId, setAdjustDetailId] = useState<string | null>(null);
   const theme = useStore((s) => s.theme);
+
+  const closeGuide = () => {
+    useStore.getState().setGuideSeen();
+    setGuideOpen(false);
+  };
 
   // 主题：html data-theme + 状态栏颜色跟随
   useEffect(() => {
@@ -57,6 +65,7 @@ export default function App() {
         onTab={setTab}
         onAdd={() => openEditor(null)}
         onOpenBooks={() => setBookMgrOpen(true)}
+        onOpenGuide={() => setGuideOpen(true)}
       >
         {tab === 'detail' && (
           <DetailPage onEdit={openEditor} onManage={() => setBookMgrOpen(true)} onUseTemplate={openFromTemplate} />
@@ -78,6 +87,7 @@ export default function App() {
         />
       )}
       {bookMgrOpen && <BookManager onClose={() => setBookMgrOpen(false)} />}
+      {guideOpen && <GuideOverlay onClose={closeGuide} />}
     </>
   );
 }

@@ -42,6 +42,10 @@ export function BookManager({ onClose }: BookManagerProps) {
 
   const del = (b: Book) => {
     setMenuId(null);
+    if (books.length <= 1) {
+      window.alert('至少保留一个账本，可先创建新账本再删除');
+      return;
+    }
     const n = txns.filter((t) => t.bookId === b.id).length;
     const msg =
       n > 0

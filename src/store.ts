@@ -53,6 +53,11 @@ export interface StoreState {
   /** 导入备份 JSON，成功返回 null，失败返回错误信息 */
   importJSON: (raw: string) => string | null;
   loadDemo: () => void;
+  /** 清空全部账目数据，恢复为首次使用的初始状态（保留主题等偏好） */
+  resetAll: () => void;
+  /** 首次使用引导是否已看过（看过后不再自动弹出） */
+  guideSeen: boolean;
+  setGuideSeen: () => void;
 }
 
 const BOOK_COLORS = ['#5b7cfa', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -65,7 +70,50 @@ export const CATEGORY_EMOJIS = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* 演示数据：以「今天」为基准生成，保证首次打开图表即有内容               */
+/* 首次使用初始数据：默认账本 + 默认分类，账目为空                      */
+/* ------------------------------------------------------------------ */
+
+/** 默认分类（收支各一组，uid 每次新建）；余额调整隐藏分类由 ensureAdjustCategories 补齐 */
+function createDefaultCategories(): Category[] {
+  const mkCat = (name: string, emoji: string, type: Category['type']): Category => ({
+    id: uid(), name, emoji, type,
+  });
+  const expenseCats = [
+    mkCat('餐饮', '🍜', 'expense'),
+    mkCat('交通', '🚇', 'expense'),
+    mkCat('购物', '🛍️', 'expense'),
+    mkCat('居住', '🏠', 'expense'),
+    mkCat('娱乐', '🎮', 'expense'),
+    mkCat('医疗', '💊', 'expense'),
+    mkCat('通讯', '📱', 'expense'),
+    mkCat('旅行', '✈️', 'expense'),
+  ];
+  const incomeCats = [
+    mkCat('工资', '💰', 'income'),
+    mkCat('理财收益', '📈', 'income'),
+    mkCat('红包', '🧧', 'income'),
+    mkCat('兼职', '💼', 'income'),
+  ];
+  return ensureAdjustCategories([...expenseCats, ...incomeCats]);
+}
+
+function createFirstRunData() {
+  const books: Book[] = [
+    { id: uid(), name: '我的账本', emoji: '🏠', color: BOOK_COLORS[0], createdAt: fmtISO(new Date()) },
+  ];
+  return {
+    books,
+    accounts: [] as Account[],
+    categories: createDefaultCategories(),
+    txns: [] as Txn[],
+    recurrences: [] as Recurring[],
+    templates: [] as Template[],
+    activeBookId: books[0].id,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* 演示数据：以「今天」为基准生成，供「资产 → 数据管理 → 载入演示」一键体验 */
 /* ------------------------------------------------------------------ */
 
 function createDemoData() {
@@ -118,26 +166,10 @@ function createDemoData() {
   const wkCredit = mkAcc('差旅信用卡', '💳', 'credit', 'credit_card', 30000, { bookId: work.id, note: '出差用卡' });
   accounts.push(wkFund, wkCredit);
 
-  const mkCat = (name: string, emoji: string, type: Category['type']): Category => ({
-    id: uid(), name, emoji, type,
-  });
-  const expenseCats = [
-    mkCat('餐饮', '🍜', 'expense'),
-    mkCat('交通', '🚇', 'expense'),
-    mkCat('购物', '🛍️', 'expense'),
-    mkCat('居住', '🏠', 'expense'),
-    mkCat('娱乐', '🎮', 'expense'),
-    mkCat('医疗', '💊', 'expense'),
-    mkCat('通讯', '📱', 'expense'),
-    mkCat('旅行', '✈️', 'expense'),
-  ];
-  const incomeCats = [
-    mkCat('工资', '💰', 'income'),
-    mkCat('理财收益', '📈', 'income'),
-    mkCat('红包', '🧧', 'income'),
-    mkCat('兼职', '💼', 'income'),
-  ];
-  const categories = ensureAdjustCategories([...expenseCats, ...incomeCats]);
+  const categories = createDefaultCategories();
+  // 隐藏的系统分类（余额调整专用）排最后，过滤掉后与原演示分类顺序一致
+  const expenseCats = categories.filter((c) => c.type === 'expense' && !c.hidden);
+  const incomeCats = categories.filter((c) => c.type === 'income');
   const [can, jiao, shop, house, fun, med, phone, trip] = expenseCats;
   const [salary, inv, hongbao, partTime] = incomeCats;
 
@@ -258,10 +290,23 @@ function createDemoData() {
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      ...createDemoData(),
+      ...createFirstRunData(),
       budgets: {},
       hideAmounts: false,
       theme: 'light',
+      guideSeen: false,
+
+      setGuideSeen: () => set({ guideSeen: true }),
+
+      /** 清空账目回到首次使用状态（保留主题 / 隐私模式等偏好） */
+      resetAll: () =>
+        set((s) => ({
+          ...createFirstRunData(),
+          budgets: {},
+          hideAmounts: s.hideAmounts,
+          theme: s.theme,
+          guideSeen: s.guideSeen,
+        })),
 
       setActiveBook: (id) => set({ activeBookId: id }),
 
@@ -351,6 +396,8 @@ export const useStore = create<StoreState>()(
 
       removeBook: (id) =>
         set((s) => {
+          // 至少保留一个账本：删光会导致各页面的账本上下文失效
+          if (s.books.length <= 1) return {};
           const books = s.books.filter((b) => b.id !== id);
           return {
             books,

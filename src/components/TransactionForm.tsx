@@ -87,7 +87,8 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
   const submit = () => {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return setError('请输入金额');
-    if (!accountId) return setError('当前账本还没有账户，请先在「资产」添加账户');
+    if (!selectable.length) return setError('当前账本还没有账户，请先在「资产」添加账户');
+    if (!accountId) return setError('请选择账户');
     if (type === 'transfer') {
       if (!accountId || !toAccountId) return setError('请选择转出与转入账户');
       if (accountId === toAccountId) return setError('转出与转入不能是同一账户');
@@ -184,6 +185,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
             <label className="field">
               <span>转出账户</span>
               <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                {selectable.length === 0 && <option value="">请先添加账户</option>}
                 {selectable.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
@@ -194,6 +196,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
             <label className="field">
               <span>转入账户</span>
               <select value={toAccountId} onChange={(e) => setToAccountId(e.target.value)}>
+                {selectable.length === 0 && <option value="">请先添加账户</option>}
                 {selectable.map((a) => (
                   <option key={a.id} value={a.id} disabled={a.id === accountId}>
                     {a.name}
@@ -214,6 +217,7 @@ export function TransactionForm({ initial, preset, onClose }: TransactionFormPro
                 {c.name}
               </button>
             ))}
+            {cats.length === 0 && <p className="empty-text">暂无{type === 'income' ? '收入' : '支出'}分类</p>}
           </div>
         )}
 

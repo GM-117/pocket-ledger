@@ -37,7 +37,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
 
-  const cats = categories.filter((c) => c.type === type);
+  const cats = categories.filter((c) => c.type === type && !c.hidden);
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const accMap = new Map(accounts.map((a) => [a.id, a]));
   const bookMap = new Map(books.map((b) => [b.id, b]));
@@ -45,7 +45,9 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
   const submit = () => {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return setError('请输入金额');
+    if (!selectable.length) return setError('当前账本还没有账户，请先在「资产」添加账户');
     if (!categoryId) return setError('请选择分类');
+    if (!accountId) return setError('请选择账户');
     saveRecurring({
       id: uid(),
       bookId,
@@ -105,6 +107,7 @@ export function RecurringManager({ bookId, onClose }: RecurringManagerProps) {
         <label className="field">
           <span>账户</span>
           <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+            {selectable.length === 0 && <option value="">请先添加账户</option>}
             {selectable.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}

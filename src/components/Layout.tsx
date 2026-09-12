@@ -9,6 +9,7 @@ import {
   LIcon,
   MoonIcon,
   PlusIcon,
+  QuestionIcon,
   SunIcon,
   WalletIcon,
 } from './icons';
@@ -35,10 +36,12 @@ interface LayoutProps {
   onAdd: () => void;
   /** 顶右账本芯片 → 打开账本管理（切换/创建/编辑/删除） */
   onOpenBooks: () => void;
+  /** 顶栏帮助按钮 → 打开使用引导 */
+  onOpenGuide: () => void;
   children: ReactNode;
 }
 
-export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps) {
+export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, children }: LayoutProps) {
   const books = useStore((s) => s.books);
   const activeBookId = useStore((s) => s.activeBookId);
   const setActiveBook = useStore((s) => s.setActiveBook);
@@ -48,6 +51,11 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps
   const themeBtn = (
     <button className="theme-btn" onClick={toggleTheme} aria-label="切换深浅主题">
       {theme === 'dark' ? <SunIcon size={17} /> : <MoonIcon size={17} />}
+    </button>
+  );
+  const guideBtn = (
+    <button className="theme-btn" onClick={onOpenGuide} aria-label="使用指南">
+      <QuestionIcon size={17} />
     </button>
   );
 
@@ -94,13 +102,17 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, children }: LayoutProps
         <button className="btn primary side-add" onClick={onAdd}>
           <PlusIcon size={16} /> 记一笔
         </button>
-        <div className="side-actions">{themeBtn}</div>
+        <div className="side-actions">
+          {guideBtn}
+          {themeBtn}
+        </div>
       </aside>
 
       <div className="main">
         <header className="topbar">
           <h1>{PAGE_TITLE[tab]}</h1>
           <div className="topbar-right">
+            {guideBtn}
             {themeBtn}
             {activeBook && (
               <button
