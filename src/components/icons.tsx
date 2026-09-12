@@ -101,6 +101,10 @@ export const RepeatIcon = make(
   </>,
 );
 
+export const FunnelIcon = make(
+  <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />,
+);
+
 export const SwapIcon = make(
   <>
     <path d="M8 3 4 7l4 4" />
