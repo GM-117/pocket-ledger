@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { accountIcon, KIND_MAP, kindToType, subtypeOf } from '../accountCatalog';
 import { useStore } from '../store';
-import type { Account, AccountKind } from '../types';
-import { accountBalance, fmtMoney, round2, uid } from '../utils';
+import { ADJUST_CATEGORY_IN, ADJUST_CATEGORY_OUT, type Account, type AccountKind } from '../types';
+import { accountBalance, fmtISO, fmtMoney, round2, uid } from '../utils';
 import { BalanceAdjustModal } from './BalanceAdjustModal';
 import { Modal } from './Modal';
 import { LIcon } from './icons';
@@ -27,6 +27,7 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
   const txns = useStore((s) => s.txns);
   const accounts = useStore((s) => s.accounts);
   const saveAccount = useStore((s) => s.saveAccount);
+  const saveTxn = useStore((s) => s.saveTxn);
   const removeAccount = useStore((s) => s.removeAccount);
   const activeBookId = useStore((s) => s.activeBookId);
 
@@ -36,6 +37,8 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
   const [includeInNet, setIncludeInNet] = useState(initial?.includeInNet ?? true);
   const [canSelect, setCanSelect] = useState(initial?.canSelect ?? true);
   const [lendDate, setLendDate] = useState(initial?.lendDate ?? '');
+  /** 新建借入/借出时关联的资金账户：借入→收款入账，借出→付款划出（仅创建时入账一次） */
+  const [linkedAccId, setLinkedAccId] = useState('');
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,6 +51,11 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
   const icon = live ? accountIcon(live) : { icon: st.icon, color: st.color };
   const isBorrowKind = kind === 'receivable' || kind === 'payable';
   const currentBalance = live ? accountBalance(live, txns) : 0;
+  // 关联账户候选：当前账本下的资金类账户（资金/充值/理财）。
+  // 应收/应付是债权债务凭证、信用卡是负债，都不是借入/借出资金实际落账的地方
+  const assetAccounts = accounts.filter(
+    (a) => a.bookId === activeBookId && a.type === 'asset' && a.kind !== 'receivable',
+  );
 
   const submit = () => {
     if (!name.trim()) return setError('请填写账户名称');
@@ -69,6 +77,27 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
       canSelect,
       lendDate: isBorrowKind && lendDate ? lendDate : undefined,
     });
+
+    // 新建借入/借出并关联了资金账户：金额一次性入账——差额调整对方期初余额，
+    // 并留一条「调整」痕迹流水（与余额调整同口径，不计入收支统计）
+    if (!live && isBorrowKind && linkedAccId && b > 0) {
+      const linked = accounts.find((a) => a.id === linkedAccId && a.type === 'asset');
+      if (linked) {
+        const delta = kind === 'payable' ? b : -b; // 借入到账 +，借出划出 −
+        saveAccount({ ...linked, initialBalance: round2(linked.initialBalance + delta) });
+        saveTxn({
+          id: uid(),
+          bookId: linked.bookId,
+          accountId: linked.id,
+          categoryId: delta > 0 ? ADJUST_CATEGORY_IN : ADJUST_CATEGORY_OUT,
+          type: 'adjust',
+          amount: round2(Math.abs(b)),
+          date: lendDate || fmtISO(new Date()),
+          note: kind === 'payable' ? `借入入账 · ${name.trim()}` : `借出划出 · ${name.trim()}`,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
     onClose();
   };
 
@@ -108,6 +137,27 @@ export function AccountForm({ initial, typePreset, onPickType, onClose }: Accoun
           <span>借款时间（可不填）</span>
           <input type="date" value={lendDate} onChange={(e) => setLendDate(e.target.value)} />
         </label>
+      )}
+
+      {isBorrowKind && !initial && (
+        <div className="field section">
+          <label className="field">
+            <span>{kind === 'payable' ? '收款账户（可不选）' : '付款账户（可不选）'}</span>
+            <select value={linkedAccId} onChange={(e) => setLinkedAccId(e.target.value)}>
+              <option value="">无</option>
+              {assetAccounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="field-hint">
+            {kind === 'payable'
+              ? '借入的钱若进入本账本的资金账户，选择后保存时会将该金额记入其余额（不计入收支统计）'
+              : '借出的钱若从本账本的资金账户划出，选择后保存时会从其余额中扣减该金额（不计入收支统计）'}
+          </p>
+        </div>
       )}
 
       <div className="card detail-card">
