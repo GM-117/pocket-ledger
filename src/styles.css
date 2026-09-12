@@ -1334,6 +1334,11 @@ input[type='date'] {
   font-size: 15px;
 }
 
+/* 完成键按下：保持渐变底（白字），仅做压暗反馈，避免灰底吃掉文字 */
+.kp-key.done:active {
+  filter: brightness(0.9);
+}
+
 /* 资产页眼睛 */
 .hero-label-row {
   display: flex;
@@ -3313,8 +3318,13 @@ html[data-theme='dark'] .acc-menu {
     border-color: var(--muted);
   }
 
-  .kp-key:hover {
+  /* 完成键是渐变底白字，hover 只压暗背景，不走灰色底（否则白字看不清） */
+  .kp-key:not(.done):hover {
     background: var(--key-active);
+  }
+
+  .kp-key.done:hover {
+    filter: brightness(0.94);
   }
 
   .theme-btn:hover,
