@@ -83,7 +83,9 @@ npm run preview    # 本机 http://127.0.0.1:4173，同时监听局域网
 
 ## 真机预览（iPhone / 手机测试）
 
-开发服务器和预览服务器都监听了全部网卡，**手机与电脑连同一个 Wi-Fi** 时，可以直接用手机浏览器访问电脑上的项目：
+**在线版已部署：https://gm-117.github.io/pocket-ledger/**（push 到 main 自动更新；iOS Safari 打开 → 分享 → 添加到主屏幕即可安装，详见 [docs/iOS部署方案.md](docs/iOS部署方案.md)）
+
+开发服务器和预览服务器都监听了全部网卡，**手机与电脑连同一个 Wi-Fi** 时，也可以直接用手机浏览器访问电脑上的项目：
 
 1. 查询电脑的局域网 IP（macOS 执行 `ipconfig getifaddr en0`，例如得到 `192.168.1.7`）
 2. 手机 Safari 打开 `http://<电脑IP>:5173`（dev 热更新，改代码手机即时生效）或 `http://<电脑IP>:4173`（preview，需先 `npm run build`）

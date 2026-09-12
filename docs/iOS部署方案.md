@@ -95,6 +95,23 @@ EdgeOne Pages 附带优势：腾讯云账号（微信扫码）即可登录，对
 ## 六、决策清单
 
 - [x] 阶段 0：PWA 基础能力（已完成，见 README「真机预览」章节）
-- [ ] 阶段 1：Cloudflare Pages 部署，拿到 HTTPS 域名交付对方
+- [x] 阶段 1：HTTPS 部署 ✅ **最终落地 GitHub Pages**（EdgeOne 默认域名被平台合规拦截，见第七节）
 - [ ] 阶段 2：WebDAV 同步 / 导出提醒 / 安装引导（可选按需）
 - [ ] 阶段 3：Xcode + 付费账号就绪后接 Capacitor（远期）
+
+## 七、执行结果（2026-09-13）
+
+**最终部署地址：https://gm-117.github.io/pocket-ledger/**（仓库已设为 public，免费计划 Pages 要求公开仓库）
+
+### 部署方式
+
+- GitHub Actions 自动部署：push 到 main → 自动构建（`DEPLOY_TARGET=gh-pages`）→ 发布到 Pages
+- 构建适配：vite `base` 按环境变量切换子路径 `/pocket-ledger/`；manifest / SW / 图标全部改为相对路径，本地 dev/preview 仍是根路径不受影响
+- 更新发版：改代码后正常 `git push`，Actions 自动重新部署；若改了 Service Worker 相关逻辑，按 README 流程递增 `public/sw.js` 的 `VERSION`
+
+### EdgeOne 实测结论（留档，避免重复踩坑）
+
+- 腾讯云国内站 & EdgeOne 国际站（同一套 Makers 基础设施）的**默认域名（edgeone.cool / edgeone.dev）从中国大陆访问一律 401**：含大陆区域要求 ICP 备案，纯海外区域平台主动屏蔽大陆来源，控制台无开关
+- 解锁公开访问只有两条路：绑定已备案域名（国内站）或绑定任意自定义域名到国际站海外区域项目（无需备案）
+- 已通过 EdgeOne CLI（`edgeone pages deploy`）完成过部署验证，账号 CLI 登录态保留；将来买了域名可直接绑定到国际站项目 `pocket-ledger`（console.tencentcloud.com），十分钟内可切换
+- 国内站/国际站的 4 个测试项目已无用，可在控制台「项目设置 → 删除此项目」清理
