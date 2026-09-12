@@ -2298,7 +2298,7 @@ input[type='date'] {
   transform: translateX(20px);
 }
 
-/* 全屏覆盖页（账户详情 / 借入借出） */
+/* 全屏覆盖页（账户详情 / 借入借出）：移动端全屏，≥561px 起为居中浮动卡片（见下方中屏适配） */
 .overlay-page {
   position: fixed;
   inset: 0;
@@ -2983,7 +2983,7 @@ input[type='date'] {
   margin-top: 8px;
 }
 
-/* ============ 中屏适配（≥640px）：弹窗居中、覆盖页卡片化 ============ */
+/* ============ 中屏适配（≥561px）：弹窗居中、覆盖页卡片化 ============ */
 .overlay-backdrop {
   position: fixed;
   inset: 0;
@@ -2991,7 +2991,9 @@ input[type='date'] {
   background: transparent;
 }
 
-@media (min-width: 640px) {
+/* 断点取 561 而非 640：基础覆盖页限宽 560px，561–639px 视口下会在两侧露出底层页面，
+   提前进入浮动卡片形态即可消除该区间 */
+@media (min-width: 561px) {
   .overlay-backdrop {
     background: rgba(15, 20, 32, 0.45);
   }
@@ -3356,7 +3358,7 @@ html[data-theme='dark'] .modal-overlay {
   background: rgba(4, 6, 10, 0.62);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 561px) {
   html[data-theme='dark'] .overlay-backdrop {
     background: rgba(4, 6, 10, 0.62);
   }
