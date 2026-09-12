@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { accountIcon } from '../accountCatalog';
 import { useStore } from '../store';
 import type { Account, AccountKind } from '../types';
-import { accountBalance, fmtMoney, lockBodyScroll, unlockBodyScroll } from '../utils';
+import { accountBalance, fmtMoney, fmtSigned, lockBodyScroll, unlockBodyScroll } from '../utils';
 import { useEffect } from 'react';
 import { CalendarIcon, ChevronLeftIcon, HandshakeIcon, LIcon } from './icons';
 
@@ -29,9 +29,7 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
     return () => unlockBodyScroll();
   }, []);
 
-  const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));
-
-  // 借入借出随账本走：只统计当前账本的账户及其名下流水
+  const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));  // 借入借出随账本走：只统计当前账本的账户及其名下流水
   const bookTxns = useMemo(
     () => txns.filter((t) => t.bookId === activeBookId),
     [txns, activeBookId],
@@ -72,7 +70,7 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
         {list.length > 0 && (
           <div className="borrow-total card">
             <span>{tab === 'borrow' ? '借入总额（欠款）' : '借出总额（应收）'}</span>
-            <b className={tab === 'borrow' ? 'neg' : 'pos'}>{money(total)}</b>
+            <b className={tab === 'borrow' ? 'neg' : 'pos'}>{hideAmounts ? '¥ ✱✱✱✱' : fmtSigned(total)}</b>
           </div>
         )}
         {list.length === 0 && (
@@ -102,8 +100,9 @@ export function BorrowPage({ initialTab = 'borrow', onClose, onOpenDetail, onAdd
                     </span>
                   </span>
                   <span className={'amount ' + (tab === 'borrow' ? 'neg' : 'pos')}>
-                    {tab === 'borrow' ? '−' : '+'}
-                    {money(bal)}
+                    {/* 按净头寸取方向：多还的部分（余额为负）显示为正 */}
+                    {tab === 'borrow' ? (bal > 0 ? '−' : '+') : bal >= 0 ? '+' : '−'}
+                    {money(Math.abs(bal))}
                   </span>
                 </button>
               );

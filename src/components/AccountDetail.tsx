@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { accountIcon } from '../accountCatalog';
 import { useStore } from '../store';
 import { ADJUST_CATEGORY_IN, type Account, type Txn } from '../types';
-import { accountBalance, createdTs, fmtHm, fmtMoney, lockBodyScroll, pad, parseISO, round2, unlockBodyScroll } from '../utils';
+import { accountBalance, createdTs, fmtHm, fmtMoney, fmtSigned, lockBodyScroll, pad, parseISO, round2, unlockBodyScroll } from '../utils';
 import { BalanceAdjustModal } from './BalanceAdjustModal';
 import { TxnDetail } from './TxnDetail';
 import { ChevronDownIcon, ChevronLeftIcon, FileTextIcon, InboxIcon, LIcon, PencilIcon, TrashIcon } from './icons';
@@ -84,7 +84,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
             type: 'income',
             amount: Math.abs(a.initialBalance),
             date: a.createdAt.slice(0, 10),
-            note: `初始${a.type === 'liability' ? '欠款' : '余额'}为 ${fmtMoney(a.initialBalance)}`,
+            note: `初始${a.type === 'liability' ? '欠款' : '余额'}为 ${fmtSigned(a.initialBalance)}`,
             createdAt: a.createdAt,
           }
         : null;
@@ -232,7 +232,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
           </div>
           <div className="acc-hero-label">账户余额（CNY）</div>
           <button className="acc-hero-balance" onClick={() => setAdjustOpen(true)} title="调整余额">
-            {fmtMoney(balance)}
+            {fmtSigned(balance)}
             <span className="acc-pencil"><PencilIcon size={14} /></span>
           </button>
         </div>
@@ -281,8 +281,8 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                                 </span>
                               </span>
                               <span className="txn-right">
-                                <span className="amount created">{fmtMoney(t.amount)}</span>
-                                <span className="txn-balance">余额: {fmtMoney(bal)}</span>
+                                <span className="amount created">{fmtSigned(a.initialBalance)}</span>
+                                <span className="txn-balance">余额: {fmtSigned(bal)}</span>
                               </span>
                             </button>
                           );
@@ -337,7 +337,7 @@ export function AccountDetail({ account: a, onClose, onEditTxn, onQuickAdd, onEd
                                 {isAdjust ? (adjustIn ? '+' : '−') : t.type === 'income' || transferIn ? '+' : '−'}
                                 {fmtMoney(t.amount)}
                               </span>
-                              <span className="txn-balance">余额: {fmtMoney(bal)}</span>
+                              <span className="txn-balance">余额: {fmtSigned(bal)}</span>
                             </span>
                           </button>
                         );

@@ -87,6 +87,12 @@ export function fmtMoney(n: number): string {
   );
 }
 
+/** 带符号金额：负数加 − 前缀。fmtMoney 恒取绝对值（供调用方自带 ± 号），
+ *  余额 / 净资产等本身可为负的展示必须用这个，否则 −2,500 会被显示成 2,500 */
+export function fmtSigned(n: number): string {
+  return (n < 0 ? '−' : '') + fmtMoney(n);
+}
+
 /** 大数字缩写：统计轴用 */
 export function fmtShort(n: number): string {
   const abs = Math.abs(n);
