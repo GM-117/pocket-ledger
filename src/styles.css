@@ -1139,7 +1139,9 @@ input[type='date'] {
 
 .pair-nums {
   display: flex;
+  align-items: baseline;
   gap: 12px;
+  line-height: 20px; /* 显式行高：防止 − / + 字形回退字体行盒差异导致两数基线错位 */
   font-variant-numeric: tabular-nums;
 }
 
@@ -1151,8 +1153,9 @@ input[type='date'] {
   background: var(--bg-blur);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  margin: 12px -18px 2px;
-  padding: 8px 18px;
+  /* 与 .content 移动端左右内边距(16px)严格一致，多 1px 都会把页面撑出横向滚动 */
+  margin: 12px -16px 2px;
+  padding: 8px 16px;
 }
 
 /* iCost 式数字键盘记账面板 */
@@ -1458,8 +1461,35 @@ input[type='date'] {
 
 /* 账单搜索 */
 .search-kw {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-size: 16px;
+}
+
+/* 搜索弹窗：固定高度、纵向 flex，筛选折叠后结果列表占主体 */
+.modal.search {
+  height: 88dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 工具行：筛选开关 + 重置 + 本月至今（固定可见，不再沉底） */
+.search-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.search-toolbar .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 折叠的高级筛选区 */
+.search-filters {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--line);
 }
 
 .search-grid {
@@ -1469,12 +1499,13 @@ input[type='date'] {
 }
 
 .search-summary {
+  flex: none;
   display: flex;
   gap: 20px;
   background: var(--primary-soft);
   border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
 }
 
 .search-summary > div {
@@ -1494,10 +1525,13 @@ input[type='date'] {
   font-variant-numeric: tabular-nums;
 }
 
-.search-results {
-  max-height: 46dvh;
+/* 结果列表：占满剩余高度，内部滚动 */
+.modal.search .search-results {
+  flex: 1 1 0;
+  min-height: 120px;
+  max-height: none;
   overflow-y: auto;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 /* 标签 */
@@ -1801,13 +1835,13 @@ input[type='date'] {
     display: none !important;
   }
 
-  /* 桌面端无顶栏，直接吸页面顶部；内容左右留白为 36px */
+  /* 桌面端无顶栏，直接吸页面顶部；负边距与 .content 的 36px 留白严格一致 */
   .cal-day-title {
     top: 0;
-    margin-left: -38px;
-    margin-right: -38px;
-    padding-left: 38px;
-    padding-right: 38px;
+    margin-left: -36px;
+    margin-right: -36px;
+    padding-left: 36px;
+    padding-right: 36px;
   }
 
   .content {
@@ -3354,4 +3388,175 @@ html[data-theme='dark'] .acc-menu {
   html[data-theme='dark'] .txn-action:hover {
     filter: brightness(1.12);
   }
+}
+
+/* ============ 首次使用引导 ============ */
+
+/* 高于普通全屏覆盖页（70）与顶部弹窗，保证首次启动时盖住一切 */
+.guide-page {
+  z-index: 95;
+}
+
+.guide-hero {
+  text-align: center;
+  padding: 18px 8px 4px;
+}
+
+.guide-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.guide-hero h2 {
+  font-size: 20px;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+
+.guide-hero p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.guide-section h3 {
+  font-size: 13.5px;
+  color: var(--ink);
+  margin: 6px 0 10px;
+}
+
+.guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 11px 12px;
+  box-shadow: var(--shadow);
+}
+
+.guide-step-n {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.guide-step-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guide-step-main b {
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.guide-step-main span {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.guide-card {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+
+.guide-card-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 6px;
+  color: var(--primary);
+}
+
+.guide-card-head b {
+  color: var(--ink);
+  font-size: 13.5px;
+}
+
+.guide-card-icon {
+  display: inline-flex;
+}
+
+.guide-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.guide-tips {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-tips li {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.guide-cta {
+  margin-top: 4px;
+  padding: 13px;
+  font-size: 15px;
+}
+
+.flip-x {
+  transform: scaleX(-1);
+}
+
+/* 空态引导副文案（资产 / 图表页） */
+.empty small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* 数据管理：导出 / 导入 / 演示 / 清空 2×2 */
+.data-actions {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.btn.ghost.danger-text {
+  color: var(--red);
 }
