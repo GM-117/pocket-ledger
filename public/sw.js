@@ -1,7 +1,8 @@
 /* 口袋记账 Service Worker —— 预缓存应用外壳，运行时缓存静态资源 */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE_NAME = `pocket-ledger-${VERSION}`;
-const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
+// 相对路径基于 sw.js 所在目录解析，兼容根路径与子路径（GitHub Pages）部署
+const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -34,10 +35,10 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
           return response;
         })
-        .catch(() => caches.match('/index.html')),
+        .catch(() => caches.match('./index.html')),
     );
     return;
   }
