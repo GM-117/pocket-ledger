@@ -3291,7 +3291,8 @@ html[data-theme='dark'] .acc-menu {
     background: var(--row-active);
   }
 
-  .chip:hover {
+  /* 选中态保持高亮不变，仅未选中项 hover 提亮 */
+  .chip:not(.active):hover {
     color: var(--ink);
     border-color: var(--muted);
   }
@@ -3314,7 +3315,8 @@ html[data-theme='dark'] .acc-menu {
     background: var(--row-active);
   }
 
-  .cat-chip:hover {
+  /* 已选中的分类卡保持主色边框，不随 hover 变色 */
+  .cat-chip:not(.active):hover {
     border-color: var(--muted);
   }
 
