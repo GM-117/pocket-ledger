@@ -2,18 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import * as echarts from 'echarts';
 import { useStore } from '../store';
 import { Chart, CHART_COLORS } from '../components/Chart';
-import { ChartIcon } from '../components/icons';
 import { MonthSwitcher } from '../components/MonthSwitcher';
 import type { Period } from '../utils';
 import {
   PERIOD_LABEL,
   addMonths,
   categoryBreakdown,
+  computeTotals,
   fmtISO,
   fmtMoney,
   fmtShort,
   fmtSigned,
-  netWorthSeries,
   parseISO,
   round2,
   startOfMonth,
@@ -34,26 +33,46 @@ interface ChartColors {
   green: string;
   red: string;
   primary: string;
+  /** 空态占位灰环（比网格线深一档，白底卡片上可辨） */
+  ring: string;
 }
 
 /** 图表配色与 CSS 变量（styles.css 深浅主题）保持一致 */
 function chartColors(dark: boolean): ChartColors {
   return dark
-    ? { muted: MUTED_DARK, line: '#232b3a', ink: '#e9ecf4', border: '#1c222e', green: '#34d399', red: '#f26d6a', primary: '#8091ff' }
-    : { muted: MUTED_LIGHT, line: '#eef0f4', ink: '#1b2231', border: '#ffffff', green: '#22c55e', red: '#ef5350', primary: '#5b7cfa' };
+    ? { muted: MUTED_DARK, line: '#232b3a', ink: '#e9ecf4', border: '#1c222e', green: '#34d399', red: '#f26d6a', primary: '#8091ff', ring: '#2a3448' }
+    : { muted: MUTED_LIGHT, line: '#eef0f4', ink: '#1b2231', border: '#ffffff', green: '#22c55e', red: '#ef5350', primary: '#5b7cfa', ring: '#e4e7ee' };
 }
 
 type StatsPeriod = Period | 'all';
 
 const LABELS: Record<StatsPeriod, string> = { ...PERIOD_LABEL, all: '全部' };
 
+/** 构成环形图与资产负债趋势的卡内切换 */
+type PieType = 'expense' | 'income';
+type NetType = 'net' | 'asset' | 'liability';
+
+const NET_NAME: Record<NetType, string> = { net: '净资产', asset: '总资产', liability: '总负债' };
+
 function pieOption(
-  title: string,
   total: number,
   totalLabel: string,
   slices: { name: string; emoji: string; value: number }[],
   C: ChartColors,
 ) {
+  // 无数据时给一个占位灰环（参考同类记账 App 的 ¥0.00 空态），而不是空白
+  const empty = slices.length === 0;
+  const data = empty
+    ? [
+        {
+          name: '',
+          value: 1,
+          itemStyle: { color: C.ring, borderColor: C.border, borderWidth: 0 },
+          label: { show: false },
+          labelLine: { show: false },
+        },
+      ]
+    : slices.map((s) => ({ name: s.name, value: s.value }));
   return {
     title: {
       text: fmtMoney(total),
@@ -64,6 +83,7 @@ function pieOption(
       subtextStyle: { fontSize: 11, color: C.muted },
     },
     legend: {
+      show: !empty,
       bottom: 0,
       type: 'scroll' as const,
       icon: 'circle',
@@ -84,15 +104,21 @@ function pieOption(
         type: 'pie' as const,
         radius: ['40%', '60%'],
         center: ['50%', '48%'],
-        data: slices.map((s) => ({ name: s.name, value: s.value })),
-        itemStyle: { borderColor: C.border, borderWidth: 2, borderRadius: 4 },
-        label: {
-          show: true,
-          color: C.muted,
-          formatter: (p: { percent: number; name: string }) => `${p.percent}% ${p.name}`,
-          fontSize: 10,
-        },
-        labelLine: { length: 8, length2: 6, lineStyle: { color: C.line } },
+        data,
+        // 占位灰环必须整段静默：单靠 data 项的 silent 挡不住 item tooltip，
+        // 会在 ¥0.00 空态上悬停出「¥1.00 · 100%」的幽灵数据
+        silent: empty,
+        ...(empty ? { emphasis: { scale: false } } : {}),
+        itemStyle: { borderColor: C.border, borderWidth: 2, borderRadius: empty ? 0 : 4 },
+        label: empty
+          ? { show: false }
+          : {
+              show: true,
+              color: C.muted,
+              formatter: (p: { percent: number; name: string }) => `${p.percent}% ${p.name}`,
+              fontSize: 10,
+            },
+        labelLine: empty ? { show: false } : { length: 8, length2: 6, lineStyle: { color: C.line } },
       },
     ],
     color: CHART_COLORS,
@@ -111,6 +137,8 @@ export function StatsPage() {
 
   const [period, setPeriod] = useState<StatsPeriod>('month');
   const [anchor, setAnchor] = useState(() => startOfMonth(new Date()));
+  const [pieType, setPieType] = useState<PieType>('expense');
+  const [netType, setNetType] = useState<NetType>('net');
 
   // 图表完全跟随右上角当前账本
   const scoped = useMemo(
@@ -125,8 +153,8 @@ export function StatsPage() {
       const start = earliest ?? todayISO;
       return { startISO: start, endISO: todayISO };
     }
-    const buckets = trendBuckets(period, period === 'week' ? anchor : new Date(anchor));
-    return { startISO: buckets[0].startISO, endISO: buckets[buckets.length - 1].endISO };
+    const bs = trendBuckets(period, anchor);
+    return { startISO: bs[0].startISO, endISO: bs[bs.length - 1].endISO };
   }, [period, anchor, scoped]);
 
   const buckets = useMemo(() => {
@@ -234,86 +262,129 @@ export function StatsPage() {
     [buckets, trend, period, C],
   );
 
-  const expenseSlices = useMemo(() => categoryBreakdown(scoped, categories, 'expense'), [scoped, categories]);
-  const incomeSlices = useMemo(() => categoryBreakdown(scoped, categories, 'income'), [scoped, categories]);
+  // 构成环形图：跟随当前所选周期（周/月/年/全部）过滤流水，与卡片总额同口径
+  const rangeTxns = useMemo(
+    () => scoped.filter((t) => t.date >= range.startISO && t.date <= range.endISO),
+    [scoped, range],
+  );
 
-  const netSeries = useMemo(() => netWorthSeries(accounts, scoped, 12), [accounts, scoped]);
+  const expenseSlices = useMemo(
+    () => categoryBreakdown(rangeTxns, categories, 'expense'),
+    [rangeTxns, categories],
+  );
+  const incomeSlices = useMemo(
+    () => categoryBreakdown(rangeTxns, categories, 'income'),
+    [rangeTxns, categories],
+  );
 
-  const netOption = useMemo(
+  const pieOpt = useMemo(
     () =>
-      ({
-        tooltip: {
-          trigger: 'axis',
-          valueFormatter: (v: unknown) => fmtSigned(Number(v)),
-          backgroundColor: C.border,
-          borderColor: C.line,
-          textStyle: { color: C.ink },
-        },
-        grid: { left: 8, right: 14, top: 24, bottom: 12, containLabel: true },
-        xAxis: {
-          type: 'category' as const,
-          data: netSeries.map((p) => p.label),
-          axisTick: { show: false },
-          axisLine: { lineStyle: { color: C.line } },
-          axisLabel: { color: C.muted, fontSize: 10 },
-          boundaryGap: false,
-        },
-        yAxis: {
-          type: 'value' as const,
-          axisLabel: { color: C.muted, fontSize: 10, formatter: (v: number) => fmtShort(v) },
-          splitLine: { lineStyle: { color: C.line } },
-        },
-        series: [
-          {
-            name: '净资产',
-            type: 'line' as const,
-            data: netSeries.map((p) => p.value),
-            smooth: true,
-            symbol: 'none',
-            lineStyle: { color: C.primary, width: 3 },
-            areaStyle: {
-              color: {
-                type: 'linear' as const,
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                  { offset: 0, color: dark ? 'rgba(128,145,255,0.3)' : 'rgba(91,124,250,0.26)' },
-                  { offset: 1, color: 'rgba(91,124,250,0.02)' },
-                ],
-              },
+      pieOption(
+        pieType === 'expense' ? periodExpense : periodIncome,
+        pieType === 'expense' ? '总支出' : '总收入',
+        pieType === 'expense' ? expenseSlices : incomeSlices,
+        C,
+      ),
+    [pieType, periodExpense, periodIncome, expenseSlices, incomeSlices, C],
+  );
+
+  // 资产/负债/净资产趋势：跟随当前周期，取每个分桶截止日的总市值（未来日期按今天截断）
+  const netSeries = useMemo(() => {
+    const todayISO = fmtISO(new Date());
+    return buckets.map((b) => {
+      const t = computeTotals(accounts, scoped, b.endISO > todayISO ? todayISO : b.endISO);
+      return { label: b.label, netWorth: t.netWorth, assets: t.assets, liabilities: t.liabilities };
+    });
+  }, [buckets, accounts, scoped]);
+
+  const netOption = useMemo(() => {
+    const key = netType === 'net' ? 'netWorth' : netType === 'asset' ? 'assets' : 'liabilities';
+    const line = netType === 'net' ? C.primary : netType === 'asset' ? C.green : C.red;
+    const rgb =
+      netType === 'net'
+        ? dark
+          ? '128,145,255'
+          : '91,124,250'
+        : netType === 'asset'
+          ? dark
+            ? '52,211,153'
+            : '34,197,94'
+          : dark
+            ? '242,109,106'
+            : '239,83,80';
+    return {
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (v: unknown) => fmtSigned(Number(v)),
+        backgroundColor: C.border,
+        borderColor: C.line,
+        textStyle: { color: C.ink },
+      },
+      grid: { left: 8, right: 14, top: 24, bottom: 12, containLabel: true },
+      xAxis: {
+        type: 'category' as const,
+        data: netSeries.map((p) => p.label),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: C.line } },
+        axisLabel: { color: C.muted, fontSize: 10 },
+        boundaryGap: false,
+      },
+      yAxis: {
+        type: 'value' as const,
+        axisLabel: { color: C.muted, fontSize: 10, formatter: (v: number) => fmtShort(v) },
+        splitLine: { lineStyle: { color: C.line } },
+      },
+      series: [
+        {
+          name: NET_NAME[netType],
+          type: 'line' as const,
+          data: netSeries.map((p) => p[key]),
+          smooth: true,
+          // 带圆点标记：「全部」可能只有单个分桶，无标记的折线单点会什么都不画
+          symbol: 'circle' as const,
+          symbolSize: 6,
+          lineStyle: { color: line, width: 3 },
+          itemStyle: { color: line },
+          areaStyle: {
+            color: {
+              type: 'linear' as const,
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: `rgba(${rgb},0.28)` },
+                { offset: 1, color: `rgba(${rgb},0.02)` },
+              ],
             },
           },
-        ],
-      }) as echarts.EChartsOption,
-    [netSeries, C, dark],
-  );
+        },
+      ],
+    } as echarts.EChartsOption;
+  }, [netSeries, netType, C, dark]);
 
   const anchorLabel =
     period === 'year' ? `${anchor.getFullYear()}年` : `${anchor.getFullYear()}年${anchor.getMonth() + 1}月`;
-
-  // 当前账本还没有任何记录：给引导空态，而不是一排空白图表
-  if (scoped.length === 0) {
-    return (
-      <div className="empty stats-empty">
-        <span className="empty-emoji">
-          <ChartIcon size={44} />
-        </span>
-        <p>
-          当前账本还没有记录，暂无统计数据
-          <br />
-          <small>记下第一笔账后，这里会自动生成收支趋势、构成与净资产图表</small>
-        </p>
-      </div>
-    );
-  }
+  // 周模式显示实际起止日期，翻周时一目了然
+  const switcherLabel =
+    period === 'week'
+      ? `${buckets[0]?.label} - ${buckets[buckets.length - 1]?.label}`
+      : anchorLabel;
 
   return (
     <>
       <div className="seg section">
         {(['week', 'month', 'year', 'all'] as StatsPeriod[]).map((p) => (
-          <button key={p} className={period === p ? 'active' : ''} onClick={() => setPeriod(p)}>
+          <button
+            key={p}
+            className={period === p ? 'active' : ''}
+            onClick={() => {
+              setPeriod(p);
+              // 页签语义是「本周/本月/今年」，切换时锚点归位到当前周期，避免沿用上一次翻页残留的锚点
+              if (p === 'week') setAnchor(startOfWeek(new Date()));
+              else if (p !== 'all') setAnchor(startOfMonth(new Date()));
+            }}
+          >
             {LABELS[p]}
           </button>
         ))}
@@ -323,10 +394,9 @@ export function StatsPage() {
         <MonthSwitcher
           value={anchor}
           onChange={setAnchor}
-          mode={period === 'year' ? 'year' : 'month'}
-          label={period === 'week' ? `本周（${anchorLabel.slice(0, 4)}）` : anchorLabel}
-          disableFuture={period !== 'week'}
-          nextDisabled={period === 'week'}
+          mode={period === 'year' ? 'year' : period === 'week' ? 'week' : 'month'}
+          label={switcherLabel}
+          disableFuture
         />
       )}
 
@@ -360,24 +430,38 @@ export function StatsPage() {
         <Chart option={trendOption} height={280} />
       </div>
 
-      <div className="chart-grid two section">
-        <div className="card">
-          <Chart
-            option={pieOption('支出构成', periodExpense, '总支出', expenseSlices, C)}
-            height={280}
-          />
+      <div className="card section">
+        <div className="chart-title">
+          收支构成 · {books.find((b) => b.id === activeBookId)?.name}
+          <span>（{LABELS[period]}）</span>
         </div>
-        <div className="card">
-          <Chart
-            option={pieOption('收入构成', periodIncome, '总收入', incomeSlices, C)}
-            height={280}
-          />
+        <Chart option={pieOpt} height={280} />
+        <div className="seg mini">
+          <button className={pieType === 'expense' ? 'active expense' : ''} onClick={() => setPieType('expense')}>
+            支出
+          </button>
+          <button className={pieType === 'income' ? 'active income' : ''} onClick={() => setPieType('income')}>
+            收入
+          </button>
         </div>
       </div>
 
       <div className="card section">
-        <div className="chart-title">净资产趋势 · 近 12 个月</div>
+        <div className="chart-title">
+          {NET_NAME[netType]}趋势 · {books.find((b) => b.id === activeBookId)?.name}
+          <span>
+            （{LABELS[period]}
+            {period === 'all' ? ' · 按月' : period === 'year' ? ' · 按月' : ' · 按日'}）
+          </span>
+        </div>
         <Chart option={netOption} height={250} />
+        <div className="seg mini">
+          {(['net', 'asset', 'liability'] as NetType[]).map((t) => (
+            <button key={t} className={netType === t ? 'active' : ''} onClick={() => setNetType(t)}>
+              {NET_NAME[t]}
+            </button>
+          ))}
+        </div>
       </div>
     </>
   );

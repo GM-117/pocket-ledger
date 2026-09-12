@@ -227,23 +227,6 @@ export function evalAmount(raw: string): number {
   return Math.round(result * 10000) / 10000;
 }
 
-/** 近 N 个月每月末的净资产（当前月按今天） */
-export function netWorthSeries(
-  accounts: Account[],
-  txns: Txn[],
-  months = 12,
-): { label: string; value: number }[] {
-  const now = new Date();
-  const pts: { label: string; value: number }[] = [];
-  for (let i = months - 1; i >= 0; i--) {
-    const anchor =
-      i === 0 ? now : endOfMonth(new Date(now.getFullYear(), now.getMonth() - i, 1));
-    const t = computeTotals(accounts, txns, fmtISO(anchor));
-    pts.push({ label: `${anchor.getMonth() + 1}月`, value: t.netWorth });
-  }
-  return pts;
-}
-
 export type Period = 'week' | 'month' | 'year';
 
 export interface Bucket {

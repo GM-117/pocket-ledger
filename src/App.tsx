@@ -36,6 +36,12 @@ export default function App() {
       ?.setAttribute('content', theme === 'dark' ? '#12151c' : '#5b7cfa');
   }, [theme]);
 
+  // 切页后回到顶部：滚动容器是 document，上一页（如图表长页）滚到底后残留的滚动量
+  // 不会自动收敛，切到较短页面时真机 WebView 会停在空白区，需手动滑动才能恢复
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [tab]);
+
   // 启动时补齐周期账单与隐藏的系统分类
   useEffect(() => {
     useStore.setState((s) => ({ categories: ensureAdjustCategories(s.categories) }));
