@@ -65,7 +65,7 @@ export function SwipeRow({ open, onOpenChange, children, onDelete }: SwipeRowPro
         className="swipe-content"
         style={{
           transform: `translateX(${dx}px)`,
-          transition: dragDx === null ? 'transform 0.22s ease' : 'none',
+          transition: dragDx === null ? 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
         }}
         onPointerDown={(e) => down(e.clientX, e.clientY)}
         onPointerMove={(e) => move(e.clientX, e.clientY)}
