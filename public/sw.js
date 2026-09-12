@@ -1,5 +1,5 @@
 /* 口袋记账 Service Worker —— 预缓存应用外壳，运行时缓存静态资源 */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE_NAME = `pocket-ledger-${VERSION}`;
 const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
 
