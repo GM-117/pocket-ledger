@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import * as echarts from 'echarts';
 import { useStore } from '../store';
 import { Chart, CHART_COLORS } from '../components/Chart';
+import { ChartIcon } from '../components/icons';
 import { MonthSwitcher } from '../components/MonthSwitcher';
 import type { Period } from '../utils';
 import {
@@ -11,6 +12,7 @@ import {
   fmtISO,
   fmtMoney,
   fmtShort,
+  fmtSigned,
   netWorthSeries,
   parseISO,
   round2,
@@ -242,7 +244,7 @@ export function StatsPage() {
       ({
         tooltip: {
           trigger: 'axis',
-          valueFormatter: (v: unknown) => fmtMoney(Number(v)),
+          valueFormatter: (v: unknown) => fmtSigned(Number(v)),
           backgroundColor: C.border,
           borderColor: C.line,
           textStyle: { color: C.ink },
@@ -290,6 +292,22 @@ export function StatsPage() {
 
   const anchorLabel =
     period === 'year' ? `${anchor.getFullYear()}年` : `${anchor.getFullYear()}年${anchor.getMonth() + 1}月`;
+
+  // 当前账本还没有任何记录：给引导空态，而不是一排空白图表
+  if (scoped.length === 0) {
+    return (
+      <div className="empty stats-empty">
+        <span className="empty-emoji">
+          <ChartIcon size={44} />
+        </span>
+        <p>
+          当前账本还没有记录，暂无统计数据
+          <br />
+          <small>记下第一笔账后，这里会自动生成收支趋势、构成与净资产图表</small>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>

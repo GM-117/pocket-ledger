@@ -2,11 +2,11 @@ import { useMemo, useRef, useState } from 'react';
 import { accountIcon, ACCOUNT_KINDS, KIND_MAP } from '../accountCatalog';
 import { useStore } from '../store';
 import type { Account, AccountKind, Txn } from '../types';
-import { accountBalance, computeTotals, fmtISO, fmtMoney } from '../utils';
+import { accountBalance, computeTotals, fmtISO, fmtSigned } from '../utils';
 import { AccountDetail } from '../components/AccountDetail';
 import { AccountForm, type AccountTypePreset } from '../components/AccountForm';
 import { AccountTypePicker } from '../components/AccountTypePicker';
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, DownloadIcon, EyeIcon, EyeOffIcon, LIcon, RotateCcwIcon, UploadIcon } from '../components/icons';
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, DownloadIcon, EyeIcon, EyeOffIcon, LIcon, RotateCcwIcon, TrashIcon, UploadIcon, WalletIcon } from '../components/icons';
 import { BorrowPage } from '../components/BorrowPage';
 import { SwipeRow } from '../components/SwipeRow';
 
@@ -30,6 +30,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const exportJSON = useStore((s) => s.exportJSON);
   const importJSON = useStore((s) => s.importJSON);
   const loadDemo = useStore((s) => s.loadDemo);
+  const resetAll = useStore((s) => s.resetAll);
   const removeAccount = useStore((s) => s.removeAccount);
 
   const [openKinds, setOpenKinds] = useState<Set<AccountKind>>(new Set());
@@ -44,7 +45,8 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtMoney(n));
+  // 带符号金额：净资产 / 余额可为负（透支），fmtMoney 会吞掉负号，这里统一用 fmtSigned
+  const money = (n: number) => (hideAmounts ? '¥ ✱✱✱✱' : fmtSigned(n));
 
   // 资产随账本走：只统计当前账本的账户与其名下流水
   const bookAccounts = useMemo(
@@ -77,6 +79,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
     return { debt: Math.round(debt * 100) / 100, lend: Math.round(lend * 100) / 100 };
   }, [bookAccounts, balances]);
 
+  // 只渲染已有账户的类型分组，空类型不占位（添加入口固定在右上「＋ 添加账户」）
   const kindRows = useMemo(
     () =>
       ACCOUNT_KINDS.map((k) => {
@@ -86,7 +89,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
           .sort((x, y) => y.bal - x.bal);
         const sum = Math.round(rows.reduce((s, r) => s + r.bal, 0) * 100) / 100;
         return { kind: k, rows, sum };
-      }),
+      }).filter((g) => g.rows.length > 0),
     [bookAccounts, balances],
   );
 
@@ -184,7 +187,22 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
         </button>
       </div>
 
-      {kindRows.map(({ kind, rows, sum }) => {
+      {bookAccounts.length === 0 ? (
+        <div className="empty accounts-empty">
+          <span className="empty-emoji">
+            <WalletIcon size={44} />
+          </span>
+          <p>
+            还没有账户，先添加一个吧
+            <br />
+            <small>记账时从这里选择付款 / 收款的账户</small>
+          </p>
+          <button className="btn primary" onClick={() => openPicker()}>
+            ＋ 添加第一个账户
+          </button>
+        </div>
+      ) : (
+        kindRows.map(({ kind, rows, sum }) => {
         const open = openKinds.has(kind.id);
         return (
           <section className="kind-group" key={kind.id}>
@@ -238,8 +256,7 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
                         </span>
                       </span>
                       <span className={'amount ' + (a.type === 'asset' ? 'pos' : 'neg')}>
-                        {a.type === 'asset' ? '' : '−'}
-                        {money(Math.abs(bal))}
+                        {money(a.type === 'asset' ? bal : -bal)}
                       </span>
                     </button>
                   );
@@ -262,12 +279,12 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
                     </SwipeRow>
                   );
                 })}
-                {rows.length === 0 && <p className="empty-text">该类型下还没有账户</p>}
               </div>
             )}
           </section>
         );
-      })}
+        })
+      )}
 
       <div className="section-title">
         <span>数据管理</span>
@@ -283,13 +300,28 @@ export function AssetsPage({ onEdit, onQuickAdd }: AssetsPageProps) {
         <button
           className="btn ghost"
           onClick={() => {
-            if (window.confirm('重置为演示数据？当前所有数据将被覆盖。')) {
+            if (window.confirm('载入演示数据？当前所有数据将被覆盖。')) {
               loadDemo();
-              setMsg('已重置为演示数据 ✓');
+              setMsg('已载入演示数据 ✓');
             }
           }}
         >
-          <RotateCcwIcon size={15} /> 重置演示
+          <RotateCcwIcon size={15} /> 载入演示
+        </button>
+        <button
+          className="btn ghost danger-text"
+          onClick={() => {
+            if (
+              window.confirm(
+                '清空全部数据并恢复到初始状态？所有账本、账户与账单将被删除且无法恢复，建议先导出备份。',
+              )
+            ) {
+              resetAll();
+              setMsg('已清空，恢复为初始状态 ✓');
+            }
+          }}
+        >
+          <TrashIcon size={15} /> 清空数据
         </button>
         <input
           ref={fileRef}
