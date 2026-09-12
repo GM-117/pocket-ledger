@@ -206,6 +206,8 @@ export function StatsPage() {
             data: trend.income,
             itemStyle: { color: C.green, borderRadius: [3, 3, 0, 0] },
             barMaxWidth: 14,
+            // 柱子居中到类目中点，与结余折线的取数位置对齐（默认双柱会左右错开）
+            barGap: '-100%' as const,
           },
           {
             name: '支出',
@@ -213,6 +215,7 @@ export function StatsPage() {
             data: trend.expense,
             itemStyle: { color: C.red, borderRadius: [3, 3, 0, 0] },
             barMaxWidth: 14,
+            barGap: '-100%' as const,
           },
           {
             name: '结余',
