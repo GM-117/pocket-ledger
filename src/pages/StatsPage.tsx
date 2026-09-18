@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as echarts from 'echarts';
 import { useStore } from '../store';
-import { Chart, CHART_COLORS } from '../components/Chart';
+import { Chart } from '../components/Chart';
+import { getTheme, type ChartPalette } from '../theme';
 import { MonthSwitcher } from '../components/MonthSwitcher';
 import type { Period } from '../utils';
 import {
@@ -22,28 +23,6 @@ import {
   ymKey,
 } from '../utils';
 
-const MUTED_LIGHT = '#7a8194';
-const MUTED_DARK = '#8f99ad';
-
-interface ChartColors {
-  muted: string;
-  line: string;
-  ink: string;
-  border: string;
-  green: string;
-  red: string;
-  primary: string;
-  /** 空态占位灰环（比网格线深一档，白底卡片上可辨） */
-  ring: string;
-}
-
-/** 图表配色与 CSS 变量（styles.css 深浅主题）保持一致 */
-function chartColors(dark: boolean): ChartColors {
-  return dark
-    ? { muted: MUTED_DARK, line: '#232b3a', ink: '#e9ecf4', border: '#1c222e', green: '#34d399', red: '#f26d6a', primary: '#8091ff', ring: '#2a3448' }
-    : { muted: MUTED_LIGHT, line: '#eef0f4', ink: '#1b2231', border: '#ffffff', green: '#22c55e', red: '#ef5350', primary: '#5b7cfa', ring: '#e4e7ee' };
-}
-
 type StatsPeriod = Period | 'all';
 
 const LABELS: Record<StatsPeriod, string> = { ...PERIOD_LABEL, all: '全部' };
@@ -58,7 +37,7 @@ function pieOption(
   total: number,
   totalLabel: string,
   slices: { name: string; emoji: string; value: number }[],
-  C: ChartColors,
+  C: ChartPalette,
 ) {
   // 无数据时给一个占位灰环（参考同类记账 App 的 ¥0.00 空态），而不是空白
   const empty = slices.length === 0;
@@ -121,7 +100,7 @@ function pieOption(
         labelLine: empty ? { show: false } : { length: 8, length2: 6, lineStyle: { color: C.line } },
       },
     ],
-    color: CHART_COLORS,
+    color: C.series,
   } as echarts.EChartsOption;
 }
 
@@ -132,8 +111,7 @@ export function StatsPage() {
   const txns = useStore((s) => s.txns);
   const activeBookId = useStore((s) => s.activeBookId);
   const theme = useStore((s) => s.theme);
-  const dark = theme === 'dark';
-  const C = chartColors(dark);
+  const C = getTheme(theme).charts;
 
   const [period, setPeriod] = useState<StatsPeriod>('month');
   const [anchor, setAnchor] = useState(() => startOfMonth(new Date()));
@@ -306,17 +284,7 @@ export function StatsPage() {
     const key = netType === 'net' ? 'netWorth' : netType === 'asset' ? 'assets' : 'liabilities';
     const line = netType === 'net' ? C.primary : netType === 'asset' ? C.green : C.red;
     const rgb =
-      netType === 'net'
-        ? dark
-          ? '128,145,255'
-          : '91,124,250'
-        : netType === 'asset'
-          ? dark
-            ? '52,211,153'
-            : '34,197,94'
-          : dark
-            ? '242,109,106'
-            : '239,83,80';
+      netType === 'net' ? C.rgb.primary : netType === 'asset' ? C.rgb.green : C.rgb.red;
     return {
       tooltip: {
         trigger: 'axis',
@@ -366,7 +334,7 @@ export function StatsPage() {
         },
       ],
     } as echarts.EChartsOption;
-  }, [netSeries, netType, C, dark]);
+  }, [netSeries, netType, C]);
 
   const anchorLabel =
     period === 'year' ? `${anchor.getFullYear()}年` : `${anchor.getFullYear()}年${anchor.getMonth() + 1}月`;

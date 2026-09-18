@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { Account, AccountKind, Book, Category, Recurring, Template, Txn } from './types';
 import { ADJUST_CATEGORY_IN, ADJUST_CATEGORY_OUT, TRANSFER_CATEGORY_ID } from './types';
 import { kindToType, normalizeAccount } from './accountCatalog';
+import type { ThemeId } from './theme';
 import { addDays, fmtISO, parseISO, round2, stepFreq, uid } from './utils';
 
 /** 确保存在余额调整专用的隐藏「其他」分类（老数据 / 导入数据补齐） */
@@ -27,8 +28,8 @@ export interface StoreState {
   budgets: Record<string, number>;
   /** 隐藏金额（隐私模式） */
   hideAmounts: boolean;
-  /** 主题：浅色 / 深色 */
-  theme: 'light' | 'dark';
+  /** 主题：简约浅色/深色 + 风格主题（枚举与色板见 theme.ts） */
+  theme: ThemeId;
   /** 模板快捷记账 */
   templates: Template[];
   /** 周期记账规则 */
@@ -37,6 +38,8 @@ export interface StoreState {
   setBudget: (bookId: string, amount: number | null) => void;
   toggleHideAmounts: () => void;
   toggleTheme: () => void;
+  /** 直接切换到指定主题（设置页外观宫格） */
+  setTheme: (t: ThemeId) => void;
   addTemplate: (t: Omit<Template, 'id'>) => void;
   removeTemplate: (id: string) => void;
   saveRecurring: (r: Recurring) => void;
@@ -149,8 +152,8 @@ function createDemoData() {
     ...extra,
   });
   const accounts: Account[] = [
-    mkAcc('微信零钱', '微', 'fund', 'wechat', 8000),
-    mkAcc('支付宝', '支', 'fund', 'alipay', 10000),
+    mkAcc('微信零钱', 'wechat', 'fund', 'wechat', 8000),
+    mkAcc('支付宝', 'alipay', 'fund', 'alipay', 10000),
     mkAcc('招商银行卡', '💳', 'fund', 'savings', 46000),
     mkAcc('基金账户', '📊', 'invest', 'fund', 30000),
     mkAcc('公交卡', '🚌', 'recharge', 'bus_card', 120, { note: '地铁通勤充值' }),
@@ -320,7 +323,10 @@ export const useStore = create<StoreState>()(
 
       toggleHideAmounts: () => set((s) => ({ hideAmounts: !s.hideAmounts })),
 
-      toggleTheme: () => set((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),
+      // 浅↔深互切；处于风格主题时一键回浅色（再点可切深色）
+      toggleTheme: () => set((s) => ({ theme: s.theme === 'light' ? 'dark' : 'light' })),
+
+      setTheme: (t) => set({ theme: t }),
 
       addTemplate: (t) =>
         set((s) => ({ templates: [...s.templates, { ...t, id: uid() }] })),

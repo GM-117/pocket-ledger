@@ -38,8 +38,3 @@ export function Chart({ option, height = 260 }: ChartProps) {
 
   return <div ref={elRef} style={{ width: '100%', height }} />;
 }
-
-export const CHART_COLORS = [
-  '#5b7cfa', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-  '#06b6d4', '#f97316', '#ec4899', '#84cc16',
-];

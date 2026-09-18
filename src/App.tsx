@@ -10,6 +10,7 @@ import { CalendarPage } from './pages/CalendarPage';
 import { DetailPage } from './pages/DetailPage';
 import { StatsPage } from './pages/StatsPage';
 import { useStore, ensureAdjustCategories } from './store';
+import { getTheme } from './theme';
 import type { Txn } from './types';
 
 export default function App() {
@@ -30,12 +31,12 @@ export default function App() {
     setGuideOpen(false);
   };
 
-  // 主题：html data-theme + 状态栏颜色跟随
+  // 主题：html data-theme + 状态栏颜色跟随（themeColor 查表见 theme.ts）
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'dark' ? '#12151c' : '#5b7cfa');
+      ?.setAttribute('content', getTheme(theme).themeColor);
   }, [theme]);
 
   // 切页后回到顶部：滚动容器是 document，上一页（如图表长页）滚到底后残留的滚动量

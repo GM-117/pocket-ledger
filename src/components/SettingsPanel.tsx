@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
+import { THEME_LIST } from '../theme';
 import { fmtISO, lockBodyScroll, unlockBodyScroll } from '../utils';
 import { ChevronLeftIcon, DownloadIcon, RotateCcwIcon, TrashIcon, UploadIcon } from './icons';
 
@@ -13,12 +14,14 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-/** 设置页（顶栏 ⚙ 进入）：数据管理 —— 导出 / 导入 / 刷新模拟数据 / 清空 */
+/** 设置页（顶栏 ⚙ 进入）：外观主题选择 + 数据管理（导出 / 导入 / 刷新模拟数据 / 清空） */
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const exportJSON = useStore((s) => s.exportJSON);
   const importJSON = useStore((s) => s.importJSON);
   const loadDemo = useStore((s) => s.loadDemo);
   const resetAll = useStore((s) => s.resetAll);
+  const theme = useStore((s) => s.theme);
+  const setTheme = useStore((s) => s.setTheme);
 
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -65,10 +68,30 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
         <div className="page-body">
           <div className="settings-group">
+            <div className="settings-group-title">外观</div>
+            <div className="card settings-card theme-grid">
+              {THEME_LIST.map((t) => (
+                <button
+                  key={t.id}
+                  className={'theme-card' + (t.id === theme ? ' active' : '')}
+                  onClick={() => setTheme(t.id)}
+                  aria-label={`切换到${t.name}主题`}
+                >
+                  <span className="theme-preview" style={{ background: t.swatch.bg }}>
+                    <span className="theme-preview-hero" style={{ background: t.swatch.primary }} />
+                    <span className="theme-preview-card" style={{ background: t.swatch.surface }} />
+                  </span>
+                  <span className="theme-name">{t.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="settings-group">
             <div className="settings-group-title">数据管理</div>
             <div className="card settings-card">
               <button className="settings-row" onClick={doExport}>
-                <span className="icon-circle" style={{ background: '#5b7cfa22', color: '#5b7cfa' }}>
+                <span className="icon-circle tone-primary">
                   <DownloadIcon size={16} />
                 </span>
                 <span className="settings-row-main">
@@ -77,7 +100,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 </span>
               </button>
               <button className="settings-row" onClick={() => fileRef.current?.click()}>
-                <span className="icon-circle" style={{ background: '#10b98122', color: '#10b981' }}>
+                <span className="icon-circle tone-green">
                   <UploadIcon size={16} />
                 </span>
                 <span className="settings-row-main">
@@ -95,7 +118,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     }
                   }}
                 >
-                  <span className="icon-circle" style={{ background: '#5b7cfa22', color: '#5b7cfa' }}>
+                  <span className="icon-circle tone-primary">
                     <RotateCcwIcon size={16} />
                   </span>
                   <span className="settings-row-main">
@@ -117,7 +140,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   }
                 }}
               >
-                <span className="icon-circle" style={{ background: '#e5484d22', color: '#e5484d' }}>
+                <span className="icon-circle tone-danger">
                   <TrashIcon size={16} />
                 </span>
                 <span className="settings-row-main">

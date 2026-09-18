@@ -29,6 +29,32 @@
   --seg-active: #ffffff;
   /* 输入框聚焦底色 */
   --field-focus: #ffffff;
+  /* 主色/渐变底上的文字与图标（若某主题主色偏浅，可改为深墨色保证对比度） */
+  --on-primary: #ffffff;
+  /* 危险色底上的文字 */
+  --on-danger: #ffffff;
+  /* 开关旋钮底色 */
+  --knob: #ffffff;
+  /* 主色装饰渐变（FAB / 完成键 / 品牌 logo 等通用），亮端随主题可调 */
+  --primary-bright: #6c8cff;
+  --primary-gradient: linear-gradient(135deg, var(--primary-bright), var(--primary-deep));
+  /* 品牌 logo 色块底色：随主题淡色，图标固定黑色（深色主题覆盖为浅底，否则黑图标不可见） */
+  --brand-bg: var(--primary-soft);
+  /* 资产页 Hero 大卡 */
+  --hero-radius: 20px;
+  --hero-gradient: linear-gradient(135deg, #6c8cff 0%, var(--primary-deep) 55%, #3f56d6 100%);
+  --hero-shadow: 0 12px 28px rgba(74, 108, 240, 0.35);
+  --fab-shadow: 0 8px 20px rgba(91, 124, 250, 0.42);
+  /* 弹窗圆角：移动端底部 sheet 只取上两角，桌面端四角 */
+  --modal-radius: 20px;
+  /* 弹窗 / 覆盖页遮罩 */
+  --overlay-bg: rgba(15, 20, 32, 0.45);
+  /* 浮层菜单投影 */
+  --menu-shadow: var(--shadow), 0 8px 28px rgba(23, 29, 41, 0.16);
+  /* 预算进度条三态渐变 */
+  --bar-green: linear-gradient(90deg, #34d399, #10b981);
+  --bar-warn: linear-gradient(90deg, #fbbf24, #f59e0b);
+  --bar-red: linear-gradient(90deg, #f87171, #ef4444);
   --tabbar-h: 58px;
   color-scheme: light;
 }
@@ -43,6 +69,8 @@ html[data-theme='dark'] {
   --primary: #8091ff;
   --primary-deep: #5b6cf0;
   --primary-soft: rgba(128, 145, 255, 0.14);
+  /* 深色主题下淡色底仍是暗色，黑图标会消失：改用主色亮调实色底 */
+  --brand-bg: #8f9dff;
   --green: #34d399;
   --green-soft: rgba(52, 211, 153, 0.13);
   --red: #f26d6a;
@@ -60,7 +88,131 @@ html[data-theme='dark'] {
   --card-border: rgba(148, 163, 196, 0.1);
   --seg-active: #2b3448;
   --field-focus: #212839;
+  --hero-gradient: linear-gradient(135deg, #5a68e8 0%, #4753d4 55%, #3a43b5 100%);
+  --hero-shadow: 0 12px 28px rgba(43, 52, 150, 0.4);
+  --fab-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  --overlay-bg: rgba(4, 6, 10, 0.62);
+  --menu-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
   color-scheme: dark;
+}
+
+/* ============ 风格主题（浅色系） ============ */
+/* 只覆盖与简约浅色有差异的变量，其余继承 :root；图表色板见 src/theme.ts */
+
+/* 糖果卡通：高饱和糖果色 + 大圆角 + 彩色柔和阴影 + 图标描边加粗 */
+html[data-theme='candy'] {
+  --bg: #fdf2f7;
+  --surface: #ffffff;
+  --ink: #3d2c3e;
+  --muted: #a08598;
+  --line: #ffe0ec;
+  --primary: #ff7096;
+  --primary-deep: #f4517c;
+  --primary-soft: rgba(255, 112, 150, 0.12);
+  --green: #1fc08e;
+  --green-soft: rgba(31, 192, 142, 0.13);
+  --red: #f45b69;
+  --red-soft: rgba(244, 91, 105, 0.13);
+  --warn: #f2913d;
+  --warn-soft: rgba(242, 145, 61, 0.15);
+  --field-bg: #fff7fa;
+  --seg-bg: #fdeaf2;
+  --row-active: #fdf0f5;
+  --key-bg: #fceef4;
+  --key-active: #f9dfe9;
+  --surface-blur: rgba(255, 255, 255, 0.94);
+  --bg-blur: rgba(253, 242, 247, 0.88);
+  --radius: 22px;
+  --shadow: 0 2px 6px rgba(255, 112, 150, 0.08), 0 6px 20px rgba(255, 112, 150, 0.12);
+  --card-border: #ffe4ee;
+  --primary-bright: #ff9db8;
+  --hero-radius: 26px;
+  --hero-gradient: linear-gradient(135deg, #ff9db8 0%, #ff7096 55%, #f4517c 100%);
+  --hero-shadow: 0 12px 28px rgba(244, 81, 124, 0.35);
+  --fab-shadow: 0 8px 20px rgba(255, 112, 150, 0.45);
+  --modal-radius: 26px;
+  color-scheme: light;
+}
+
+/* 卡通主题图标描边加粗（CSS 覆盖 SVG 的 strokeWidth 属性）；
+   贴纸风底栏图标（.ticon）自带分层描边，豁免本规则 */
+html[data-theme='candy'] svg:not(.ticon) {
+  stroke-width: 2.25;
+}
+
+/* 樱花少女：粉紫柔和系 + 渐变点缀 + 圆角适中 */
+html[data-theme='sakura'] {
+  --bg: #fbf3f8;
+  --surface: #ffffff;
+  --ink: #4a3a47;
+  --muted: #a893a3;
+  --line: #f3e2ec;
+  --primary: #d97fb8;
+  --primary-deep: #c767a5;
+  --primary-soft: rgba(217, 127, 184, 0.12);
+  --green: #6faf78;
+  --green-soft: rgba(111, 175, 120, 0.14);
+  --red: #e57373;
+  --red-soft: rgba(229, 115, 115, 0.13);
+  --warn: #c99a3f;
+  --warn-soft: rgba(201, 154, 63, 0.15);
+  --field-bg: #fdf7fa;
+  --seg-bg: #f6e9f1;
+  --row-active: #f9eff5;
+  --key-bg: #f7ecf3;
+  --key-active: #efdbe8;
+  --surface-blur: rgba(255, 255, 255, 0.94);
+  --bg-blur: rgba(251, 243, 248, 0.88);
+  --radius: 18px;
+  --shadow: 0 2px 6px rgba(183, 110, 158, 0.07), 0 6px 18px rgba(183, 110, 158, 0.1);
+  --primary-bright: #eeb6d8;
+  --hero-radius: 22px;
+  --hero-gradient: linear-gradient(135deg, #eeb6d8 0%, #d98cc0 55%, #c678ae 100%);
+  --hero-shadow: 0 12px 28px rgba(199, 103, 165, 0.32);
+  --fab-shadow: 0 8px 20px rgba(217, 127, 184, 0.42);
+  --modal-radius: 22px;
+  color-scheme: light;
+}
+
+/* 手账时光：米纸底 + 墨水棕 + 圆角收敛 + 细纸边手账质感 + 描边略细 */
+html[data-theme='journal'] {
+  --bg: #f5efe3;
+  --surface: #fffdf7;
+  --ink: #4a3f33;
+  --muted: #9a8c78;
+  --line: #e6dcc8;
+  --primary: #a97c50;
+  --primary-deep: #96683f;
+  --primary-soft: rgba(169, 124, 80, 0.12);
+  --green: #7a9455;
+  --green-soft: rgba(122, 148, 85, 0.14);
+  --red: #c25b4e;
+  --red-soft: rgba(194, 91, 78, 0.13);
+  --warn: #b48a33;
+  --warn-soft: rgba(180, 138, 51, 0.16);
+  --field-bg: #fbf7ee;
+  --seg-bg: #eee6d4;
+  --row-active: #f2ebdb;
+  --key-bg: #f1ead9;
+  --key-active: #e5dbc3;
+  --surface-blur: rgba(255, 253, 247, 0.94);
+  --bg-blur: rgba(245, 239, 227, 0.88);
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(90, 74, 52, 0.08), 0 3px 10px rgba(90, 74, 52, 0.06);
+  /* 手账质感：可见的细纸边替代阴影分层 */
+  --card-border: #e6dcc8;
+  --primary-bright: #c49a6c;
+  --hero-radius: 14px;
+  --hero-gradient: linear-gradient(135deg, #c49a6c 0%, #a97c50 55%, #8f6338 100%);
+  --hero-shadow: 0 10px 24px rgba(150, 104, 63, 0.3);
+  --fab-shadow: 0 6px 16px rgba(150, 104, 63, 0.35);
+  --modal-radius: 14px;
+  color-scheme: light;
+}
+
+/* 手账主题图标描边略细，贴近钢笔手绘（贴纸风 .ticon 自带描边，豁免） */
+html[data-theme='journal'] svg:not(.ticon) {
+  stroke-width: 1.7;
 }
 
 * {
@@ -211,6 +363,21 @@ p {
   color: var(--primary);
 }
 
+/* 风格主题贴纸图标（.ticon）：未选中压灰去彩，选中还原彩色并轻微浮起 */
+.tab-item .ticon,
+.side-nav button .ticon {
+  opacity: 0.55;
+  filter: saturate(0.3);
+  transition: opacity 0.18s ease, filter 0.18s ease, transform 0.18s ease;
+}
+
+.tab-item.active .ticon,
+.side-nav button.active .ticon {
+  opacity: 1;
+  filter: none;
+  transform: translateY(-1px) scale(1.12);
+}
+
 /* 悬浮记账按钮（移动端） */
 .fab {
   position: fixed;
@@ -220,10 +387,10 @@ p {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6c8cff, var(--primary-deep));
-  color: #fff;
+  background: var(--primary-gradient);
+  color: var(--on-primary);
   border: none;
-  box-shadow: 0 8px 20px rgba(91, 124, 250, 0.42);
+  box-shadow: var(--fab-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -363,11 +530,11 @@ p {
 
 /* 资产页 Hero */
 .hero {
-  background: linear-gradient(135deg, #6c8cff 0%, var(--primary-deep) 55%, #3f56d6 100%);
-  color: #fff;
-  border-radius: 20px;
+  background: var(--hero-gradient);
+  color: var(--on-primary);
+  border-radius: var(--hero-radius);
   padding: 22px 20px;
-  box-shadow: 0 12px 28px rgba(74, 108, 240, 0.35);
+  box-shadow: var(--hero-shadow);
 }
 
 .hero .label {
@@ -677,7 +844,7 @@ p {
   /* 必须高于全屏覆盖页（账户详情 .overlay-page z-index:70），
      否则从账户详情打开的记账/编辑弹窗会被压在下面 */
   z-index: 80;
-  background: rgba(15, 20, 32, 0.45);
+  background: var(--overlay-bg);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -691,7 +858,7 @@ p {
   overflow-y: auto;
   /* 禁止横向滑动：内容超宽时裁剪而不是让整个面板左右晃动 */
   overflow-x: hidden;
-  border-radius: 20px 20px 0 0;
+  border-radius: var(--modal-radius) var(--modal-radius) 0 0;
   padding: 18px 18px calc(20px + env(safe-area-inset-bottom));
 }
 
@@ -883,7 +1050,7 @@ input[type='date'] {
 
 .btn.primary {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 .btn.primary:disabled {
@@ -1021,16 +1188,16 @@ input[type='date'] {
 .budget-bar {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #34d399, #10b981);
+  background: var(--bar-green);
   transition: width 0.4s ease;
 }
 
 .budget-bar.warn {
-  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  background: var(--bar-warn);
 }
 
 .budget-bar.over {
-  background: linear-gradient(90deg, #f87171, #ef4444);
+  background: var(--bar-red);
 }
 
 .budget-nums {
@@ -1113,7 +1280,7 @@ input[type='date'] {
 
 .cal-cell.today .cal-day {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 .cal-cell.selected {
@@ -1335,8 +1502,8 @@ input[type='date'] {
 }
 
 .kp-key.done {
-  background: linear-gradient(135deg, #6c8cff, var(--primary-deep));
-  color: #fff;
+  background: var(--primary-gradient);
+  color: var(--on-primary);
   font-size: 15px;
 }
 
@@ -1802,7 +1969,8 @@ input[type='date'] {
     width: 36px;
     height: 36px;
     border-radius: 11px;
-    background: linear-gradient(135deg, #6c8cff, var(--primary-deep));
+    background: var(--brand-bg);
+    color: #000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1914,7 +2082,7 @@ input[type='date'] {
   }
 
   .modal {
-    border-radius: 20px;
+    border-radius: var(--modal-radius);
   }
 }
 
@@ -1949,6 +2117,22 @@ input[type='date'] {
   width: 52px;
   height: 52px;
   font-size: 23px;
+}
+
+/* 设置页图标底色语义类：走主题变量，替代内联写死色值 */
+.icon-circle.tone-primary {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.icon-circle.tone-green {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.icon-circle.tone-danger {
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 /* 「不计入」徽标 */
@@ -2268,7 +2452,7 @@ input[type='date'] {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--knob);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   transition: transform 0.18s;
 }
@@ -2716,7 +2900,7 @@ input[type='date'] {
   border: none;
   border-radius: 11px;
   background: var(--red);
-  color: #fff;
+  color: var(--on-danger);
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
@@ -2996,8 +3180,8 @@ input[type='date'] {
   padding: 13px 0;
   height: auto;
   /* 主题蓝渐变 + 白字（同 .kp-key.done，不再用警示黄） */
-  background: linear-gradient(135deg, #6c8cff, var(--primary-deep));
-  color: #fff;
+  background: var(--primary-gradient);
+  color: var(--on-primary);
 }
 
 /* 单选弹窗（账本/账户等行内编辑） */
@@ -3053,7 +3237,7 @@ input[type='date'] {
    提前进入浮动卡片形态即可消除该区间 */
 @media (min-width: 561px) {
   .overlay-backdrop {
-    background: rgba(15, 20, 32, 0.45);
+    background: var(--overlay-bg);
   }
 
   .modal-overlay {
@@ -3062,7 +3246,7 @@ input[type='date'] {
   }
 
   .modal {
-    border-radius: 20px;
+    border-radius: var(--modal-radius);
     max-height: 86dvh;
   }
 
@@ -3078,7 +3262,7 @@ input[type='date'] {
     transform: translate(-50%, -50%);
     width: min(560px, calc(100vw - 48px));
     height: min(86dvh, 880px);
-    border-radius: 20px;
+    border-radius: var(--modal-radius);
     border: 1px solid var(--line);
     box-shadow: 0 24px 80px rgba(15, 20, 32, 0.35);
     overflow: hidden;
@@ -3191,7 +3375,7 @@ input[type='date'] {
   height: 22px;
   border-radius: 50%;
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   font-size: 13px;
   font-weight: 800;
   display: flex;
@@ -3297,7 +3481,7 @@ input[type='date'] {
 }
 
 .eye-btn {
-  color: #fff;
+  color: var(--on-primary);
 }
 
 .kp-key {
@@ -3403,28 +3587,8 @@ input[type='date'] {
   border: 1px solid var(--card-border);
 }
 
-html[data-theme='dark'] .hero {
-  background: linear-gradient(135deg, #5a68e8 0%, #4753d4 55%, #3a43b5 100%);
-  box-shadow: 0 12px 28px rgba(43, 52, 150, 0.4);
-}
-
-html[data-theme='dark'] .fab {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-}
-
-html[data-theme='dark'] .modal-overlay {
-  background: rgba(4, 6, 10, 0.62);
-}
-
-@media (min-width: 561px) {
-  html[data-theme='dark'] .overlay-backdrop {
-    background: rgba(4, 6, 10, 0.62);
-  }
-}
-
-html[data-theme='dark'] .acc-menu {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
-}
+/* 深色下 hero/fab/遮罩/菜单投影的差异已由 --hero-gradient / --fab-shadow /
+   --overlay-bg / --menu-shadow 等变量表达，无需再写 html[data-theme='dark'] 特例 */
 
 /* ============ 桌面端 hover（移动端无此状态） ============ */
 @media (hover: hover) {
@@ -3527,8 +3691,8 @@ html[data-theme='dark'] .acc-menu {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-soft);
-  color: var(--primary);
+  background: var(--brand-bg);
+  color: #000;
 }
 
 .guide-hero h2 {
@@ -3573,7 +3737,7 @@ html[data-theme='dark'] .acc-menu {
   height: 22px;
   border-radius: 50%;
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   font-size: 12px;
   font-weight: 800;
   display: flex;
@@ -3667,4 +3831,79 @@ html[data-theme='dark'] .acc-menu {
   margin-top: 4px;
   font-size: 12px;
   opacity: 0.85;
+}
+
+/* ============ 设置页 · 外观主题宫格 + 顶栏主题圆点 ============ */
+
+/* 风格主题下顶栏按钮显示当前主题色圆点（点击回简约浅色） */
+.theme-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.65);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 14px;
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.theme-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  height: 52px;
+  padding: 7px 8px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.theme-card.active .theme-preview {
+  border-color: var(--primary);
+}
+
+.theme-preview-hero {
+  width: 62%;
+  height: 9px;
+  border-radius: 5px;
+}
+
+.theme-preview-card {
+  flex: 1;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.theme-name {
+  font-size: 11px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.theme-card.active .theme-name {
+  color: var(--primary);
+  font-weight: 700;
 }
