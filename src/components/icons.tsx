@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ThemeId } from '../theme';
 
 interface IconProps {
   size?: number;
@@ -31,6 +32,35 @@ function make(paths: ReactNode, sw = 1.8, defaultSize = 22) {
     return base(size, sw, paths, className);
   };
 }
+
+/** 填充式图标基座：品牌 logo 用，fill=currentColor，随上下文着色 */
+function fillMake(paths: ReactNode, defaultSize = 22) {
+  return function Icon({ size = defaultSize, className }: IconProps) {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        stroke="none"
+        className={className}
+        aria-hidden="true"
+        focusable="false"
+      >
+        {paths}
+      </svg>
+    );
+  };
+}
+
+/* ============ 品牌 ============ */
+
+/** 品牌标:钱包（1024 网格源图，按 24/1024 缩放）。颜色由 currentColor 决定，与 favicon / PWA 图标同源 */
+export const BrandIcon = fillMake(
+  <g transform="scale(0.0234375)">
+    <path d="M787.584 164.138667a85.333333 85.333333 0 0 1 1.493333 15.936v13.653333A128.042667 128.042667 0 0 1 896 320v88.021333c36.821333 9.493333 64 42.88 64 82.645334v149.333333a85.376 85.376 0 0 1-64 82.645333V810.666667a128 128 0 0 1-128 128H192a128 128 0 0 1-128-128V320a128 128 0 0 1 127.744-128v-1.429333L687.829333 96.213333a85.333333 85.333333 0 0 1 99.776 67.904zM768 256H192a64 64 0 0 0-63.893333 60.245333L128 320v490.666667a64 64 0 0 0 60.245333 63.893333L192 874.666667h576a64 64 0 0 0 63.893333-60.245334L832 810.666667v-85.333334h-181.333333a160 160 0 0 1 0-320H832v-85.333333a64 64 0 0 0-60.245333-63.893333L768 256z m106.666667 213.333333H650.666667a96 96 0 0 0-4.522667 191.893334L650.666667 661.333333H874.666667a21.333333 21.333333 0 0 0 21.184-18.837333L896 640v-149.333333a21.333333 21.333333 0 0 0-18.837333-21.184L874.666667 469.333333z m-224 64a32 32 0 1 1 0 64 32 32 0 0 1 0-64z m51.584-374.549333l-2.474667 0.341333-172.949333 32.853334h198.229333v-12.906667l-0.341333-2.986667a21.333333 21.333333 0 0 0-22.464-17.28z" />
+  </g>,
+);
 
 /* ============ 导航 / 框架 ============ */
 
@@ -612,6 +642,48 @@ export const InboxIcon = make(
   </>,
 );
 
+/* ============ 品牌 logo（单色填充，由 icon-circle 的 color 着色） ============ */
+
+export const AlipayLogo = fillMake(
+  <path d="M19.695 15.07c3.426 1.158 4.203 1.22 4.203 1.22V3.846c0-2.124-1.705-3.845-3.81-3.845H3.914C1.808.001.102 1.722.102 3.846v16.31c0 2.123 1.706 3.845 3.813 3.845h16.173c2.105 0 3.81-1.722 3.81-3.845v-.157s-6.19-2.602-9.315-4.119c-2.096 2.602-4.8 4.181-7.607 4.181-4.75 0-6.361-4.19-4.112-6.949.49-.602 1.324-1.175 2.617-1.497 2.025-.502 5.247.313 8.266 1.317a16.796 16.796 0 0 0 1.341-3.302H5.781v-.952h4.799V6.975H4.77v-.953h5.81V3.591s0-.409.411-.409h2.347v2.84h5.744v.951h-5.744v1.704h4.69a19.453 19.453 0 0 1-1.986 5.06c1.424.52 2.702 1.011 3.654 1.333m-13.81-2.032c-.596.06-1.71.325-2.321.869-1.83 1.608-.735 4.55 2.968 4.55 2.151 0 4.301-1.388 5.99-3.61-2.403-1.182-4.438-2.028-6.637-1.809" />,
+);
+
+export const WechatLogo = fillMake(
+  <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z" />,
+);
+
+export const MeituanLogo = fillMake(
+  <path d="M6.923 0c-2.408 0-3.28.25-4.16.721A4.906 4.907 0 0 0 .722 2.763C.25 3.643 0 4.516 0 6.923v10.154c0 2.407.25 3.28.72 4.16a4.905 4.906 0 0 0 2.042 2.042c.88.47 1.752.721 4.16.721h10.156c2.407 0 3.28-.25 4.16-.721a4.906 4.907 0 0 0 2.04-2.042c.471-.88.722-1.753.722-4.16V6.923c0-2.407-.25-3.28-.722-4.16A4.906 4.907 0 0 0 21.238.72C20.357.251 19.484 0 17.077 0ZM4.17 7.51h1.084c.04.24.07.488.11.737h3.47c.05-.25.08-.497.1-.736h1.105a9.849 9.85 0 0 1-.09.736h1.562v.866H7.62v.696h3.642v.855h-3.64v.667h3.64v.854h-3.64v.816h3.89v.865H7.88c.775.935 2.218 1.532 3.78 1.651l-.538.936c-1.442-.17-3.103-.846-4.028-2.04-.856 1.194-2.487 1.92-4.525 2.07l.318-1.005c1.382-.02 2.814-.736 3.431-1.612h-3.62v-.865h3.86v-.816h-3.64v-.854h3.64v-.667h-3.64v-.855h3.64v-.697H2.7v-.866h1.56zm8.603.182h7.976c.358 0 .567.198.567.547v8.146H13.33c-.358 0-.557-.199-.557-.547zm1.044.885V15.5h6.455V8.577Zm3.999.476h1.024v.756h.975v.835h-.975V13c0 .806-.1 1.402-.318 2.02h-1.113c.338-.717.408-1.224.408-1.99v-2.387h-.935c-.14 1.541-.736 3.451-1.363 4.376h-1.134c.607-.855 1.303-2.526 1.472-4.376h-1.512v-.835h3.472z" />,
+);
+
+export const QqLogo = fillMake(
+  <path d="M21.395 15.035a40 40 0 0 0-.803-2.264l-1.079-2.695c.001-.032.014-.562.014-.836C19.526 4.632 17.351 0 12 0S4.474 4.632 4.474 9.241c0 .274.013.804.014.836l-1.08 2.695a39 39 0 0 0-.802 2.264c-1.021 3.283-.69 4.643-.438 4.673.54.065 2.103-2.472 2.103-2.472 0 1.469.756 3.387 2.394 4.771-.612.188-1.363.479-1.845.835-.434.32-.379.646-.301.778.343.578 5.883.369 7.482.189 1.6.18 7.14.389 7.483-.189.078-.132.132-.458-.301-.778-.483-.356-1.233-.646-1.846-.836 1.637-1.384 2.393-3.302 2.393-4.771 0 0 1.563 2.537 2.103 2.472.251-.03.581-1.39-.438-4.673" />,
+);
+
+/** 抖音与 TikTok 为同一音符标 */
+export const DouyinLogo = fillMake(
+  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />,
+);
+
+export const PaypalLogo = fillMake(
+  <path d="M15.607 4.653H8.941L6.645 19.251H1.82L4.862 0h7.995c3.754 0 6.375 2.294 6.473 5.513-.648-.478-2.105-.86-3.722-.86m6.57 5.546c0 3.41-3.01 6.853-6.958 6.853h-2.493L11.595 24H6.74l1.845-11.538h3.592c4.208 0 7.346-3.634 7.153-6.949a5.24 5.24 0 0 1 2.848 4.686M9.653 5.546h6.408c.907 0 1.942.222 2.363.541-.195 2.741-2.655 5.483-6.441 5.483H8.714Z" />,
+);
+
+export const LineLogo = fillMake(
+  <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" />,
+);
+
+/** 京东无公开矢量标，此处为 "JD" 字样（D 用 evenodd 挖空内孔） */
+export const JdLogo = fillMake(
+  <>
+    <path d="M8.6 3.5h2.9v9.4c0 3.2-2 5.1-5 5.1-.75 0-1.5-.13-2.1-.36l.6-2.6c.4.16.85.26 1.25.26 1.3 0 2.35-.9 2.35-2.55V3.5z" />
+    <path
+      fillRule="evenodd"
+      d="M14 3.5h3c3.4 0 5.5 2.6 5.5 7.25S20.4 18 17 18h-3V3.5zm2.7 2.8v8.9h.35c1.6 0 2.6-1.5 2.6-4.45S18.65 6.3 17.05 6.3h-.35z"
+    />
+  </>,
+);
+
 /* ============ emoji → SVG 映射 ============ */
 
 type IconCmp = (p: IconProps) => ReactNode;
@@ -695,20 +767,88 @@ export function normEmoji(s: string): string {
   return s.replace(/\uFE0F/g, '');
 }
 
+/**
+ * 账户子类型 id → 图标。品牌账户给对应品牌 logo，其余给语义图标。
+ * 品牌 logo 走 fillMake（单色填充），语义图标沿用线性风。
+ */
+const ACCOUNT_ICON_MAP: Record<string, IconCmp> = {
+  // 资金账户
+  alipay: AlipayLogo,
+  yuebao: AlipayLogo,
+  yulibao: AlipayLogo,
+  xiaohebao: AlipayLogo,
+  ant_fortune: AlipayLogo,
+  wechat: WechatLogo,
+  wechat_change: WechatLogo,
+  tenpay: TrendingUpIcon,
+  qq: QqLogo,
+  douyin: DouyinLogo,
+  eleme: UtensilsIcon,
+  fliggy: PlaneIcon,
+  macau_wallet: WalletIcon,
+  dcep: CoinIcon,
+  jd_finance: JdLogo,
+  jd_xjk: JdLogo,
+  unionpay: ZapIcon,
+  line_pay: LineLogo,
+  paypay: BanknoteIcon,
+  paypal: PaypalLogo,
+  payme: BanknoteIcon,
+  paga: BanknoteIcon,
+  chipper: BanknoteIcon,
+  youtrip: CreditCardIcon,
+  tng: WalletIcon,
+  usetimon: WalletIcon,
+  gjj: HomeIcon,
+  yibao: ShieldIcon,
+  pension: PiggyIcon,
+  passbook: NotebookIcon,
+  other_asset: PackageIcon,
+  // 信用账户
+  loan: BankIcon,
+  huabei: AlipayLogo,
+  jd_baitiao: JdLogo,
+  jd_jintiao: JdLogo,
+  jiebei: AlipayLogo,
+  weilidai: WechatLogo,
+  mt_jieqian: MeituanLogo,
+  mt_yuefu: MeituanLogo,
+  dy_fxj: DouyinLogo,
+  dy_yuefu: DouyinLogo,
+  wechat_fenfu: WechatLogo,
+  beiyongjin: ZapIcon,
+  family: HeartHandshakeIcon,
+  other_credit: QuestionIcon,
+  // 充值账户
+  octopus: CreditCardIcon,
+  macau_pass: BusIcon,
+  suica: SubwayIcon,
+  icoca: SubwayIcon,
+  pasmo: SubwayIcon,
+  wowpass: CreditCardIcon,
+  tmoney: SubwayIcon,
+  tmall_card: CartIcon,
+  jd_market_card: JdLogo,
+  jd_ecard: JdLogo,
+  other_prepaid: CreditCardIcon,
+  // 理财账户
+  other_invest: CoinsIcon,
+};
+
 interface LIconProps {
-  /** 数据层存的 emoji（或账户的 1-2 个汉字品牌符，如「微」「支」） */
+  /** 数据层存的 emoji，或账户子类型 id（如 alipay / wechat / jd_baitiao） */
   emoji?: string | null;
   size?: number;
   className?: string;
 }
 
 /**
- * 统一图标渲染：emoji 命中映射 → 线性 SVG（currentColor 着色）；
- * 未命中 → 原文本渲染（汉字品牌符 / 用户自定义 emoji 的优雅降级）。
+ * 统一图标渲染：账户子类型 / emoji 命中映射 → SVG（currentColor 着色）；
+ * 未命中 → 原文本渲染（用户自定义 emoji 与导入数据的优雅降级）。
  */
 export function LIcon({ emoji, size = 18, className }: LIconProps) {
   const key = emoji ? normEmoji(emoji) : '';
-  const Cmp = EMOJI_ICON_MAP[key];
+  const Cmp = ACCOUNT_ICON_MAP[key] ?? EMOJI_ICON_MAP[key];
   if (Cmp) return <Cmp size={size} className={className} />;
   if (key) {
     return (
@@ -722,3 +862,335 @@ export function LIcon({ emoji, size = 18, className }: LIconProps) {
   }
   return <QuestionIcon size={size} className={className} />;
 }
+
+/* ============ 底栏 Tab 主题图标（风格主题专用） ============ */
+/* 贴纸风：面（固定色填充）+ 线（描边）分层，不参与 currentColor 着色，
+   仅用于 Layout 的 tabbar / sidebar；GuideOverlay 等功能场景沿用基础图标。
+   选中/未选中态由 CSS（.ticon）控制：未选中压灰去彩，选中还原彩色。
+   注意：styles.css 的全局描边覆盖规则已用 :not(.ticon) 豁免本组图标。 */
+
+/** 贴纸风图标基座：不带根级 stroke/fill，颜色全部落在各 path 上 */
+function sticker(children: ReactNode, defaultSize = 22) {
+  return function StickerIcon({ size = defaultSize, className }: IconProps) {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className ? `ticon ${className}` : 'ticon'}
+        aria-hidden="true"
+        focusable="false"
+      >
+        {children}
+      </svg>
+    );
+  };
+}
+
+const CANDY = {
+  line: '#c94470',
+  pink: '#ff7096',
+  soft: '#ffd9e5',
+  cream: '#fff4f8',
+  yellow: '#ffc24b',
+  blue: '#4cc9f0',
+  purple: '#9d6bff',
+  caramel: '#cf9a5f',
+};
+const SAKURA = {
+  line: '#a8558b',
+  pink: '#f4a4c6',
+  soft: '#fad5e5',
+  deep: '#d97fb8',
+  gold: '#ffd36e',
+  goldDeep: '#f0b64c',
+};
+const JOURNAL = {
+  line: '#7a5a3a',
+  kraft: '#e9cd9c',
+  cream: '#f8efd9',
+  red: '#c25b4e',
+  green: '#9db27c',
+  tan: '#d9b48a',
+};
+
+/* ---- 糖果卡通：棒棒糖 / 花糖 / 冰棍 / 甜甜圈 ---- */
+
+export const CandyLollipopIcon = sticker(
+  <>
+    <path d="M12 15v6.4" stroke={CANDY.caramel} strokeWidth={2.6} />
+    <defs>
+      <clipPath id="ticon-pop">
+        <circle cx="12" cy="9.6" r="6.7" />
+      </clipPath>
+    </defs>
+    <circle cx="12" cy="9.6" r="7" fill={CANDY.cream} />
+    <g clipPath="url(#ticon-pop)">
+      <path d="M12 9.6 12 2.4 A7.2 7.2 0 0 1 19.2 9.6 Z" fill={CANDY.pink} />
+      <path d="M12 9.6 12 16.8 A7.2 7.2 0 0 1 4.8 9.6 Z" fill={CANDY.pink} />
+    </g>
+    <circle cx="12" cy="9.6" r="7" fill="none" stroke={CANDY.line} strokeWidth={1.9} />
+    <path d="M7.4 7a5.2 5.2 0 0 1 2.4-2.3" stroke="#ffffff" strokeWidth={1.5} />
+  </>,
+);
+
+export const CandySweetIcon = sticker(
+  <>
+    <path
+      d="M7.6 11.2 3.4 8c-.9 2.6-.9 5.4 0 8l4.2-3.2z"
+      fill={CANDY.yellow}
+      stroke={CANDY.line}
+      strokeWidth={1.8}
+    />
+    <path
+      d="M16.4 11.2 20.6 8c.9 2.6.9 5.4 0 8l-4.2-3.2z"
+      fill={CANDY.yellow}
+      stroke={CANDY.line}
+      strokeWidth={1.8}
+    />
+    <ellipse cx="12" cy="12" rx="4.9" ry="4.1" fill={CANDY.pink} stroke={CANDY.line} strokeWidth={1.9} />
+    <path d="M12.8 8.6a4.5 3.6 0 0 1 0 6.8" stroke="#ff9db8" strokeWidth={1.3} fill="none" />
+    <path d="M9 10.2a3.6 3.6 0 0 1 2.5-1.8" stroke="#ffffff" strokeWidth={1.5} fill="none" />
+  </>,
+);
+
+export const CandyPopsicleIcon = sticker(
+  <>
+    <rect x="10.7" y="15.4" width="2.6" height="5.6" rx="1.3" fill={CANDY.caramel} stroke={CANDY.line} strokeWidth={1.5} />
+    <defs>
+      <clipPath id="ticon-ice">
+        <rect x="8" y="3.2" width="8" height="13.2" rx="4" />
+      </clipPath>
+    </defs>
+    <g clipPath="url(#ticon-ice)">
+      <rect x="8" y="3.2" width="8" height="13.2" fill={CANDY.soft} />
+      <path d="M8 3.2h8V9c-1.3 1.2-2.7-1.2-4 0s-2.7 1.2-4 0z" fill={CANDY.pink} />
+      <path d="M10 5.4l1.2.7M13.4 6.2l1.2-.7" stroke="#ffffff" strokeWidth={1.2} />
+    </g>
+    <rect x="8" y="3.2" width="8" height="13.2" rx="4" fill="none" stroke={CANDY.line} strokeWidth={1.9} />
+  </>,
+);
+
+export const CandyDonutIcon = sticker(
+  <>
+    <defs>
+      <clipPath id="ticon-donut">
+        <circle cx="12" cy="12" r="7.7" />
+      </clipPath>
+    </defs>
+    <circle cx="12" cy="12" r="8" fill="#f2b266" />
+    <g clipPath="url(#ticon-donut)">
+      <path
+        d="M4 12a8 8 0 0 1 16 0c-.6 1.2-1.7 1-2.3 1.9-.6.8-1.7.8-2.3 0-.7-.8-1.9-.7-2.5.2-.6.8-1.8.7-2.4-.2-.6-.8-1.4-.5-2-1.3-.4-.6-1.4-.4-2-1.2-.8.5-2 .2-2.5.6z"
+        fill={CANDY.pink}
+      />
+      <path d="M7.6 7l1.5.8" stroke={CANDY.blue} strokeWidth={1.4} />
+      <path d="M12.4 5.2l.6 1.6" stroke="#ffffff" strokeWidth={1.4} />
+      <path d="M15.9 7.2l-1.3 1" stroke={CANDY.purple} strokeWidth={1.4} />
+      <path d="M9 9.9l1.5-.5" stroke={CANDY.yellow} strokeWidth={1.4} />
+    </g>
+    <circle cx="12" cy="12" r="8" fill="none" stroke={CANDY.line} strokeWidth={1.9} />
+    <circle cx="12" cy="12" r="3" fill={CANDY.cream} stroke={CANDY.line} strokeWidth={1.7} />
+  </>,
+);
+
+/* ---- 樱花少女：五瓣樱 / 爱心 / 蝴蝶结 / 星芒 ---- */
+
+const SAKURA_PETAL =
+  'M12 11.2c-1.8-1.3-2.7-3.2-2.1-5.1.2-.8.7-1.5 1.4-1.9l.7.8.7-.8c.7.4 1.2 1.1 1.4 1.9.6 1.9-.3 3.8-2.1 5.1z';
+const SAKURA_STAMEN_DEGS = [36, 108, 180, 252, 324];
+
+export const SakuraBlossomIcon = sticker(
+  <>
+    {[0, 72, 144, 216, 288].map((deg) => (
+      <path
+        key={deg}
+        d={SAKURA_PETAL}
+        fill={SAKURA.soft}
+        stroke={SAKURA.line}
+        strokeWidth={1.5}
+        transform={`rotate(${deg} 12 12)`}
+      />
+    ))}
+    {SAKURA_STAMEN_DEGS.map((deg) => {
+      const rad = (deg * Math.PI) / 180;
+      return (
+        <circle
+          key={deg}
+          cx={12 + 2.9 * Math.cos(rad)}
+          cy={12 - 2.9 * Math.sin(rad)}
+          r="0.55"
+          fill={SAKURA.goldDeep}
+          stroke="none"
+        />
+      );
+    })}
+    <circle cx="12" cy="12" r="1.6" fill={SAKURA.gold} stroke={SAKURA.line} strokeWidth={1.1} />
+  </>,
+);
+
+export const SakuraHeartIcon = sticker(
+  <>
+    <path
+      d="M12 20.4C7.5 17.4 4.4 14.2 4.4 10.5 4.4 7.8 6.4 5.8 9 5.8c1.5 0 2.6.8 3 2 .4-1.2 1.5-2 3-2 2.6 0 4.6 2 4.6 4.7 0 3.7-3.1 6.9-7.6 9.9z"
+      fill={SAKURA.pink}
+      stroke={SAKURA.line}
+      strokeWidth={1.8}
+    />
+    <path d="M7.6 9.2a2.4 2.4 0 0 1 2.4-2.1" stroke="#ffffff" strokeWidth={1.5} fill="none" />
+    <path
+      d="M18.7 2.8c.25 1.3.85 1.9 2.1 2.15-1.25.25-1.85.85-2.1 2.15-.25-1.3-.85-1.9-2.1-2.15 1.25-.25 1.85-.85 2.1-2.15z"
+      fill={SAKURA.gold}
+      stroke={SAKURA.line}
+      strokeWidth={0.9}
+    />
+  </>,
+);
+
+export const SakuraBowIcon = sticker(
+  <>
+    <path
+      d="M10.6 13.3 8.2 18.1l1.7-1.5 1.2 1.6 1.1-4.5z"
+      fill={SAKURA.soft}
+      stroke={SAKURA.line}
+      strokeWidth={1.4}
+    />
+    <path
+      d="M13.4 13.3 15.8 18.1l-1.7-1.5-1.2 1.6-1.1-4.5z"
+      fill={SAKURA.soft}
+      stroke={SAKURA.line}
+      strokeWidth={1.4}
+    />
+    <path
+      d="M10.9 12 4.6 8.5C3.2 10.7 3.2 13.3 4.6 15.5Z"
+      fill={SAKURA.soft}
+      stroke={SAKURA.line}
+      strokeWidth={1.6}
+    />
+    <path
+      d="M13.1 12 19.4 8.5C20.8 10.7 20.8 13.3 19.4 15.5Z"
+      fill={SAKURA.soft}
+      stroke={SAKURA.line}
+      strokeWidth={1.6}
+    />
+    <path d="M10.5 12.1 6.6 10.4M13.5 12.1 17.4 10.4" stroke={SAKURA.line} strokeWidth={1} opacity={0.55} fill="none" />
+    <rect x="10.5" y="10.2" width="3" height="3.8" rx="1.5" fill={SAKURA.deep} stroke={SAKURA.line} strokeWidth={1.5} />
+  </>,
+);
+
+export const SakuraSparkleIcon = sticker(
+  <>
+    <path
+      d="M10.4 3.6c.6 3.9 2.2 5.5 6.1 6.1-3.9.6-5.5 2.2-6.1 6.1-.6-3.9-2.2-5.5-6.1-6.1 3.9-.6 5.5-2.2 6.1-6.1z"
+      fill={SAKURA.gold}
+      stroke={SAKURA.line}
+      strokeWidth={1.5}
+    />
+    <path
+      d="M17.8 13.2c.4 2.4 1.4 3.4 3.7 3.8-2.3.4-3.3 1.4-3.7 3.8-.4-2.4-1.4-3.4-3.7-3.8 2.3-.4 3.3-1.4 3.7-3.8z"
+      fill={SAKURA.pink}
+      stroke={SAKURA.line}
+      strokeWidth={1.3}
+    />
+    <circle cx="18.6" cy="5.4" r="1" fill={SAKURA.pink} stroke="none" />
+    <circle cx="5.2" cy="17.8" r="0.9" fill={SAKURA.goldDeep} stroke="none" />
+  </>,
+);
+
+/* ---- 手账时光：钢笔 / 和纸胶带 / 手帐本 / 木尺 ---- */
+
+export const JournalPenIcon = sticker(
+  <>
+    <path
+      d="M19.3 4.7c-1.2-1.2-3.1-1.2-4.3 0l-6.3 6.3 4.3 4.3 6.3-6.3c1.2-1.2 1.2-3.1 0-4.3z"
+      fill={JOURNAL.tan}
+      stroke={JOURNAL.line}
+      strokeWidth={1.6}
+    />
+    <path d="M10.2 9.5l4.3 4.3" stroke={JOURNAL.line} strokeWidth={1.2} opacity={0.55} fill="none" />
+    <path d="M8.7 11 5.9 18.1 13 15.3z" fill={JOURNAL.cream} stroke={JOURNAL.line} strokeWidth={1.6} />
+    <path d="M7.2 16.7l2.3-2.3" stroke={JOURNAL.line} strokeWidth={1.2} fill="none" />
+    <circle cx="9.7" cy="14.3" r="0.95" fill={JOURNAL.line} stroke="none" />
+  </>,
+);
+
+export const JournalTapeIcon = sticker(
+  <g transform="rotate(-24 12 12)">
+    <defs>
+      <clipPath id="ticon-tape">
+        <path d="M4.4 9h15.2l-1.6 2 1.6 2-1.6 2H4.4l1.6-2-1.6-2z" />
+      </clipPath>
+    </defs>
+    <path
+      d="M4.4 9h15.2l-1.6 2 1.6 2-1.6 2H4.4l1.6-2-1.6-2z"
+      fill={JOURNAL.green}
+      stroke={JOURNAL.line}
+      strokeWidth={1.5}
+    />
+    <g clipPath="url(#ticon-tape)" stroke="#ffffff" strokeWidth={1.1} opacity={0.85}>
+      <path d="M8.4 7.6 6 16.4" />
+      <path d="M12.4 7.6 10 16.4" />
+      <path d="M16.4 7.6 14 16.4" />
+    </g>
+  </g>,
+);
+
+export const JournalNotebookIcon = sticker(
+  <>
+    <rect x="5" y="4.4" width="14" height="15.6" rx="2.6" fill={JOURNAL.cream} stroke={JOURNAL.line} strokeWidth={1.6} />
+    <path d="M8.8 2.8v3.4M12 2.8v3.4M15.2 2.8v3.4" stroke={JOURNAL.line} strokeWidth={1.7} fill="none" />
+    <path d="M17.6 4.4V20" stroke={JOURNAL.red} strokeWidth={1.3} opacity={0.85} fill="none" />
+    <path
+      d="M12 16.4c-2.1-1.4-3.3-2.7-3.3-4.2 0-1.1.8-2 1.9-2 .6 0 1.1.4 1.4 1 .3-.6.8-1 1.4-1 1.1 0 1.9.9 1.9 2 0 1.5-1.2 2.8-3.3 4.2z"
+      fill={JOURNAL.red}
+      stroke={JOURNAL.line}
+      strokeWidth={1.3}
+    />
+  </>,
+);
+
+export const JournalRulerIcon = sticker(
+  <g transform="rotate(30 12 12)">
+    <rect x="3.5" y="9.2" width="17" height="5.6" rx="1.1" fill={JOURNAL.kraft} stroke={JOURNAL.line} strokeWidth={1.6} />
+    <path d="M7 9.2v2.4M10.4 9.2v3.4M13.8 9.2v2.4M17.2 9.2v3.4" stroke={JOURNAL.line} strokeWidth={1.4} fill="none" />
+    <circle cx="5.7" cy="12" r="0.85" fill={JOURNAL.cream} stroke={JOURNAL.line} strokeWidth={1} />
+  </g>,
+);
+
+/** 一套底栏图标（明细 / 资产 / 日历 / 图表） */
+export interface TabIconSet {
+  detail: ReturnType<typeof make>;
+  assets: ReturnType<typeof make>;
+  calendar: ReturnType<typeof make>;
+  stats: ReturnType<typeof make>;
+}
+
+/**
+ * 按主题取底栏图标：简约浅/深沿用基础线性图标，
+ * 三套风格主题各配一套主题化图标（糖果 / 樱花 / 手账）。
+ */
+export const TAB_ICON_SETS: Record<ThemeId, TabIconSet> = {
+  light: { detail: BookIcon, assets: WalletIcon, calendar: CalendarIcon, stats: ChartIcon },
+  dark: { detail: BookIcon, assets: WalletIcon, calendar: CalendarIcon, stats: ChartIcon },
+  candy: {
+    detail: CandyLollipopIcon,
+    assets: CandySweetIcon,
+    calendar: CandyPopsicleIcon,
+    stats: CandyDonutIcon,
+  },
+  sakura: {
+    detail: SakuraBlossomIcon,
+    assets: SakuraHeartIcon,
+    calendar: SakuraBowIcon,
+    stats: SakuraSparkleIcon,
+  },
+  journal: {
+    detail: JournalPenIcon,
+    assets: JournalTapeIcon,
+    calendar: JournalNotebookIcon,
+    stats: JournalRulerIcon,
+  },
+};

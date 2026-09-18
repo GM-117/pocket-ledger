@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import {
   BookIcon,
+  BrandIcon,
   CalendarIcon,
   ChartIcon,
   ChevronLeftIcon,
-  CoinsIcon,
   WalletIcon,
 } from './icons';
 import { lockBodyScroll, unlockBodyScroll } from '../utils';
@@ -63,7 +63,7 @@ export function GuideOverlay({ onClose }: GuideOverlayProps) {
         <div className="page-body">
           <div className="guide-hero">
             <span className="brand-logo guide-logo">
-              <CoinsIcon size={30} />
+              <BrandIcon size={32} />
             </span>
             <h2>口袋记账 PocketLedger</h2>
             <p>多账本明细 · 资产管理 · 收支日历 · 统计图表，数据全部保存在你自己的设备上</p>

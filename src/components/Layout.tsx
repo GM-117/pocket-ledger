@@ -1,27 +1,24 @@
 import { type ReactNode } from 'react';
 import { useStore } from '../store';
 import {
-  BookIcon,
-  CalendarIcon,
-  ChartIcon,
+  BrandIcon,
   ChevronDownIcon,
-  CoinsIcon,
   GearIcon,
   LIcon,
   MoonIcon,
   PlusIcon,
   QuestionIcon,
   SunIcon,
-  WalletIcon,
+  TAB_ICON_SETS,
 } from './icons';
 
 export type TabKey = 'detail' | 'assets' | 'calendar' | 'stats';
 
-const TABS: { key: TabKey; label: string; icon: ReactNode }[] = [
-  { key: 'detail', label: '明细', icon: <BookIcon /> },
-  { key: 'assets', label: '资产', icon: <WalletIcon /> },
-  { key: 'calendar', label: '日历', icon: <CalendarIcon /> },
-  { key: 'stats', label: '图表', icon: <ChartIcon /> },
+const TAB_META: { key: TabKey; label: string }[] = [
+  { key: 'detail', label: '明细' },
+  { key: 'assets', label: '资产' },
+  { key: 'calendar', label: '日历' },
+  { key: 'stats', label: '图表' },
 ];
 
 const PAGE_TITLE: Record<TabKey, string> = {
@@ -50,10 +47,27 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, onOpenSett
   const setActiveBook = useStore((s) => s.setActiveBook);
   const theme = useStore((s) => s.theme);
   const toggleTheme = useStore((s) => s.toggleTheme);
+  // 风格主题使用专属底栏图标包（糖果 / 樱花 / 手账），简约深浅沿用基础图标
+  const tabIcons = TAB_ICON_SETS[theme];
+  const TABS = TAB_META.map((t) => {
+    const Icon = tabIcons[t.key];
+    return { ...t, icon: <Icon /> };
+  });
   const activeBook = books.find((b) => b.id === activeBookId) ?? books[0];
   const themeBtn = (
-    <button className="theme-btn" onClick={toggleTheme} aria-label="切换深浅主题">
-      {theme === 'dark' ? <SunIcon size={17} /> : <MoonIcon size={17} />}
+    <button
+      className="theme-btn"
+      onClick={toggleTheme}
+      aria-label={theme === 'light' ? '切换到深色主题' : '切换到简约浅色主题'}
+    >
+      {theme === 'light' ? (
+        <MoonIcon size={17} />
+      ) : theme === 'dark' ? (
+        <SunIcon size={17} />
+      ) : (
+        // 风格主题：显示当前主题色圆点，点击回简约浅色
+        <span className="theme-dot" aria-hidden="true" />
+      )}
     </button>
   );
   const guideBtn = (
@@ -72,7 +86,7 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, onOpenSett
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-logo">
-            <CoinsIcon size={19} />
+            <BrandIcon size={20} />
           </span>
           <span>
             口袋记账
