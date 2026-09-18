@@ -69,8 +69,10 @@
 
 ```bash
 npm install
-npm run dev        # 本机 http://127.0.0.1:5173，同时监听局域网（手机可访问）
+npm run dev        # 本机 http://localhost:5273，同时监听局域网（手机可访问）
 ```
+
+> dev 端口固定 5273 且开启 `strictPort`：本机若还有其他 Vite 项目以 `[::1]:5173`（仅 IPv6）占用 5173，IPv4 侧绑定不会报冲突，Vite 会照常打印 5173，而浏览器打开 `localhost:5173` 落到的却是另一个项目。
 
 生产构建与预览：
 
@@ -88,7 +90,7 @@ npm run preview    # 本机 http://127.0.0.1:4173，同时监听局域网
 开发服务器和预览服务器都监听了全部网卡，**手机与电脑连同一个 Wi-Fi** 时，也可以直接用手机浏览器访问电脑上的项目：
 
 1. 查询电脑的局域网 IP（macOS 执行 `ipconfig getifaddr en0`，例如得到 `192.168.1.7`）
-2. 手机 Safari 打开 `http://<电脑IP>:5173`（dev 热更新，改代码手机即时生效）或 `http://<电脑IP>:4173`（preview，需先 `npm run build`）
+2. 手机 Safari 打开 `http://<电脑IP>:5273`（dev 热更新，改代码手机即时生效）或 `http://<电脑IP>:4173`（preview，需先 `npm run build`）
 3. （可选）Safari「分享 → 添加到主屏幕」，即可像原生 App 一样从桌面图标全屏启动
 
 本项目已具备 PWA 基础能力：
@@ -100,7 +102,7 @@ npm run preview    # 本机 http://127.0.0.1:4173，同时监听局域网
 注意两点：
 
 - **离线缓存在 `http://` 下不生效**：Service Worker 仅在 HTTPS 或 localhost 下注册。局域网 IP 通过 `http://` 访问时，主屏幕安装、全屏等一切正常，只是断网后无法打开；完整离线体验需部署到 HTTPS 环境
-- **dev（5173）与 preview（4173）数据相互独立**：各自使用独立的 localStorage，账目数据不互通；数据保存在手机本地，「添加到主屏幕」的 App 与 Safari 浏览器的存储也是隔离的，删除主屏幕图标会清掉该 App 内的数据
+- **dev（5273）与 preview（4173）数据相互独立**：各自使用独立的 localStorage，账目数据不互通；数据保存在手机本地，「添加到主屏幕」的 App 与 Safari 浏览器的存储也是隔离的，删除主屏幕图标会清掉该 App 内的数据
 - 发版更新（HTTPS 部署后）：改代码后同步递增 `public/sw.js` 顶部的 `VERSION` 以清理旧缓存，页面导航为网络优先，联网刷新即可拿到新版
 
 ## 技术栈
