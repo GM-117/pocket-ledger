@@ -231,6 +231,13 @@ export const UploadIcon = make(
   </>,
 );
 
+export const CameraIcon = make(
+  <>
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+    <circle cx="12" cy="13" r="3.2" />
+  </>,
+);
+
 export const RotateCcwIcon = make(
   <>
     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -684,6 +691,233 @@ export const JdLogo = fillMake(
   </>,
 );
 
+/* ---- 同系账户差异化语义图标（线性风，替代复用的品牌 logo） ---- */
+
+/** 余额宝：钱袋 + ¥ */
+export const YuebaoIcon = make(
+  <>
+    <path d="M9.2 7.2c0-1.6 1.2-2.7 2.8-2.7s2.8 1.1 2.8 2.7" />
+    <path d="M7.6 7.2h8.8l1.6 2.8c.9 1.6 1.5 3.3 1.5 5a7.5 7.5 0 1 1-15 0c0-1.7.6-3.4 1.5-5z" />
+    <path d="m9.8 12 2.2 2.4 2.2-2.4" />
+    <path d="M12 14.4V18" />
+    <path d="M10.2 15.6h3.6M10.2 17.1h3.6" />
+  </>,
+);
+
+/** 余利宝：金币堆 + 上升箭头 */
+export const YulibaoIcon = make(
+  <>
+    <ellipse cx="9.5" cy="6.8" rx="5.2" ry="2.3" />
+    <path d="M4.3 6.8v3.6c0 1.3 2.3 2.3 5.2 2.3s5.2-1 5.2-2.3V6.8" />
+    <path d="M4.3 10.4V14c0 1.3 2.3 2.3 5.2 2.3 1 0 1.9-.1 2.7-.3" />
+    <path d="m14.5 16.5 5-5" />
+    <path d="M15 11.5h4.5V16" />
+  </>,
+);
+
+/** 小荷包：束口荷包 + 爱心 */
+export const XiaohebaoIcon = make(
+  <>
+    <path d="M9 3.5 12 7l3-3.5" />
+    <path d="M7 7c-1.6 1.7-2.6 3.7-2.6 6a7.6 7.6 0 0 0 15.2 0c0-2.3-1-4.3-2.6-6z" />
+    <path d="M7 7c1.6 1 3.2 1.4 5 1.4s3.4-.4 5-1.4" />
+    <path d="M12 17.2c-1.7-1.1-2.7-2.2-2.7-3.4 0-.8.6-1.4 1.3-1.4.5 0 .9.2 1.4.8.5-.6.9-.8 1.4-.8.7 0 1.3.6 1.3 1.4 0 1.2-1 2.3-2.7 3.4z" />
+  </>,
+);
+
+/** 蚂蚁财富：圆圈 + 净值曲线 */
+export const AntFortuneIcon = make(
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m6.5 15.5 3-3.2 2.5 2.2 4.5-5" />
+    <path d="M13.5 9.5h3v3" />
+  </>,
+);
+
+/** 微信零钱通：¥ 硬币 + 零钱 */
+export const WechatChangeIcon = make(
+  <>
+    <circle cx="10" cy="11.5" r="6.8" />
+    <path d="m7.6 9 2.4 2.6L12.4 9" />
+    <path d="M10 11.6V15" />
+    <path d="M8.2 12.8h3.6M8.2 14.2h3.6" />
+    <path d="M15.9 15.3a3.8 3.8 0 1 0 .5 4" />
+  </>,
+);
+
+/** 微粒贷：钞票 + 微粒 */
+export const WeilidaiIcon = make(
+  <>
+    <rect x="2.5" y="9.5" width="15.5" height="9.5" rx="2" />
+    <circle cx="10.2" cy="14.2" r="2.1" />
+    <path d="M5.5 12.2h.01M15 16.2h.01" />
+    <circle cx="19" cy="4.8" r="1" />
+    <circle cx="21.2" cy="7.6" r="0.7" />
+    <circle cx="16.6" cy="3.4" r="0.7" />
+  </>,
+);
+
+/** 微信分付：分期饼图 */
+export const WechatFenfuIcon = make(
+  <>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 12V3.5" />
+    <path d="m12 12 7.4-4.3" />
+    <path d="m12 12-2.8 8" />
+  </>,
+);
+
+/** 京东白条：欠条票据（锯齿边） */
+export const JdBaitiaoIcon = make(
+  <>
+    <path d="M6.5 3h8L18 6.5V21l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2L6.5 21z" />
+    <path d="M9.5 8.5h5.5M9.5 12h5.5M9.5 15.5h3.5" />
+  </>,
+);
+
+/** 京东金条：金条堆 */
+export const JdJintiaoIcon = make(
+  <>
+    <path d="m4 17.5 1.6-4.5h5.2l1.6 4.5z" />
+    <path d="m11.6 17.5 1.6-4.5h5.2l1.6 4.5z" />
+    <path d="m7.8 9 1.6-4.5h5.2L16.2 9z" />
+  </>,
+);
+
+/** 京东小金库：保险箱 */
+export const JdXjkIcon = make(
+  <>
+    <rect x="3.5" y="4.5" width="17" height="14.5" rx="2.5" />
+    <circle cx="12" cy="11.7" r="3.1" />
+    <path d="M12 8.6V7.6M12 15.8v-1M8.9 11.7h-1M16.1 11.7h-1" />
+    <path d="M7 19v2M17 19v2" />
+  </>,
+);
+
+/** 美团借钱：手托 ¥ 币 */
+export const MtJieqianIcon = make(
+  <>
+    <circle cx="12" cy="7.5" r="4" />
+    <path d="m10 5.7 2 2.2 2-2.2" />
+    <path d="M12 7.9v3M10.3 9.4h3.4" />
+    <path d="M3.5 15.8c1.8 0 2.8.5 4.2 1.4s2.6 1.3 4.3 1.3h6" />
+    <path d="M3.5 15.8v3.2" />
+  </>,
+);
+
+/** 美团月付：日历 + ¥ */
+export const MtYuefuIcon = make(
+  <>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+    <path d="M3.5 9.8h17M8.5 3v3.5M15.5 3v3.5" />
+    <path d="m9.4 13 2.6 2.6 2.6-2.6" />
+    <path d="M12 15.6v2.4M10.3 16.8h3.4" />
+  </>,
+);
+
+/** 抖音放心借：盾牌 + 对勾 */
+export const DyFxjIcon = make(
+  <>
+    <path d="M12 2.8 19.5 5.6v5.9c0 5-3.2 8.3-7.5 9.7-4.3-1.4-7.5-4.7-7.5-9.7V5.6z" />
+    <path d="m8.8 11.6 2.2 2.2 4.2-4.4" />
+  </>,
+);
+
+/** 抖音月付：卡片 + 月牙 */
+export const DyYuefuIcon = make(
+  <>
+    <rect x="2.5" y="5.5" width="19" height="13.5" rx="2.5" />
+    <path d="M2.5 9.7h19" />
+    <path d="M15.6 16.4a2.8 2.8 0 1 1 1.9-3.5 2.2 2.2 0 0 0-1.9 3.5z" />
+  </>,
+);
+
+/** 京东超市卡：商店 */
+export const JdMarketCardIcon = make(
+  <>
+    <path d="M4.5 9 5.6 4.5h12.8L19.5 9" />
+    <path d="M4.5 9a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0" />
+    <path d="M6 11.4V20h12v-8.6" />
+    <path d="M9.6 20v-4.6h4.8V20" />
+  </>,
+);
+
+/** 京东 E 卡：卡片 + 星 */
+export const JdEcardIcon = make(
+  <>
+    <rect x="2.5" y="5.5" width="19" height="13.5" rx="2.5" />
+    <path d="M2.5 9.7h19" />
+    <path d="m15.4 12.4.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1.1 1.5-.2z" />
+  </>,
+);
+
+/** 八达通：NFC 感应卡 */
+export const OctopusIcon = make(
+  <>
+    <rect x="2.5" y="5.5" width="19" height="13.5" rx="2.5" />
+    <path d="M8.2 10.2a3.2 3.2 0 0 1 0 4.6" />
+    <path d="M10.8 8.8a6 6 0 0 1 0 7.4" />
+    <path d="M13.4 7.5a8.6 8.6 0 0 1 0 10" />
+  </>,
+);
+
+/** 其他充值卡：票券 */
+export const PrepaidTicketIcon = make(
+  <>
+    <path d="M3 9.5V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2.5a2.5 2.5 0 0 0 0 5V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.5a2.5 2.5 0 0 0 0-5z" />
+    <path d="M13.5 5v2.2M13.5 11v2M13.5 16.8V19" />
+  </>,
+);
+
+/** ICOCA：芯片卡 */
+export const IcocaIcon = make(
+  <>
+    <rect x="2.5" y="5.5" width="19" height="13.5" rx="2.5" />
+    <rect x="5.5" y="9.5" width="5" height="4.5" rx="1" />
+    <path d="M5.5 11.7h5M8 9.5V14" />
+  </>,
+);
+
+/** Tmoney：T 地铁标 */
+export const TmoneyIcon = make(
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8.5 9.3h7" />
+    <path d="M12 9.3v7" />
+  </>,
+);
+
+/** 蚂蚁花呗：花朵（"花"呗） */
+export const HuabeiIcon = make(
+  <>
+    <circle cx="12" cy="5.6" r="2.1" />
+    <circle cx="8.3" cy="9.6" r="2.1" />
+    <circle cx="15.7" cy="9.6" r="2.1" />
+    <circle cx="12" cy="9" r="1.7" />
+    <path d="M12 11.4V21" />
+    <path d="M12 17.5c-1.8 0-3-.9-3.5-2.2M12 15.3c1.8 0 3-.9 3.5-2.2" />
+  </>,
+);
+
+/** 蚂蚁借呗：箭头入钱包（借入） */
+export const JiebeiIcon = make(
+  <>
+    <path d="M12 2.5V9" />
+    <path d="m9.2 6.7 2.8 2.8 2.8-2.8" />
+    <path d="M4 11.5h16V19a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19z" />
+    <path d="M4 11.5 6 8.8M20 11.5 18 8.8" />
+    <path d="M15.5 16h.01" />
+  </>,
+);
+
+/** PASMO：圆角方块 + P */
+export const PasmoIcon = make(
+  <>
+    <rect x="4" y="4" width="16" height="16" rx="4.5" />
+    <path d="M9.5 16.5v-9h3.2a2.6 2.6 0 0 1 0 5.2H9.5" />
+  </>,
+);
+
 /* ============ emoji → SVG 映射 ============ */
 
 type IconCmp = (p: IconProps) => ReactNode;
@@ -774,12 +1008,12 @@ export function normEmoji(s: string): string {
 const ACCOUNT_ICON_MAP: Record<string, IconCmp> = {
   // 资金账户
   alipay: AlipayLogo,
-  yuebao: AlipayLogo,
-  yulibao: AlipayLogo,
-  xiaohebao: AlipayLogo,
-  ant_fortune: AlipayLogo,
+  yuebao: YuebaoIcon,
+  yulibao: YulibaoIcon,
+  xiaohebao: XiaohebaoIcon,
+  ant_fortune: AntFortuneIcon,
   wechat: WechatLogo,
-  wechat_change: WechatLogo,
+  wechat_change: WechatChangeIcon,
   tenpay: TrendingUpIcon,
   qq: QqLogo,
   douyin: DouyinLogo,
@@ -788,7 +1022,7 @@ const ACCOUNT_ICON_MAP: Record<string, IconCmp> = {
   macau_wallet: WalletIcon,
   dcep: CoinIcon,
   jd_finance: JdLogo,
-  jd_xjk: JdLogo,
+  jd_xjk: JdXjkIcon,
   unionpay: ZapIcon,
   line_pay: LineLogo,
   paypay: BanknoteIcon,
@@ -806,31 +1040,31 @@ const ACCOUNT_ICON_MAP: Record<string, IconCmp> = {
   other_asset: PackageIcon,
   // 信用账户
   loan: BankIcon,
-  huabei: AlipayLogo,
-  jd_baitiao: JdLogo,
-  jd_jintiao: JdLogo,
-  jiebei: AlipayLogo,
-  weilidai: WechatLogo,
-  mt_jieqian: MeituanLogo,
-  mt_yuefu: MeituanLogo,
-  dy_fxj: DouyinLogo,
-  dy_yuefu: DouyinLogo,
-  wechat_fenfu: WechatLogo,
+  huabei: HuabeiIcon,
+  jd_baitiao: JdBaitiaoIcon,
+  jd_jintiao: JdJintiaoIcon,
+  jiebei: JiebeiIcon,
+  weilidai: WeilidaiIcon,
+  mt_jieqian: MtJieqianIcon,
+  mt_yuefu: MtYuefuIcon,
+  dy_fxj: DyFxjIcon,
+  dy_yuefu: DyYuefuIcon,
+  wechat_fenfu: WechatFenfuIcon,
   beiyongjin: ZapIcon,
   family: HeartHandshakeIcon,
   other_credit: QuestionIcon,
   // 充值账户
-  octopus: CreditCardIcon,
+  octopus: OctopusIcon,
   macau_pass: BusIcon,
   suica: SubwayIcon,
-  icoca: SubwayIcon,
-  pasmo: SubwayIcon,
+  icoca: IcocaIcon,
+  pasmo: PasmoIcon,
   wowpass: CreditCardIcon,
-  tmoney: SubwayIcon,
+  tmoney: TmoneyIcon,
   tmall_card: CartIcon,
-  jd_market_card: JdLogo,
-  jd_ecard: JdLogo,
-  other_prepaid: CreditCardIcon,
+  jd_market_card: JdMarketCardIcon,
+  jd_ecard: JdEcardIcon,
+  other_prepaid: PrepaidTicketIcon,
   // 理财账户
   other_invest: CoinsIcon,
 };
