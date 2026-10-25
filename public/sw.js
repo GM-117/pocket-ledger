@@ -1,5 +1,5 @@
 /* 口袋记账 Service Worker —— 预缓存应用外壳，运行时缓存静态资源 */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE_NAME = `pocket-ledger-${VERSION}`;
 // 相对路径基于 sw.js 所在目录解析，兼容根路径与子路径（GitHub Pages）部署
 const PRECACHE = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];

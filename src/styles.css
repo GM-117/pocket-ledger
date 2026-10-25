@@ -3907,3 +3907,213 @@ input[type='date'] {
   color: var(--primary);
   font-weight: 700;
 }
+
+/* ============ 截图记账 ============ */
+.scan-modal {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+.scan-engines {
+  margin-bottom: 12px;
+}
+
+/* 引擎名不换行断字（四档挤在一行时「粘贴文/字」会被拆开） */
+.scan-engines button {
+  white-space: nowrap;
+}
+
+.scan-sources {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.scan-source-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.scan-or {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* textarea 不在全局 input 规则覆盖范围内，这里补齐同款外观（含 iOS 16px 防缩放） */
+.scan-field textarea {
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px;
+  line-height: 1.5;
+  background: var(--field-bg);
+  color: var(--ink);
+  font-family: inherit;
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+}
+
+.scan-field textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+  background: var(--field-focus);
+}
+
+.scan-preview {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--key-bg);
+  margin-bottom: 12px;
+}
+
+.scan-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.scan-busy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 26px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.scan-spin {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--line);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: scan-spin 0.8s linear infinite;
+}
+
+@keyframes scan-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scan-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 4px 10px;
+  border-bottom: 1.5px solid var(--line);
+  margin-bottom: 10px;
+}
+
+.scan-cny {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.scan-amount-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.scan-amount-input:focus {
+  outline: none;
+  background: transparent;
+}
+
+.scan-amount.expense .scan-amount-input {
+  color: var(--red);
+}
+
+.scan-amount.income .scan-amount-input {
+  color: var(--green);
+}
+
+.scan-amount.transfer .scan-amount-input {
+  color: var(--primary);
+}
+
+.scan-type {
+  margin-bottom: 12px;
+}
+
+.scan-cats {
+  margin: 0 0 12px;
+}
+
+.scan-cands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.scan-cands .chip {
+  cursor: pointer;
+}
+
+.scan-note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.scan-raw-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.scan-raw {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: var(--key-bg);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.scan-consent-title {
+  margin: 2px 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.scan-consent-list {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+
+/* 设置页：识别引擎选择与操作行 */

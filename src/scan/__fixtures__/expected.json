@@ -1,0 +1,24 @@
+[
+  { "file": "alipay-pay-success.txt", "amount": 28.5, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [2026, 28.0] },
+  { "file": "wechat-pay-voucher.txt", "amount": 32.0, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [1003, 2026] },
+  { "file": "unionpay-bill-detail.txt", "amount": 158.0, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [12345.67, 1234] },
+  { "file": "cmb-salary-income.txt", "amount": 8900.0, "kind": "income", "minConfidence": 0.6, "mustNotBe": [23456.78] },
+  { "file": "wechat-refund.txt", "amount": 45.9, "kind": "income", "minConfidence": 0.6, "mustNotBe": [2026] },
+  { "file": "change-withdraw.txt", "amount": 500.0, "kind": "transfer", "minConfidence": 0.6, "mustNotBe": [0.1, 6789] },
+  { "file": "order-noise.txt", "amount": 68.0, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [128.0, 60.0, 8.0, 13812345678] },
+  { "file": "unsigned-plain.txt", "amount": 15.0, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [] },
+  { "file": "thousands-separator.txt", "amount": 1299.0, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [100.0, 129987654321] },
+  { "file": "wan-amount.txt", "amount": 12800.0, "kind": "expense", "minConfidence": 0.5, "mustNotBe": [1.28, 15] },
+  { "file": "traditional-hk.txt", "amount": 78.0, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [7, 8888, 11] },
+  { "file": "blurry-spaced.txt", "amount": 23.5, "kind": "expense", "minConfidence": 0.6, "mustNotBe": [2026, 9, 21] },
+
+  { "file": "alipay-ctrip-autodeduct.txt", "amount": 412.0, "kind": "expense", "date": "2025-03-08", "minConfidence": 0.6, "mustNotBe": [41] },
+  { "file": "alipay-taobao-flashbuy.txt", "amount": 26.8, "kind": "expense", "date": "2025-03-09", "minConfidence": 0.6, "mustNotBe": [26] },
+  { "file": "alipay-taobao-huabei-cashback.txt", "amount": 31.2, "kind": "expense", "date": "2025-03-10", "minConfidence": 0.6, "mustNotBe": [0.25, 31, 6789] },
+  { "file": "wechat-list-pair.txt", "amount": 28.5, "kind": "expense", "date": "2026-09-24", "minConfidence": 0.6, "mustNotBe": [2468] },
+  { "file": "wechat-jd-bill.txt", "amount": 68.9, "kind": "expense", "date": "2025-03-08", "minConfidence": 0.6, "mustNotBe": [2468, 3630461003588001] },
+  { "file": "wechat-meituan-bill.txt", "amount": 33.6, "kind": "expense", "date": "2025-03-09", "minConfidence": 0.6, "mustNotBe": [2468] },
+  { "file": "wechat-redpacket-sent.txt", "amount": 188.0, "kind": "expense", "date": "2025-03-10", "minConfidence": 0.6, "mustNotBe": [2468] },
+  { "file": "wechat-transfer-shop.txt", "amount": 45.0, "kind": "expense", "date": "2025-03-09", "minConfidence": 0.6, "mustNotBe": [2468] },
+  { "file": "ocr-scrambled-columns.txt", "amount": 96.5, "kind": "expense", "date": "2026-01-13", "minConfidence": 0.6, "mustNotBe": [96, 85] }
+]

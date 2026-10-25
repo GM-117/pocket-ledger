@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { useStore } from '../store';
 import {
   BrandIcon,
+  CameraIcon,
   ChevronDownIcon,
   GearIcon,
   LIcon,
@@ -32,6 +33,8 @@ interface LayoutProps {
   tab: TabKey;
   onTab: (t: TabKey) => void;
   onAdd: () => void;
+  /** 顶栏相机 → 截图 / 文字识别记账。不传即不渲染入口（功能开关见 App.tsx 的 SHOW_SCAN） */
+  onScan?: () => void;
   /** 顶右账本芯片 → 打开账本管理（切换/创建/编辑/删除） */
   onOpenBooks: () => void;
   /** 顶栏帮助按钮 → 打开使用引导 */
@@ -41,7 +44,7 @@ interface LayoutProps {
   children: ReactNode;
 }
 
-export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, onOpenSettings, children }: LayoutProps) {
+export function Layout({ tab, onTab, onAdd, onScan, onOpenBooks, onOpenGuide, onOpenSettings, children }: LayoutProps) {
   const books = useStore((s) => s.books);
   const activeBookId = useStore((s) => s.activeBookId);
   const setActiveBook = useStore((s) => s.setActiveBook);
@@ -70,6 +73,11 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, onOpenSett
       )}
     </button>
   );
+  const scanBtn = onScan ? (
+    <button className="theme-btn" onClick={onScan} aria-label="截图记账">
+      <CameraIcon size={17} />
+    </button>
+  ) : null;
   const guideBtn = (
     <button className="theme-btn" onClick={onOpenGuide} aria-label="使用指南">
       <QuestionIcon size={17} />
@@ -125,6 +133,7 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, onOpenSett
           <PlusIcon size={16} /> 记一笔
         </button>
         <div className="side-actions">
+          {scanBtn}
           {guideBtn}
           {themeBtn}
           {settingsBtn}
@@ -135,6 +144,7 @@ export function Layout({ tab, onTab, onAdd, onOpenBooks, onOpenGuide, onOpenSett
         <header className="topbar">
           <h1>{PAGE_TITLE[tab]}</h1>
           <div className="topbar-right">
+            {scanBtn}
             {guideBtn}
             {themeBtn}
             {settingsBtn}
